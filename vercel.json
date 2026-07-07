@@ -1,13 +1,12 @@
 {
-  "version": 2,
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ]
+  "name": "deportivo-italia-academy",
+  "version": "1.0.0",
+  "description": "Sistema de gestión Deportivo Italia Academy",
+  "private": true,
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.4"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }

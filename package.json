@@ -1,12 +1,4 @@
-{
-  "name": "deportivo-italia-academy",
-  "version": "1.0.0",
-  "description": "Sistema de gestión Deportivo Italia Academy",
-  "private": true,
-  "dependencies": {
-    "@neondatabase/serverless": "^0.9.4"
-  },
-  "engines": {
-    "node": ">=18"
-  }
-}
+# Copia este archivo como .env.local y rellena tu connection string de Neon
+# Lo encuentras en: dashboard.neon.tech → tu proyecto → Connection Details → Connection string
+
+DATABASE_URL=postgres://user:password@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
