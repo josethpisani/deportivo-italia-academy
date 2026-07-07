@@ -411,19 +411,1208 @@ function makeAthlete(category, idx){
   };
 }
 function seedAthletes(){
-  let list = [];
-  CATEGORIES.forEach(cat => {
-    const count = cat==="U6"?8 : cat==="U8"?10 : cat==="U10"?9 : 7;
-    for(let i=0;i<count;i++) list.push(makeAthlete(cat,i));
-  });
-  return list;
+  return [
+      {
+          "id": "ath_qyarke0",
+          "nombre": "Fabrizio",
+          "apellido": "Adragna",
+          "categoria": "U6",
+          "edad": 6,
+          "fechaNacimiento": "2019-10-11",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_l2qpgsg",
+          "nombre": "Jhan",
+          "apellido": "Felix reyes visuetti",
+          "categoria": "U6",
+          "edad": 7,
+          "fechaNacimiento": "2019-04-15",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_gbh8mki",
+          "nombre": "Eliseo",
+          "apellido": "Aarón Arrocha",
+          "categoria": "U6",
+          "edad": 7,
+          "fechaNacimiento": "2019-03-25",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_xo7dcmg",
+          "nombre": "Pedro",
+          "apellido": "Rafael Rojas Figueredo",
+          "categoria": "U6",
+          "edad": 7,
+          "fechaNacimiento": "2018-10-29",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_aeeof7a",
+          "nombre": "Dylan",
+          "apellido": "Antonio brocé chacon",
+          "categoria": "U6",
+          "edad": 7,
+          "fechaNacimiento": "2018-08-12",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_xqiztys",
+          "nombre": "Mateo",
+          "apellido": "Gael López Arosemena",
+          "categoria": "U6",
+          "edad": 7,
+          "fechaNacimiento": "2018-07-28",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_hjsznmu",
+          "nombre": "Noah",
+          "apellido": "Quijano Fragachan",
+          "categoria": "U6",
+          "edad": 7,
+          "fechaNacimiento": "2019-06-05",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_rh6tuoo",
+          "nombre": "Sebastián",
+          "apellido": "Matias Sequeira campos",
+          "categoria": "U6",
+          "edad": 8,
+          "fechaNacimiento": "2018-02-11",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_afpyhrv",
+          "nombre": "Adrian",
+          "apellido": "ameth rivas cortes",
+          "categoria": "U6",
+          "edad": 8,
+          "fechaNacimiento": "2018-01-08",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_30m2ygc",
+          "nombre": "Jaime",
+          "apellido": "li conde",
+          "categoria": "U8",
+          "edad": 8,
+          "fechaNacimiento": "2017-07-13",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_ev6waat",
+          "nombre": "Jonathan",
+          "apellido": "Martín Poveda Batista",
+          "categoria": "U8",
+          "edad": 9,
+          "fechaNacimiento": "2017-05-27",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_p2neyps",
+          "nombre": "Miguel",
+          "apellido": "Axel Cáceres González",
+          "categoria": "U8",
+          "edad": 9,
+          "fechaNacimiento": "2017-01-21",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_sdmwt10",
+          "nombre": "Gabriel",
+          "apellido": "Eduardo De Oliveira Córdova",
+          "categoria": "U8",
+          "edad": 9,
+          "fechaNacimiento": "2016-10-23",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_y6fz5by",
+          "nombre": "Jeronimo",
+          "apellido": "Pinzon",
+          "categoria": "U8",
+          "edad": 10,
+          "fechaNacimiento": "2016-04-17",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_4dto0uh",
+          "nombre": "Ivan",
+          "apellido": "Haziel Nieves Gonzalez",
+          "categoria": "U10",
+          "edad": 10,
+          "fechaNacimiento": "2015-11-25",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_khbtune",
+          "nombre": "Andres",
+          "apellido": "Jimenez",
+          "categoria": "U10",
+          "edad": 11,
+          "fechaNacimiento": "2015-04-21",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_092puoc",
+          "nombre": "Bayron",
+          "apellido": "gomez santiago",
+          "categoria": "U10",
+          "edad": 12,
+          "fechaNacimiento": "2014-07-07",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_j9y6kk9",
+          "nombre": "Estefano",
+          "apellido": "Diaz",
+          "categoria": "U6",
+          "edad": 6,
+          "fechaNacimiento": "2020-02-16",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_wuhr5gu",
+          "nombre": "Gabriel",
+          "apellido": "Alejandro Melgar Ramos",
+          "categoria": "U12",
+          "edad": 12,
+          "fechaNacimiento": "2014-01-08",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_rigdjbf",
+          "nombre": "Kenny",
+          "apellido": "Sáenz",
+          "categoria": "U12",
+          "edad": 12,
+          "fechaNacimiento": "2013-11-20",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_xu4f6y6",
+          "nombre": "Daniel",
+          "apellido": "Alberto Tejada Guillén",
+          "categoria": "U12",
+          "edad": 13,
+          "fechaNacimiento": "2013-02-18",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_1137awz",
+          "nombre": "Esteban",
+          "apellido": "alexander hernández",
+          "categoria": "U12",
+          "edad": 14,
+          "fechaNacimiento": "2012-02-20",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_qgmwxzo",
+          "nombre": "David",
+          "apellido": "Jimenez",
+          "categoria": "U12",
+          "edad": 14,
+          "fechaNacimiento": "2011-12-31",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_naoqgfu",
+          "nombre": "Camila",
+          "apellido": "Lucia de Leon Palacios",
+          "categoria": "U12",
+          "edad": 16,
+          "fechaNacimiento": "2010-01-17",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_nmydoo0",
+          "nombre": "Ian",
+          "apellido": "daniel ramos ferrer",
+          "categoria": "U6",
+          "edad": 6,
+          "fechaNacimiento": "2019-12-22",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_5rup6my",
+          "nombre": "Liam",
+          "apellido": "Alfonzo Acevedo medina",
+          "categoria": "U6",
+          "edad": 6,
+          "fechaNacimiento": "2019-11-02",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_avis54r",
+          "nombre": "Massimo",
+          "apellido": "Samaniego Cannavó",
+          "categoria": "U6",
+          "edad": 4,
+          "fechaNacimiento": "2021-11-19",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_nt1vkyq",
+          "nombre": "Matheo",
+          "apellido": "david rodriguez rodriguez",
+          "categoria": "U6",
+          "edad": 4,
+          "fechaNacimiento": "2021-10-07",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_n6lxcfq",
+          "nombre": "Federico",
+          "apellido": "Espil",
+          "categoria": "U6",
+          "edad": 4,
+          "fechaNacimiento": "2021-07-28",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_zjvrdaj",
+          "nombre": "Gabriel",
+          "apellido": "Felipe José Endara Andrade",
+          "categoria": "U6",
+          "edad": 5,
+          "fechaNacimiento": "2021-05-05",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_y8c45nv",
+          "nombre": "Yibram",
+          "apellido": "Alejandro Herrera Sánchez",
+          "categoria": "U6",
+          "edad": 5,
+          "fechaNacimiento": "2021-02-12",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_vv76zc3",
+          "nombre": "Joaquín",
+          "apellido": "Garzón Gonzalez",
+          "categoria": "U6",
+          "edad": 5,
+          "fechaNacimiento": "2020-09-20",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_c19vu0m",
+          "nombre": "Joshua",
+          "apellido": "Alejandro orobio collo",
+          "categoria": "U6",
+          "edad": 5,
+          "fechaNacimiento": "2020-09-15",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_ldu22ai",
+          "nombre": "Javier",
+          "apellido": "Arcángel Vargas Martinez",
+          "categoria": "U6",
+          "edad": 5,
+          "fechaNacimiento": "2020-09-09",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_vz2e4r1",
+          "nombre": "Daniel",
+          "apellido": "Alessandro Carbone Tam",
+          "categoria": "U8",
+          "edad": 7,
+          "fechaNacimiento": "2019-03-21",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_9p4hulb",
+          "nombre": "Lucca",
+          "apellido": "Hutchinson De León",
+          "categoria": "U8",
+          "edad": 7,
+          "fechaNacimiento": "2019-03-06",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_iwoag9g",
+          "nombre": "Rogelio",
+          "apellido": "A. Duque D.",
+          "categoria": "U8",
+          "edad": 7,
+          "fechaNacimiento": "2019-02-21",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_edwluq5",
+          "nombre": "Luis",
+          "apellido": "Alberto Arauz melo",
+          "categoria": "U8",
+          "edad": 9,
+          "fechaNacimiento": "2017-03-17",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_u3kvn9o",
+          "nombre": "Andrew",
+          "apellido": "Mirko Richards Ureña",
+          "categoria": "U8",
+          "edad": 7,
+          "fechaNacimiento": "2019-01-29",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_h2ee3iz",
+          "nombre": "Daniel",
+          "apellido": "De Jesus Trujillo Valdes",
+          "categoria": "U8",
+          "edad": 7,
+          "fechaNacimiento": "2018-10-16",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_7u5y912",
+          "nombre": "Luis",
+          "apellido": "Carlos Garcia",
+          "categoria": "U8",
+          "edad": 8,
+          "fechaNacimiento": "2018-07-02",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_c8qqrcw",
+          "nombre": "Federico",
+          "apellido": "Márquez",
+          "categoria": "U8",
+          "edad": 8,
+          "fechaNacimiento": "2018-06-07",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_7k28uxg",
+          "nombre": "Diego",
+          "apellido": "Méndez",
+          "categoria": "U8",
+          "edad": 8,
+          "fechaNacimiento": "2018-05-21",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_krogr4o",
+          "nombre": "Lucas",
+          "apellido": "Méndez",
+          "categoria": "U8",
+          "edad": 8,
+          "fechaNacimiento": "2018-05-21",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_tdufh2h",
+          "nombre": "Matías",
+          "apellido": "Enrique Morán Castillo",
+          "categoria": "U8",
+          "edad": 8,
+          "fechaNacimiento": "2018-05-19",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_3d3k55d",
+          "nombre": "Juan",
+          "apellido": "Diego Araque Flors",
+          "categoria": "U8",
+          "edad": 8,
+          "fechaNacimiento": "2018-04-23",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_o3wvf37",
+          "nombre": "Thiago",
+          "apellido": "André Villarreal",
+          "categoria": "U8",
+          "edad": 8,
+          "fechaNacimiento": "2018-03-26",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_clmab66",
+          "nombre": "Santiago",
+          "apellido": "Castillo",
+          "categoria": "U8",
+          "edad": 8,
+          "fechaNacimiento": "2018-03-14",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_ozivyfq",
+          "nombre": "Ihan",
+          "apellido": "Vásquez (BECADO)",
+          "categoria": "U10",
+          "edad": 8,
+          "fechaNacimiento": "2017-10-17",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_ofhs101",
+          "nombre": "Gian",
+          "apellido": "Franco Molina",
+          "categoria": "U10",
+          "edad": 9,
+          "fechaNacimiento": "2017-06-01",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_gkb08fr",
+          "nombre": "Santiago",
+          "apellido": "Morales",
+          "categoria": "U10",
+          "edad": 9,
+          "fechaNacimiento": "2017-05-31",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_sooh0cn",
+          "nombre": "Guillermo",
+          "apellido": "Andrés Pérez Velandia",
+          "categoria": "U10",
+          "edad": 9,
+          "fechaNacimiento": "2017-05-27",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_3smeoxy",
+          "nombre": "Dylan",
+          "apellido": "Andrew Wong",
+          "categoria": "U10",
+          "edad": 9,
+          "fechaNacimiento": "2017-04-08",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_fkd55v0",
+          "nombre": "Esteban",
+          "apellido": "David Montero",
+          "categoria": "U10",
+          "edad": 10,
+          "fechaNacimiento": "2016-05-04",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_o185tdh",
+          "nombre": "Gabriel",
+          "apellido": "Gaspard",
+          "categoria": "U10",
+          "edad": 10,
+          "fechaNacimiento": "2016-01-24",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_scu8bj2",
+          "nombre": "Elon",
+          "apellido": "Wong",
+          "categoria": "U12",
+          "edad": 10,
+          "fechaNacimiento": "2015-08-18",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      },
+      {
+          "id": "ath_55w8x9n",
+          "nombre": "Paolo",
+          "apellido": "Tabbi",
+          "categoria": "U12",
+          "edad": 10,
+          "fechaNacimiento": "2015-07-10",
+          "posicion": "Mediocampo",
+          "representante": "",
+          "telefono": "",
+          "direccion": "",
+          "fechaIngreso": "2026-07-07",
+          "matricula": {
+              "estado": "pendiente",
+              "monto": 35,
+              "fecha": "2026-07-07"
+          },
+          "torneos": [],
+          "asistenciaEntrenamiento": {},
+          "asistenciaJuegos": {}
+      }
+  ];
 }
 function seedTorneos(){
-  return [
-    { id: uid("tor"), nombre:"Copa Apertura Caracas", fecha:"2026-07-12", categoria:"U10", monto:25 },
-    { id: uid("tor"), nombre:"Torneo Relámpago Italia Cup", fecha:"2026-07-26", categoria:"U12", monto:30 },
-    { id: uid("tor"), nombre:"Festival U6/U8 Valle Arriba", fecha:"2026-08-02", categoria:"U6", monto:15 },
-  ];
+  return [];
 }
 function attendanceRate(obj){
   const vals = Object.values(obj);
