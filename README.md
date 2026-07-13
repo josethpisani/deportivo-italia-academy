@@ -1,145 +1,115 @@
-# 🛡️ Deportivo Italia Academy — Sistema de Gestión
+# Deportivo Italia Academy — Sistema de Gestion
 
-Sistema web de gestión para academia de fútbol. Frontend en HTML/JS puro, API serverless en Vercel y base de datos PostgreSQL en Neon.
-
----
-
-## 📋 Requisitos previos
-
-- Cuenta en [GitHub](https://github.com) (gratuita)
-- Cuenta en [Neon](https://neon.tech) (gratuita)
-- Cuenta en [Vercel](https://vercel.com) (gratuita)
-- [Node.js 18+](https://nodejs.org) instalado en tu computadora
-- [Git](https://git-scm.com) instalado
+Sistema web de gestion para academia de futbol. Frontend modular en HTML/JS puro, API serverless en Vercel y base de datos PostgreSQL en Neon.
 
 ---
 
-## 🗄️ PASO 1 — Crear la base de datos en Neon
+## Estructura del proyecto
 
-1. Ve a [dashboard.neon.tech](https://dashboard.neon.tech) e inicia sesión.
-2. Haz clic en **"New Project"**.
-3. Asigna el nombre: `deportivo-italia-academy`.
-4. Selecciona la región más cercana (ej. `AWS / US East`).
-5. Haz clic en **"Create Project"**.
-6. En la pantalla siguiente, ve a **"Connection Details"**.
-7. Selecciona el modo **"Connection string"** y copia el valor. Se verá así:
-   ```
-   postgres://usuario:contraseña@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
-   ```
-8. **Guarda esta cadena**, la necesitarás en el Paso 3 y en Vercel.
-
-> ⚠️ La tabla `app_data` se crea automáticamente la primera vez que abres la app. No necesitas ejecutar SQL manualmente.
+```
+deportivo-italia-academy/
+├── public/
+│   ├── index.html              ← Shell HTML (42 lineas)
+│   ├── css/
+│   │   ├── variables.css       ← Variables CSS (colores)
+│   │   ├── base.css            ← Reset, layout, pills, badges
+│   │   ├── sidebar.css         ← Sidebar escritorio + mobile
+│   │   ├── dashboard.css       ← Tarjetas de categoria
+│   │   ├── athletes.css        ← Grid/lista de atletas, perfil
+│   │   ├── attendance.css      ← Registro de asistencia
+│   │   ├── admin.css           ← Panel admin, tablas, matriculas
+│   │   ├── modal.css           ← Modales bottom-sheet
+│   │   ├── charts.css          ← Contenedores de graficos
+│   │   └── responsive.css      ← Media queries (tablet/movil)
+│   ├── js/
+│   │   ├── app.js              ← Punto de entrada, render principal
+│   │   ├── constants.js        ← Categorias, dias, nombres
+│   │   ├── utils.js            ← Funciones utilitarias
+│   │   ├── state.js            ← Estado global
+│   │   ├── seed.js             ← Carga de datos iniciales
+│   │   ├── api.js              ← Cliente API (Neon)
+│   │   ├── mutations.js        ← Mutaciones de datos
+│   │   ├── icons.js            ← Iconos SVG inline
+│   │   ├── render-helpers.js   ← Helpers de renderizado
+│   │   ├── modals.js           ← Modales de agregar
+│   │   ├── charts.js           ← Funciones Chart.js
+│   │   ├── events.js           ← Manejo de eventos
+│   │   └── views/
+│   │       ├── sidebar.js      ← Vista sidebar
+│   │       ├── home.js         ← Vista dashboard
+│   │       ├── athletes.js     ← Vista lista/perfil atletas
+│   │       ├── attendance.js   ← Vista asistencia
+│   │       └── admin.js        ← Vista administracion
+│   └── data/
+│       └── athletes.json       ← Datos iniciales de atletas
+├── api/
+│   └── data.js                 ← API serverless (Neon PostgreSQL)
+├── package.json                ← Dependencias
+├── vercel.json                 ← Configuracion de rutas Vercel
+├── .gitignore
+├── .env.local.example
+└── README.md
+```
 
 ---
 
-## 📁 PASO 2 — Subir el proyecto a GitHub
+## Despliegue rapido
 
-### Opción A: Usando GitHub.com (sin terminal)
-1. Ve a [github.com/new](https://github.com/new).
-2. Nombre del repositorio: `deportivo-italia-academy`.
-3. Déjalo **privado** (recomendado) o público.
-4. Haz clic en **"Create repository"**.
-5. En la página del repositorio vacío, haz clic en **"uploading an existing file"**.
-6. Arrastra y suelta TODOS los archivos y carpetas de este proyecto.
-7. Haz clic en **"Commit changes"**.
+### 1. Crear base de datos en Neon
+1. Ve a [dashboard.neon.tech](https://dashboard.neon.tech)
+2. "New Project" → nombre: `deportivo-italia-academy`
+3. Copia la **connection string** (postgres://...)
 
-### Opción B: Usando terminal (Git)
+### 2. Subir a GitHub
+Opcion A — Desde [github.com/new](https://github.com/new):
+1. Crear repositorio `deportivo-italia-academy`
+2. Subir todos los archivos del proyecto
+
+Opcion B — Desde terminal:
 ```bash
-# Dentro de la carpeta del proyecto:
 git init
 git add .
-git commit -m "Deportivo Italia Academy - primer deploy"
+git commit -m "Sistema Deportivo Italia Academy"
 git branch -M main
 git remote add origin https://github.com/TU_USUARIO/deportivo-italia-academy.git
 git push -u origin main
 ```
 
----
-
-## 🚀 PASO 3 — Desplegar en Vercel
-
-1. Ve a [vercel.com](https://vercel.com) e inicia sesión con tu cuenta de GitHub.
-2. Haz clic en **"Add New → Project"**.
-3. Selecciona el repositorio `deportivo-italia-academy` y haz clic en **"Import"**.
-4. En la sección **"Environment Variables"**, agrega:
+### 3. Desplegar en Vercel
+1. Ve a [vercel.com](https://vercel.com) → "Add New → Project"
+2. Selecciona el repositorio → "Import"
+3. En **Environment Variables** agrega:
    - **Name:** `DATABASE_URL`
-   - **Value:** (pega aquí la connection string de Neon del Paso 1)
-5. Haz clic en **"Deploy"**.
-6. Espera ~1 minuto. Vercel te dará una URL como:
-   ```
-   https://deportivo-italia-academy.vercel.app
-   ```
-7. ✅ **¡Tu sistema está en línea!**
+   - **Value:** (tu connection string de Neon)
+4. Click "Deploy"
+5. Tu app estara en: `https://deportivo-italia-academy.vercel.app`
 
----
-
-## 🔄 Actualizar el sistema en el futuro
-
-Cada vez que quieras hacer cambios:
-
-```bash
-# Edita los archivos que necesites, luego:
-git add .
-git commit -m "descripción del cambio"
-git push
-```
-
-Vercel detecta el push automáticamente y redespliega en ~30 segundos.
-
----
-
-## 📂 Estructura del proyecto
-
-```
-deportivo-italia-academy/
-├── public/
-│   └── index.html          ← Frontend completo (HTML + JS)
-├── api/
-│   └── data.js             ← API serverless (Neon PostgreSQL)
-├── package.json            ← Dependencias (solo @neondatabase/serverless)
-├── vercel.json             ← Configuración de rutas Vercel
-├── .gitignore
-├── .env.local.example      ← Plantilla de variables de entorno
-└── README.md               ← Este archivo
-```
-
----
-
-## 🔐 Variables de entorno
-
-| Variable | Descripción | Dónde obtenerla |
+### Variables de entorno
+| Variable | Descripcion | Donde obtenerla |
 |---|---|---|
 | `DATABASE_URL` | Connection string de Neon | dashboard.neon.tech → tu proyecto → Connection Details |
 
-### Para desarrollo local:
+### Desarrollo local
 ```bash
 cp .env.local.example .env.local
-# Edita .env.local y pega tu DATABASE_URL
-```
-
-Para correr localmente necesitas Vercel CLI:
-```bash
+# Edita .env.local con tu DATABASE_URL
 npm install -g vercel
 vercel dev
 ```
-Esto levanta tanto el frontend como el API en `http://localhost:3000`.
+
+### Actualizar en el futuro
+```bash
+git add .
+git commit -m "descripcion del cambio"
+git push
+```
+Vercel redespliega automaticamente (~30 segundos).
 
 ---
 
-## 🛠️ Solución de problemas
+## Base de datos (Neon)
 
-| Problema | Solución |
-|---|---|
-| La app carga pero no guarda datos | Verifica que `DATABASE_URL` esté correctamente configurada en Vercel → Settings → Environment Variables |
-| Error 500 en `/api/data` | Revisa los logs en Vercel → tu proyecto → Functions → data → Logs |
-| La tabla no se crea | La primera visita a la app la crea automáticamente. Si falla, revisa la conexión a Neon |
-| Cambios no se reflejan | Haz `git push` y espera que Vercel redepliegue (~30s) |
-
----
-
-## 📊 Base de datos (Neon)
-
-La tabla que se crea automáticamente:
+La tabla se crea automaticamente:
 
 ```sql
 CREATE TABLE IF NOT EXISTS app_data (
@@ -149,16 +119,13 @@ CREATE TABLE IF NOT EXISTS app_data (
 );
 ```
 
-Dos filas principales:
-- `key = 'athletes'` → array JSON de todos los atletas con su asistencia y pagos
-- `key = 'torneos'`  → array JSON de todos los torneos
+- `key = 'athletes'` → array JSON de atletas
+- `key = 'torneos'` → array JSON de torneos
 
-Puedes ver y editar los datos directamente desde el **SQL Editor** en [dashboard.neon.tech](https://dashboard.neon.tech).
+## Solucion de problemas
 
----
-
-## 💡 Tips
-
-- **Dominio personalizado**: en Vercel → tu proyecto → Settings → Domains, puedes agregar tu propio dominio (ej. `app.deportivoitalia.com`).
-- **Múltiples usuarios**: la base de datos es compartida, cualquier persona con el link ve y edita los mismos datos.
-- **Backup**: desde Neon puedes hacer export de la base de datos en cualquier momento.
+| Problema | Solucion |
+|---|---|
+| App carga pero no guarda | Verifica DATABASE_URL en Vercel → Settings → Environment Variables |
+| Error 500 en /api/data | Revisa logs en Vercel → Functions → data → Logs |
+| Cambios no se reflejan | git push y espera ~30s |
