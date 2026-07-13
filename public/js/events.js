@@ -2,27 +2,26 @@ import { state } from './state.js';
 import { toggleAttendance, setMatricula, setTorneoPago } from './mutations.js';
 import { openAddAthleteModal, openAddTorneoModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
-import { render } from './app.js';
 
 export function attachEvents(){
   document.querySelectorAll("[data-nav]").forEach(btn=>{
-    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; render(); };
+    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; if(window.__render) window.__render(); };
   });
   document.querySelectorAll("[data-goto-cat]").forEach(btn=>{
-    btn.onclick = ()=>{ state.activeCategory = btn.dataset.gotoCat; state.view="atleta-list"; render(); };
+    btn.onclick = ()=>{ state.activeCategory = btn.dataset.gotoCat; state.view="atleta-list"; if(window.__render) window.__render(); };
   });
   document.querySelectorAll("[data-cat]").forEach(btn=>{
-    btn.onclick = ()=>{ state.activeCategory = btn.dataset.cat; render(); };
+    btn.onclick = ()=>{ state.activeCategory = btn.dataset.cat; if(window.__render) window.__render(); };
   });
   const searchInput = document.getElementById("searchInput");
   if(searchInput){
-    searchInput.oninput = (e)=>{ state.search = e.target.value; render(); document.getElementById("searchInput").focus(); document.getElementById("searchInput").selectionStart = document.getElementById("searchInput").selectionEnd = state.search.length; };
+    searchInput.oninput = (e)=>{ state.search = e.target.value; if(window.__render) window.__render(); document.getElementById("searchInput").focus(); document.getElementById("searchInput").selectionStart = document.getElementById("searchInput").selectionEnd = state.search.length; };
   }
   document.querySelectorAll("[data-open]").forEach(btn=>{
-    btn.onclick = ()=>{ state.selectedId = btn.dataset.open; state.view = "atleta-detail"; render(); };
+    btn.onclick = ()=>{ state.selectedId = btn.dataset.open; state.view = "atleta-detail"; if(window.__render) window.__render(); };
   });
   const backBtn = document.getElementById("btnBack");
-  if(backBtn) backBtn.onclick = ()=>{ state.view="atleta-list"; render(); };
+  if(backBtn) backBtn.onclick = ()=>{ state.view="atleta-list"; if(window.__render) window.__render(); };
   const addAthBtn = document.getElementById("btnAddAthlete");
   if(addAthBtn) addAthBtn.onclick = openAddAthleteModal;
   const addTorBtn = document.getElementById("btnAddTorneo");
@@ -34,7 +33,7 @@ export function attachEvents(){
     };
   });
   document.querySelectorAll("[data-admintab]").forEach(btn=>{
-    btn.onclick = ()=>{ state.adminTab = btn.dataset.admintab; render(); };
+    btn.onclick = ()=>{ state.adminTab = btn.dataset.admintab; if(window.__render) window.__render(); };
   });
   document.querySelectorAll("[data-matricula]").forEach(btn=>{
     btn.onclick = ()=>{
@@ -49,16 +48,16 @@ export function attachEvents(){
     };
   });
   const btnViewGrid = document.getElementById("btnViewGrid");
-  if(btnViewGrid) btnViewGrid.onclick = ()=>{ state.athViewMode="grid"; render(); };
+  if(btnViewGrid) btnViewGrid.onclick = ()=>{ state.athViewMode="grid"; if(window.__render) window.__render(); };
   const btnViewList = document.getElementById("btnViewList");
-  if(btnViewList) btnViewList.onclick = ()=>{ state.athViewMode="list"; render(); };
+  if(btnViewList) btnViewList.onclick = ()=>{ state.athViewMode="list"; if(window.__render) window.__render(); };
 
   const regTipoSelect = document.getElementById("regTipoSelect");
-  if(regTipoSelect) regTipoSelect.onchange = (e)=>{ state.regTipo = e.target.value; render(); };
+  if(regTipoSelect) regTipoSelect.onchange = (e)=>{ state.regTipo = e.target.value; if(window.__render) window.__render(); };
   const regDateInput = document.getElementById("regDateInput");
-  if(regDateInput) regDateInput.onchange = (e)=>{ state.regDate = e.target.value; render(); };
+  if(regDateInput) regDateInput.onchange = (e)=>{ state.regDate = e.target.value; if(window.__render) window.__render(); };
   document.querySelectorAll("[data-regcat]").forEach(btn=>{
-    btn.onclick = ()=>{ state.regCategory = btn.dataset.regcat; render(); };
+    btn.onclick = ()=>{ state.regCategory = btn.dataset.regcat; if(window.__render) window.__render(); };
   });
   document.querySelectorAll("[data-regattend]").forEach(btn=>{
     btn.onclick = ()=>{

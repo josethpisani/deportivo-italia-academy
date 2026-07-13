@@ -3,7 +3,6 @@ import { uid, todayISO } from './utils.js';
 import { makeAthlete } from './seed.js';
 import { saveAthletes, saveTorneos } from './api.js';
 import { closeModal } from './modals.js';
-import { render, renderSaveStatus } from './app.js';
 
 export function updateAthlete(id, patch){
   const a = state.athletes.find(x=>x.id===id);
@@ -17,7 +16,7 @@ export function toggleAttendance(athleteId, type, dateKey, status){
   if(a[field][dateKey]===status) delete a[field][dateKey];
   else a[field][dateKey] = status;
   saveAthletes();
-  render();
+  if(window.__render) window.__render();
 }
 
 export function addAthlete(data){
@@ -31,21 +30,21 @@ export function addAthlete(data){
   state.athletes.push(newA);
   saveAthletes();
   closeModal();
-  render();
+  if(window.__render) window.__render();
 }
 
 export function addTorneo(data){
   state.torneos.push({ id: uid("tor"), nombre:data.nombre, fecha:data.fecha, categoria:data.categoria, monto:Number(data.monto) });
   saveTorneos();
   closeModal();
-  render();
+  if(window.__render) window.__render();
 }
 
 export function setMatricula(athleteId, estado){
   const a = state.athletes.find(x=>x.id===athleteId);
   a.matricula = { ...a.matricula, estado, fecha: todayISO() };
   saveAthletes();
-  render();
+  if(window.__render) window.__render();
 }
 
 export function setTorneoPago(athleteId, torneoId, pagado){
@@ -53,5 +52,5 @@ export function setTorneoPago(athleteId, torneoId, pagado){
   a.torneos = a.torneos.filter(t=>t.torneoId!==torneoId);
   if(pagado) a.torneos.push({ torneoId, fecha: todayISO() });
   saveAthletes();
-  render();
+  if(window.__render) window.__render();
 }

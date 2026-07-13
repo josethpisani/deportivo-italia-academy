@@ -1,9 +1,13 @@
 import { state } from './state.js';
 import { seedAthletes, seedTorneos } from './seed.js';
-import { render, renderSaveStatus } from './app.js';
 
 const API = "/api/data";
 const HEADERS = {"Content-Type":"application/json"};
+
+export function setRenderCallbacks(renderFn, saveStatusFn){
+  window.__render = renderFn;
+  window.__renderStatus = saveStatusFn;
+}
 
 export async function loadData(){
   try{
@@ -26,7 +30,7 @@ export async function loadData(){
     state.torneos = seedTorneos();
   }finally{
     state.loaded = true;
-    render();
+    if(window.__render) window.__render();
   }
 }
 
@@ -36,7 +40,7 @@ export async function saveAthletes(){
     const d = await res.json();
     state.saveError = !d.success;
   }catch(e){ state.saveError = true; }
-  renderSaveStatus();
+  if(window.__renderStatus) window.__renderStatus();
 }
 
 export async function saveTorneos(){
@@ -45,5 +49,5 @@ export async function saveTorneos(){
     const d = await res.json();
     state.saveError = !d.success;
   }catch(e){ state.saveError = true; }
-  renderSaveStatus();
+  if(window.__renderStatus) window.__renderStatus();
 }

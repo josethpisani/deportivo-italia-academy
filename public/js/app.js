@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { loadData } from './api.js';
+import { loadData, setRenderCallbacks } from './api.js';
 import { renderSidebar, renderSaveStatus } from './views/sidebar.js';
 import { renderHome } from './views/home.js';
 import { renderAthleteList, renderAthleteDetail } from './views/athletes.js';
@@ -8,11 +8,9 @@ import { renderAdmin } from './views/admin.js';
 import { drawHomeCharts, drawAthListChart, drawAthDetailChart, drawRegChart, drawAdminCharts } from './charts.js';
 import { attachEvents } from './events.js';
 
-export { renderSaveStatus };
-
-export function render(){
+function render(){
   if(!state.loaded){
-    document.getElementById("app").innerHTML = `<div class="loading-screen"><div style="font-size:28px;">🛡️</div><div style="font-size:13px;opacity:.8;">Cargando datos de la academia…</div></div>`;
+    document.getElementById("app").innerHTML = `<div class="loading-screen"><div style="font-size:28px;">&#x1f6e1;&#xfe0f;</div><div style="font-size:13px;opacity:.8;">Cargando datos de la academia&#8230;</div></div>`;
     return;
   }
   let mainContent = "";
@@ -32,4 +30,5 @@ export function render(){
   else if(state.view==="admin") drawAdminCharts();
 }
 
+setRenderCallbacks(render, renderSaveStatus);
 loadData();
