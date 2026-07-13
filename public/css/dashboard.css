@@ -1,6 +1,0 @@
-/* CATEGORY CARDS */
-.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-.cat-card{background:var(--pitch);border-radius:12px;padding:20px 18px;border:none;text-align:left;color:#fff;width:100%;}
-.cat-card .eyebrow{font-size:11px;color:var(--green);font-weight:700;letter-spacing:1px;margin-bottom:6px;}
-.cat-card .big{font-size:30px;font-weight:700;}
-.cat-card .sub{font-size:13px;opacity:.85;margin-top:4px;}
