@@ -1,5 +1,9 @@
 {
-  "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ]
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": [
+      { "source": "/((?!api/).*)", "destination": "/index.html" }
+    ]
+  }
 }
