@@ -1,0 +1,42 @@
+/* ADMIN */
+.admin-tabs{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;padding-bottom:2px;}
+.admin-tab{border:1px solid var(--chalk-dim);border-radius:8px;padding:8px 14px;font-weight:700;font-size:12.5px;background:#fff;color:var(--ink);white-space:nowrap;}
+.admin-tab.active{background:var(--pitch);color:#fff;border-color:var(--pitch);}
+.table-wrap{background:#fff;border-radius:10px;border:1px solid var(--chalk-dim);overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+table thead tr{background:var(--chalk-dim);text-align:left;}
+table th{padding:10px 12px;font-weight:700;font-size:11.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+table td{padding:10px 12px;border-top:1px solid var(--chalk-dim);white-space:nowrap;}
+.link-btn{border:none;background:none;color:var(--pitch);font-weight:700;font-size:12.5px;}
+
+/* MATRICULA CARDS */
+.mat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.mat-card{background:#fff;border:1px solid var(--chalk-dim);border-radius:10px;padding:14px;}
+.mat-card .row1{display:flex;justify-content:space-between;margin-bottom:6px;align-items:center;gap:8px;}
+.mat-card .row1 .name{font-weight:700;font-size:13.5px;}
+.mat-card .info{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.mat-card .btns{display:flex;gap:8px;}
+.mat-card .btns button{flex:1;border-radius:6px;padding:7px 0;font-weight:700;font-size:12px;background:#fff;}
+.mat-card .btns .bp{border:1px solid var(--pitch);color:var(--pitch);}
+.mat-card .btns .bp.on{background:var(--pitch);color:#fff;}
+.mat-card .btns .bd{border:1px solid var(--red);color:var(--red);}
+.mat-card .btns .bd.on{background:var(--red);color:#fff;}
+
+/* TORNEO CARDS */
+.torneo-card{background:#fff;border:1px solid var(--chalk-dim);border-radius:10px;padding:16px;margin-bottom:14px;}
+.torneo-card .head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.torneo-card .tname{font-weight:700;font-size:15px;}
+.torneo-card .tmeta{font-size:12.5px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-top:2px;}
+.tor-desc{font-size:12px;color:var(--muted);margin-top:4px;font-style:italic;}
+.tor-actions-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.tor-stats-mini{font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+.pay-chips-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;margin-top:4px;}
+.pay-chips{display:flex;gap:8px;flex-wrap:wrap;}
+.pay-chip{border:1px solid var(--chalk-dim);border-radius:100px;padding:5px 12px;font-size:12px;font-weight:600;background:#fff;color:var(--ink);display:flex;align-items:center;gap:5px;}
+.pay-chip.paid{border-color:var(--pitch);background:#DCEFE3;color:#1F6E45;}
+
+/* BTN ICON */
+.btn-icon{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--chalk-dim);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer;transition:all .15s;}
+.btn-icon:hover{border-color:var(--pitch);color:var(--pitch);}
+.btn-icon.green{color:var(--green);}
+.btn-icon.green:hover{border-color:var(--green);}
