@@ -2,7 +2,8 @@ import { state } from './state.js';
 import { CATEGORIES } from './constants.js';
 import { attendanceRate, dayNameFromDate } from './utils.js';
 
-const CHART_COLORS = { pitch:"#0E4C86", green:"#1FA855", red:"#C23B33", grayBg:"#E1E8EF", ink:"#162233", orange:"#E8922D", purple:"#7B4FD4" };
+const C = { pitch:"#0E4C86", green:"#1FA855", red:"#C23B33", grayBg:"#E1E8EF", ink:"#162233", orange:"#E8922D", purple:"#7B4FD4", teal:"#2BA5AD" };
+const CAT_COLORS = ["#0E4C86","#1FA855","#E8922D","#C23B33","#7B4FD4"];
 
 function destroyChart(id){
   window.__charts = window.__charts || {};
@@ -17,78 +18,105 @@ function makeChart(id, config){
   window.__charts[id] = new Chart(ctx, config);
 }
 
-const baseOpts = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ font:{ family:"Inter", size:11 } } } } };
+const doughnutOpts = (title) => ({
+  responsive:true, maintainAspectRatio:false,
+  cutout:"55%",
+  plugins:{
+    legend:{ position:"bottom", labels:{ font:{ family:"Inter", size:11 }, padding:12 } },
+    title:{ display:!!title, text:title||"", font:{ family:"Inter", size:13, weight:"600" } }
+  }
+});
 
 export function drawHomeCharts(){
-  const catCounts = CATEGORIES.map(c => state.athletes.filter(a=>a.categoria===c).length);
-  makeChart("chartHomeCat", { type:"bar", data:{ labels:CATEGORIES, datasets:[{ label:"Atletas", data:catCounts, backgroundColor:CHART_COLORS.pitch, borderRadius:6 }] },
-    options:{ ...baseOpts, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } } } });
+  makeChart("chartHomeCat", {
+    type:"doughnut",
+    data:{ labels:CATEGORIES, datasets:[{ data:CATEGORIES.map(c=>state.athletes.filter(a=>a.categoria===c).length), backgroundColor:CAT_COLORS }] },
+    options: doughnutOpts("Atletas por categoría")
+  });
 
   const pagado = state.athletes.filter(a=>a.matricula.estado==="pagado").length;
   const pendiente = state.athletes.length - pagado;
-  makeChart("chartHomeMatricula", { type:"doughnut", data:{ labels:["Pagado","Pendiente"], datasets:[{ data:[pagado,pendiente], backgroundColor:[CHART_COLORS.green, CHART_COLORS.red] }] },
-    options:{ ...baseOpts, cutout:"65%" } });
+  makeChart("chartHomeMatricula", {
+    type:"doughnut",
+    data:{ labels:["Pagado","Pendiente"], datasets:[{ data:[pagado,pendiente], backgroundColor:[C.green, C.red] }] },
+    options: doughnutOpts("Estado de matrícula")
+  });
 
   const catAttend = CATEGORIES.map(c=>{
     const list = state.athletes.filter(a=>a.categoria===c);
     if(!list.length) return 0;
-    const avg = list.reduce((s,a)=>s+attendanceRate(a.asistenciaEntrenamiento),0)/list.length;
-    return Math.round(avg);
+    return Math.round(list.reduce((s,a)=>s+attendanceRate(a.asistenciaEntrenamiento),0)/list.length);
   });
-  makeChart("chartHomeAsistencia", { type:"bar", data:{ labels:CATEGORIES, datasets:[{ label:"% Asistencia", data:catAttend, backgroundColor:CHART_COLORS.green, borderRadius:6 }] },
-    options:{ ...baseOpts, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:100 } } } });
+  makeChart("chartHomeAsistencia", {
+    type:"doughnut",
+    data:{ labels:CATEGORIES, datasets:[{ data:catAttend.map(v=>v||1), backgroundColor:CAT_COLORS }] },
+    options: doughnutOpts("Asistencia entrenamientos (%)")
+  });
 }
 
 export function drawAthListChart(){
   const catAttend = CATEGORIES.map(c=>{
     const list = state.athletes.filter(a=>a.categoria===c);
     if(!list.length) return 0;
-    const avg = list.reduce((s,a)=>s+attendanceRate(a.asistenciaEntrenamiento),0)/list.length;
-    return Math.round(avg);
+    return Math.round(list.reduce((s,a)=>s+attendanceRate(a.asistenciaEntrenamiento),0)/list.length);
   });
-  makeChart("chartAthListAttend", { type:"bar", data:{ labels:CATEGORIES, datasets:[{ label:"% Asistencia", data:catAttend, backgroundColor:CHART_COLORS.pitch, borderRadius:6 }] },
-    options:{ ...baseOpts, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:100 } } } });
+  makeChart("chartAthListAttend", {
+    type:"doughnut",
+    data:{ labels:CATEGORIES, datasets:[{ data:catAttend.map(v=>v||1), backgroundColor:CAT_COLORS }] },
+    options: doughnutOpts("Asistencia por categoría")
+  });
 }
 
 export function drawAthDetailChart(){
   const d = window.__athDetailData;
   if(!d) return;
-  makeChart("chartAthDetail", { type:"bar",
-    data:{ labels:["Entrenamientos","Juegos"], datasets:[
-      { label:"Presente", data:[d.trainPresent, d.gamePresent], backgroundColor:CHART_COLORS.green, borderRadius:6 },
-      { label:"Ausente", data:[d.trainAusente, d.gameAusente], backgroundColor:CHART_COLORS.red, borderRadius:6 },
-    ]},
-    options:{ ...baseOpts, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } } } });
+  makeChart("chartAthDetail", {
+    type:"doughnut",
+    data:{ labels:["Entren. presentes","Entren. ausentes","Juegos presentes","Juegos ausentes"],
+      datasets:[{ data:[d.trainPresent||0,d.trainAusente||0,d.gamePresent||0,d.gameAusente||0],
+        backgroundColor:[C.green, "#95d4a8", C.teal, "#8ecfd6"] }] },
+    options: doughnutOpts("Entrenamientos vs. juegos")
+  });
 }
 
 export function drawAdminCharts(){
-  const pagado = state.athletes.filter(a=>a.matricula.estado==="pagado").length;
-  const pendiente = state.athletes.length - pagado;
+  const matCatData = CATEGORIES.map(c=> state.athletes.filter(a=>a.categoria===c && a.matricula.estado==="pagado").length);
+  const matCatPend = CATEGORIES.map(c=> state.athletes.filter(a=>a.categoria===c && a.matricula.estado==="pendiente").length);
+  const pagado = matCatData.reduce((s,v)=>s+v,0);
+  const pendiente = matCatPend.reduce((s,v)=>s+v,0);
 
-  const matCatData = CATEGORIES.map(c=>{
-    const list = state.athletes.filter(a=>a.categoria===c);
-    return list.filter(a=>a.matricula.estado==="pagado").length;
+  makeChart("chartAdminMatricula", {
+    type:"doughnut",
+    data:{ labels:["Pagado","Pendiente"], datasets:[{ data:[pagado,pendiente], backgroundColor:[C.green, C.red] }] },
+    options: doughnutOpts("Matrículas: pagado vs pendiente")
   });
-  const matCatPend = CATEGORIES.map(c=>{
-    const list = state.athletes.filter(a=>a.categoria===c);
-    return list.filter(a=>a.matricula.estado==="pendiente").length;
-  });
 
-  makeChart("chartAdminMatricula", { type:"bar",
-    data:{ labels:CATEGORIES, datasets:[
-      { label:"Pagado", data:matCatData, backgroundColor:CHART_COLORS.green, borderRadius:6 },
-      { label:"Pendiente", data:matCatPend, backgroundColor:CHART_COLORS.red, borderRadius:6 },
-    ]},
-    options:{ ...baseOpts, scales:{ x:{stacked:true}, y:{ stacked:true, beginAtZero:true, ticks:{ stepSize:1 } } } } });
-
-  const torLabels = state.torneos.length ? state.torneos.map(t=>t.nombre) : ["Sin torneos"];
+  const torLabels = state.torneos.map(t=>t.nombre);
   const torData = state.torneos.map(t=>{
     const inscritos = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
     return inscritos * t.monto;
   });
-  const torColor = state.torneos.length ? CHART_COLORS.red : CHART_COLORS.grayBg;
-  makeChart("chartAdminTorneos", { type:"bar", data:{ labels:torLabels, datasets:[{ label:"Recaudado ($)", data:torData.length?torData:[0], backgroundColor:torColor, borderRadius:6 }] },
-    options:{ ...baseOpts, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } } });
+  if(torLabels.length){
+    makeChart("chartAdminTorneos", {
+      type:"doughnut",
+      data:{ labels:torLabels, datasets:[{ data:torData, backgroundColor:CAT_COLORS }] },
+      options: doughnutOpts("Recaudación por torneo ($)")
+    });
+  }
+
+  const catInscritos = CATEGORIES.map(c=>{
+    return state.torneos.reduce((sum,t)=>{
+      if(t.categoria!==c) return sum;
+      return sum + state.athletes.filter(a=>a.categoria===c && a.torneos.some(at=>at.torneoId===t.id)).length;
+    },0);
+  });
+  if(catInscritos.some(v=>v>0)){
+    makeChart("chartAdminCatTorneos", {
+      type:"doughnut",
+      data:{ labels:CATEGORIES, datasets:[{ data:catInscritos, backgroundColor:CAT_COLORS }] },
+      options: doughnutOpts("Inscritos a torneos por categoría")
+    });
+  }
 }
 
 export function drawRegChart(){
@@ -97,10 +125,11 @@ export function drawRegChart(){
   const field = state.regTipo==="training" ? "asistenciaEntrenamiento" : "asistenciaJuegos";
   const presData = CATEGORIES.map(c=> state.athletes.filter(a=>a.categoria===c && a[field][dateKey]==="presente").length);
   const ausData = CATEGORIES.map(c=> state.athletes.filter(a=>a.categoria===c && a[field][dateKey]==="ausente").length);
-  makeChart("chartRegDay", { type:"bar",
-    data:{ labels:CATEGORIES, datasets:[
-      { label:"Presente", data:presData, backgroundColor:CHART_COLORS.green, borderRadius:6 },
-      { label:"Ausente", data:ausData, backgroundColor:CHART_COLORS.red, borderRadius:6 },
-    ]},
-    options:{ ...baseOpts, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } } } });
+  const totalPres = presData.reduce((s,v)=>s+v,0);
+  const totalAus = ausData.reduce((s,v)=>s+v,0);
+  makeChart("chartRegDay", {
+    type:"doughnut",
+    data:{ labels:["Presentes","Ausentes"], datasets:[{ data:[totalPres||0,totalAus||0], backgroundColor:[C.green,C.red] }] },
+    options: doughnutOpts("Asistencia del día")
+  });
 }

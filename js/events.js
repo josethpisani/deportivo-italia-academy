@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones } from './mutations.js';
-import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal } from './modals.js';
+import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
 
 export function attachEvents(){
@@ -28,6 +28,8 @@ export function attachEvents(){
   if(editAthBtn) editAthBtn.onclick = ()=> openEditAthleteModal(state.selectedId);
   const addTorBtn = document.getElementById("btnAddTorneo");
   if(addTorBtn) addTorBtn.onclick = openAddTorneoModal;
+  const editConfigBtn = document.getElementById("btnEditConfig");
+  if(editConfigBtn) editConfigBtn.onclick = openConfigModal;
   document.querySelectorAll("[data-edit-torneo]").forEach(btn=>{
     btn.onclick = ()=> openEditTorneoModal(btn.dataset.editTorneo);
   });

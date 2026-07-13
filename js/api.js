@@ -24,6 +24,7 @@ export async function loadData(){
       state.torneos = seedTorneos();
       fetch(API,{method:"POST",headers:HEADERS,body:JSON.stringify({key:"torneos",value:state.torneos})}).catch(()=>{});
     }
+    if(d.config && Object.keys(d.config).length){ state.config = d.config; }
   }catch(e){
     console.warn("No se pudo conectar al servidor, usando datos locales.");
     state.athletes = await seedAthletes();
@@ -46,6 +47,15 @@ export async function saveAthletes(){
 export async function saveTorneos(){
   try{
     const res = await fetch(API,{method:"POST",headers:HEADERS,body:JSON.stringify({key:"torneos",value:state.torneos})});
+    const d = await res.json();
+    state.saveError = !d.success;
+  }catch(e){ state.saveError = true; }
+  if(window.__renderStatus) window.__renderStatus();
+}
+
+export async function saveConfig(){
+  try{
+    const res = await fetch(API,{method:"POST",headers:HEADERS,body:JSON.stringify({key:"config",value:state.config})});
     const d = await res.json();
     state.saveError = !d.success;
   }catch(e){ state.saveError = true; }

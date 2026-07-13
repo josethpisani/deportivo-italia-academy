@@ -13,13 +13,40 @@ export function renderAdmin(){
   const pendientes = state.athletes.filter(a=>a.matricula.estado==="pendiente").length;
 
   const tabs = [
+    {key:"config",label:"Configuración"},
     {key:"atletas",label:"Todos los atletas"},
     {key:"matriculas",label:"Pagos de matrícula"},
     {key:"torneos",label:"Torneos y pagos"},
   ].map(t=>`<button class="admin-tab ${state.adminTab===t.key?"active":""}" data-admintab="${t.key}">${t.label}</button>`).join("");
 
   let body = "";
-  if(state.adminTab==="atletas"){
+  if(state.adminTab==="config"){
+    const configRows = CATEGORIES.map(c=>{
+      const cfg = state.config[c] || {matricula:35, mensualidad:20};
+      const count = state.athletes.filter(a=>a.categoria===c).length;
+      return `<tr>
+        <td style="font-weight:700;font-size:15px;">${c}</td>
+        <td style="text-align:center;">${count}</td>
+        <td style="text-align:center;font-weight:700;">$${cfg.matricula}</td>
+        <td style="text-align:center;font-weight:700;">$${cfg.mensualidad}</td>
+      </tr>`;
+    }).join("");
+    body = `
+      <div class="config-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 class="dia-title" style="margin:0;">Costos por categoría</h3>
+          <button class="btn-primary" id="btnEditConfig">${ic.pencil} Editar costos</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Categoría</th><th style="text-align:center;">Atletas</th><th style="text-align:center;">Matrícula ($)</th><th style="text-align:center;">Mensualidad ($)</th>
+          </tr></thead><tbody>${configRows}</tbody></table>
+        </div>
+        <div class="config-info">
+          <p>${ic.alert} Los costos se aplican al crear nuevos atletas y al generar cobros de mensualidad.</p>
+        </div>
+      </div>`;
+  } else if(state.adminTab==="atletas"){
     const rows = state.athletes.map(a=>`<tr>
       <td style="font-weight:600;">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</td>
       <td>${a.categoria}</td><td>${a.edad}</td><td>${escapeHtml(a.representante)}</td><td>${escapeHtml(a.telefono)}</td>
@@ -42,7 +69,6 @@ export function renderAdmin(){
     const torneosHtml = state.torneos.map(t=>{
       const elegibles = state.athletes.filter(a=>a.categoria===t.categoria);
       const inscritos = elegibles.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
-      const pagantes = inscritos.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
 
       const chips = elegibles.map(a=>{
         const inscrito = a.torneos.some(at=>at.torneoId===t.id);
@@ -67,7 +93,7 @@ export function renderAdmin(){
             ${t.descripcion ? `<div class="tor-desc">${escapeHtml(t.descripcion)}</div>` : ""}
           </div>
           <div class="tor-actions-top">
-            ${badge(pagantes.length+"/"+inscritos.length+" inscritos","warn")}
+            ${badge(inscritos.length+"/"+elegibles.length+" inscritos","warn")}
             <button class="btn-icon" data-edit-torneo="${t.id}" title="Editar torneo">${ic.pencil}</button>
             <button class="btn-icon green" data-stats-torneo="${t.id}" title="Cargar estadísticas">${ic.activity}</button>
           </div>
@@ -85,11 +111,6 @@ export function renderAdmin(){
     </div>${torneosHtml}`;
   }
 
-  const matCat = CATEGORIES.map(c => {
-    const list = state.athletes.filter(a=>a.categoria===c);
-    return { cat:c, pagado:list.filter(a=>a.matricula.estado==="pagado").length, pendiente:list.filter(a=>a.matricula.estado==="pendiente").length };
-  });
-
   return `
     <h1 class="page-title dia-title">Panel Administrativo</h1>
     <p class="page-sub">Control de atletas, matrículas y torneos</p>
@@ -100,10 +121,11 @@ export function renderAdmin(){
       ${statPill(ic.alert,"Matrículas pendientes", pendientes,"var(--red)")}
     </div>
     <div class="admin-tabs">${tabs}</div>
-    <div class="charts-row">
-      <div class="chart-card"><h4>Matrículas por categoría</h4><div class="chart-wrap short"><canvas id="chartAdminMatricula"></canvas></div></div>
+    ${state.adminTab!=="config" ? `<div class="charts-row">
+      <div class="chart-card"><h4>Matrículas: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMatricula"></canvas></div></div>
       <div class="chart-card"><h4>Recaudación por torneo ($)</h4><div class="chart-wrap short"><canvas id="chartAdminTorneos"></canvas></div></div>
-    </div>
+      <div class="chart-card"><h4>Inscritos a torneos por categoría</h4><div class="chart-wrap short"><canvas id="chartAdminCatTorneos"></canvas></div></div>
+    </div>` : ""}
     ${body}
   `;
 }

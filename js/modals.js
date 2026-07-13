@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { CATEGORIES, POSITIONS } from './constants.js';
 import { ic } from './icons.js';
-import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadistica } from './mutations.js';
+import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadistica, saveConfigData } from './mutations.js';
 import { escapeHtml } from './utils.js';
 
 export function closeModal(){
@@ -101,6 +101,42 @@ export function openEditAthleteModal(athleteId){
     });
     closeModal();
     if(window.__render) window.__render();
+  };
+}
+
+export function openConfigModal(){
+  closeModal();
+  const rows = CATEGORIES.map(c=>{
+    const cfg = state.config[c] || {matricula:35, mensualidad:20};
+    return `<div class="config-row">
+      <div class="config-cat">${c}</div>
+      <div class="config-fields">
+        <div><label>Matrícula ($)</label><input type="number" min="0" class="cfg-input" data-cfg="${c}|matricula" value="${cfg.matricula}"></div>
+        <div><label>Mensualidad ($)</label><input type="number" min="0" class="cfg-input" data-cfg="${c}|mensualidad" value="${cfg.mensualidad}"></div>
+      </div>
+    </div>`;
+  }).join("");
+  const html = `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <div class="mh"><h3 class="dia-title">Editar costos</h3><button id="modalClose">${ic.x}</button></div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Configura el costo de matrícula y mensualidad para cada categoría.</p>
+        ${rows}
+        <button class="save-btn" id="cfg_save">Guardar costos</button>
+      </div>
+    </div>`;
+  document.getElementById("app").insertAdjacentHTML("beforeend", html);
+  document.getElementById("modalClose").onclick = closeModal;
+  document.getElementById("modalOverlay").addEventListener("click", e=>{ if(e.target.id==="modalOverlay") closeModal(); });
+  document.getElementById("cfg_save").onclick = ()=>{
+    const newConfig = {};
+    CATEGORIES.forEach(c=>{
+      const mat = document.querySelector(`[data-cfg="${c}|matricula"]`);
+      const men = document.querySelector(`[data-cfg="${c}|mensualidad"]`);
+      newConfig[c] = { matricula: Number(mat?mat.value:35), mensualidad: Number(men?men.value:20) };
+    });
+    saveConfigData(newConfig);
+    closeModal();
   };
 }
 

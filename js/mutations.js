@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { uid, todayISO } from './utils.js';
 import { makeAthlete } from './seed.js';
-import { saveAthletes, saveTorneos } from './api.js';
+import { saveAthletes, saveTorneos, saveConfig } from './api.js';
 import { closeModal } from './modals.js';
 
 export function updateAthlete(id, patch){
@@ -20,13 +20,14 @@ export function toggleAttendance(athleteId, type, dateKey, status){
 }
 
 export function addAthlete(data){
+  const costoMatricula = (state.config[data.categoria] && state.config[data.categoria].matricula) || 35;
   const newA = makeAthlete(data.categoria, state.athletes.length+1);
   Object.assign(newA, {
     nombre:data.nombre, apellido:data.apellido, edad:Number(data.edad),
     categoria:data.categoria, posicion:data.posicion, representante:data.representante,
     telefono:data.telefono, fechaNacimiento:data.fechaNacimiento,
     direccion:data.direccion||"",
-    matricula:{ estado:"pendiente", monto:35, fecha:todayISO() },
+    matricula:{ estado:"pendiente", monto:costoMatricula, fecha:todayISO() },
   });
   state.athletes.push(newA);
   saveAthletes();
@@ -96,4 +97,9 @@ export function saveEstadistica(athleteId, torneoId, stats){
   a.estadisticas[torneoId] = { ...stats };
   saveAthletes();
   if(window.__render) window.__render();
+}
+
+export function saveConfigData(newConfig){
+  Object.assign(state.config, newConfig);
+  saveConfig();
 }
