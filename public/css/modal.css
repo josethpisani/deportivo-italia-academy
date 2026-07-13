@@ -11,3 +11,11 @@
 .modal .save-btn{width:100%;background:var(--pitch);color:#fff;border:none;border-radius:8px;padding:13px 0;font-weight:700;font-size:14px;margin-top:6px;}
 .modal .save-btn.red{background:var(--red);}
 .modal .save-btn:disabled{opacity:.5;cursor:not-allowed;}
+.modal textarea{width:100%;padding:10px;border-radius:7px;border:1px solid var(--chalk-dim);font-size:14px;font-family:inherit;resize:vertical;margin-bottom:12px;}
+.modal textarea:focus{outline:none;border-color:var(--pitch);}
+.modal .table-wrap{overflow-x:auto;margin-bottom:12px;}
+.modal table{font-size:12px;}
+.modal table th{padding:6px 8px;font-size:10px;}
+.modal table td{padding:6px 8px;}
+.modal .st-input{width:60px;padding:6px;border:1px solid var(--chalk-dim);border-radius:6px;font-size:13px;text-align:center;}
+.modal .st-input:focus{outline:none;border-color:var(--pitch);}

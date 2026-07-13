@@ -35,9 +35,28 @@ export function addAthlete(data){
 }
 
 export function addTorneo(data){
-  state.torneos.push({ id: uid("tor"), nombre:data.nombre, fecha:data.fecha, categoria:data.categoria, monto:Number(data.monto) });
+  state.torneos.push({ id: uid("tor"), nombre:data.nombre, fecha:data.fecha, categoria:data.categoria, monto:Number(data.monto), descripcion:data.descripcion||"" });
   saveTorneos();
   closeModal();
+  if(window.__render) window.__render();
+}
+
+export function updateTorneo(id, patch){
+  const t = state.torneos.find(x=>x.id===id);
+  Object.assign(t, patch);
+  saveTorneos();
+  closeModal();
+  if(window.__render) window.__render();
+}
+
+export function deleteTorneo(id){
+  state.torneos = state.torneos.filter(t=>t.id!==id);
+  state.athletes.forEach(a=>{
+    a.torneos = a.torneos.filter(t=>t.torneoId!==id);
+    if(a.estadisticas) delete a.estadisticas[id];
+  });
+  saveTorneos();
+  saveAthletes();
   if(window.__render) window.__render();
 }
 
@@ -52,6 +71,29 @@ export function setTorneoPago(athleteId, torneoId, pagado){
   const a = state.athletes.find(x=>x.id===athleteId);
   a.torneos = a.torneos.filter(t=>t.torneoId!==torneoId);
   if(pagado) a.torneos.push({ torneoId, fecha: todayISO() });
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
+export function toggleTorneoAtleta(athleteId, torneoId){
+  const a = state.athletes.find(x=>x.id===athleteId);
+  const exists = a.torneos.some(t=>t.torneoId===torneoId);
+  if(exists) a.torneos = a.torneos.filter(t=>t.torneoId!==torneoId);
+  else a.torneos.push({ torneoId, fecha: todayISO() });
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
+export function saveObservaciones(athleteId, text){
+  const a = state.athletes.find(x=>x.id===athleteId);
+  a.observaciones = text;
+  saveAthletes();
+}
+
+export function saveEstadistica(athleteId, torneoId, stats){
+  const a = state.athletes.find(x=>x.id===athleteId);
+  if(!a.estadisticas) a.estadisticas = {};
+  a.estadisticas[torneoId] = { ...stats };
   saveAthletes();
   if(window.__render) window.__render();
 }

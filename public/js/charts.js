@@ -2,7 +2,7 @@ import { state } from './state.js';
 import { CATEGORIES } from './constants.js';
 import { attendanceRate, dayNameFromDate } from './utils.js';
 
-const CHART_COLORS = { pitch:"#0E4C86", green:"#1FA855", red:"#C23B33", grayBg:"#E1E8EF", ink:"#162233" };
+const CHART_COLORS = { pitch:"#0E4C86", green:"#1FA855", red:"#C23B33", grayBg:"#E1E8EF", ink:"#162233", orange:"#E8922D", purple:"#7B4FD4" };
 
 function destroyChart(id){
   window.__charts = window.__charts || {};
@@ -64,15 +64,30 @@ export function drawAthDetailChart(){
 export function drawAdminCharts(){
   const pagado = state.athletes.filter(a=>a.matricula.estado==="pagado").length;
   const pendiente = state.athletes.length - pagado;
-  makeChart("chartAdminMatricula", { type:"doughnut", data:{ labels:["Pagado","Pendiente"], datasets:[{ data:[pagado,pendiente], backgroundColor:[CHART_COLORS.green, CHART_COLORS.red] }] },
-    options:{ ...baseOpts, cutout:"65%" } });
 
-  const torLabels = state.torneos.map(t=>t.nombre);
-  const torData = state.torneos.map(t=>{
-    const pagantes = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
-    return pagantes * t.monto;
+  const matCatData = CATEGORIES.map(c=>{
+    const list = state.athletes.filter(a=>a.categoria===c);
+    return list.filter(a=>a.matricula.estado==="pagado").length;
   });
-  makeChart("chartAdminTorneos", { type:"bar", data:{ labels:torLabels, datasets:[{ label:"Recaudado ($)", data:torData, backgroundColor:CHART_COLORS.red, borderRadius:6 }] },
+  const matCatPend = CATEGORIES.map(c=>{
+    const list = state.athletes.filter(a=>a.categoria===c);
+    return list.filter(a=>a.matricula.estado==="pendiente").length;
+  });
+
+  makeChart("chartAdminMatricula", { type:"bar",
+    data:{ labels:CATEGORIES, datasets:[
+      { label:"Pagado", data:matCatData, backgroundColor:CHART_COLORS.green, borderRadius:6 },
+      { label:"Pendiente", data:matCatPend, backgroundColor:CHART_COLORS.red, borderRadius:6 },
+    ]},
+    options:{ ...baseOpts, scales:{ x:{stacked:true}, y:{ stacked:true, beginAtZero:true, ticks:{ stepSize:1 } } } } });
+
+  const torLabels = state.torneos.length ? state.torneos.map(t=>t.nombre) : ["Sin torneos"];
+  const torData = state.torneos.map(t=>{
+    const inscritos = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
+    return inscritos * t.monto;
+  });
+  const torColor = state.torneos.length ? CHART_COLORS.red : CHART_COLORS.grayBg;
+  makeChart("chartAdminTorneos", { type:"bar", data:{ labels:torLabels, datasets:[{ label:"Recaudado ($)", data:torData.length?torData:[0], backgroundColor:torColor, borderRadius:6 }] },
     options:{ ...baseOpts, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } } });
 }
 

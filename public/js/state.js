@@ -14,4 +14,6 @@ export const state = {
   regDate: new Date().toISOString().slice(0,10),
   regCategory: "Todos",
   athViewMode: "grid",
+  editingTorneo: null,
+  statsTorneo: null,
 };

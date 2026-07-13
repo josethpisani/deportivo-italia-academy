@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { CATEGORIES, POSITIONS } from './constants.js';
 import { ic } from './icons.js';
-import { addAthlete, addTorneo, updateAthlete } from './mutations.js';
+import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadistica } from './mutations.js';
 import { escapeHtml } from './utils.js';
 
 export function closeModal(){
@@ -116,7 +116,8 @@ export function openAddTorneoModal(){
           <div><label>Categoría</label><select id="t_categoria">${CATEGORIES.map(c=>`<option>${c}</option>`).join("")}</select></div>
           <div><label>Monto ($)</label><input id="t_monto" type="number" value="20"></div>
         </div>
-        <button class="save-btn red" id="t_save" disabled>Crear torneo</button>
+        <label>Descripción</label><textarea id="t_desc" rows="2" placeholder="Detalles del torneo..."></textarea>
+        <button class="save-btn" id="t_save" disabled>Crear torneo</button>
       </div>
     </div>`;
   document.getElementById("app").insertAdjacentHTML("beforeend", html);
@@ -133,6 +134,101 @@ export function openAddTorneoModal(){
       fecha: document.getElementById("t_fecha").value,
       categoria: document.getElementById("t_categoria").value,
       monto: document.getElementById("t_monto").value,
+      descripcion: document.getElementById("t_desc").value.trim(),
     });
   };
+}
+
+export function openEditTorneoModal(torneoId){
+  closeModal();
+  const t = state.torneos.find(x=>x.id===torneoId);
+  if(!t) return;
+  const html = `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <div class="mh"><h3 class="dia-title">Editar torneo</h3><button id="modalClose">${ic.x}</button></div>
+        <label>Nombre del torneo</label><input id="et_nombre" value="${escapeHtml(t.nombre)}">
+        <label>Fecha</label><input id="et_fecha" type="date" value="${t.fecha}">
+        <div class="row2">
+          <div><label>Categoría</label><select id="et_categoria">${CATEGORIES.map(c=>`<option ${c===t.categoria?"selected":""}>${c}</option>`).join("")}</select></div>
+          <div><label>Monto ($)</label><input id="et_monto" type="number" value="${t.monto}"></div>
+        </div>
+        <label>Descripción</label><textarea id="et_desc" rows="2">${escapeHtml(t.descripcion||"")}</textarea>
+        <button class="save-btn" id="et_save" disabled>Guardar cambios</button>
+        <button class="save-btn red" id="et_delete" style="margin-top:8px;">Eliminar torneo</button>
+      </div>
+    </div>`;
+  document.getElementById("app").insertAdjacentHTML("beforeend", html);
+  document.getElementById("modalClose").onclick = closeModal;
+  document.getElementById("modalOverlay").addEventListener("click", e=>{ if(e.target.id==="modalOverlay") closeModal(); });
+  const checkValid = ()=>{
+    const ok = document.getElementById("et_nombre").value.trim() && document.getElementById("et_fecha").value;
+    document.getElementById("et_save").disabled = !ok;
+  };
+  ["et_nombre","et_fecha"].forEach(id=> document.getElementById(id).addEventListener("input", checkValid));
+  checkValid();
+  document.getElementById("et_save").onclick = ()=>{
+    updateTorneo(torneoId, {
+      nombre: document.getElementById("et_nombre").value.trim(),
+      fecha: document.getElementById("et_fecha").value,
+      categoria: document.getElementById("et_categoria").value,
+      monto: Number(document.getElementById("et_monto").value),
+      descripcion: document.getElementById("et_desc").value.trim(),
+    });
+  };
+  document.getElementById("et_delete").onclick = ()=>{
+    if(confirm("¿Eliminar este torneo? Se desasociará de todos los atletas.")){
+      deleteTorneo(torneoId);
+      closeModal();
+    }
+  };
+}
+
+export function openTorneoStatsModal(torneoId){
+  closeModal();
+  const t = state.torneos.find(x=>x.id===torneoId);
+  if(!t) return;
+  const elegibles = state.athletes.filter(a=>a.categoria===t.categoria && a.torneos.some(x=>x.torneoId===torneoId));
+
+  const rows = elegibles.map(a=>{
+    const stats = (a.estadisticas && a.estadisticas[torneoId]) || {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0};
+    return `<tr>
+      <td style="font-weight:600;">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</td>
+      <td><input type="number" min="0" class="st-input" data-st="${a.id}|goles" value="${stats.goles}"></td>
+      <td><input type="number" min="0" class="st-input" data-st="${a.id}|asistencias" value="${stats.asistencias}"></td>
+      <td><input type="number" min="0" class="st-input" data-st="${a.id}|tarjetasAmarillas" value="${stats.tarjetasAmarillas}"></td>
+      <td><input type="number" min="0" class="st-input" data-st="${a.id}|tarjetasRojas" value="${stats.tarjetasRojas}"></td>
+      <td><input type="number" min="0" class="st-input" data-st="${a.id}|partidosJugados" value="${stats.partidosJugados}"></td>
+    </tr>`;
+  }).join("");
+
+  const html = `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal" style="max-width:600px;">
+        <div class="mh"><h3 class="dia-title">Estadísticas — ${escapeHtml(t.nombre)}</h3><button id="modalClose">${ic.x}</button></div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Categoría ${t.categoria} · ${elegibles.length} atletas inscritos</p>
+        ${elegibles.length === 0 ? '<p class="empty-msg">No hay atletas inscritos en este torneo.</p>' : `
+        <div style="overflow-x:auto;">
+        <table><thead><tr><th>Atleta</th><th>Goles</th><th>Asist.</th><th>TA</th><th>TR</th><th>Partidos</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>
+        <button class="save-btn" id="st_save">Guardar estadísticas</button>`}
+      </div>
+    </div>`;
+  document.getElementById("app").insertAdjacentHTML("beforeend", html);
+  document.getElementById("modalClose").onclick = closeModal;
+  document.getElementById("modalOverlay").addEventListener("click", e=>{ if(e.target.id==="modalOverlay") closeModal(); });
+  const saveBtn = document.getElementById("st_save");
+  if(saveBtn){
+    saveBtn.onclick = ()=>{
+      elegibles.forEach(a=>{
+        const stats = { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0 };
+        Object.keys(stats).forEach(key=>{
+          const inp = document.querySelector(`[data-st="${a.id}|${key}"]`);
+          if(inp) stats[key] = Number(inp.value)||0;
+        });
+        saveEstadistica(a.id, torneoId, stats);
+      });
+      closeModal();
+    };
+  }
 }

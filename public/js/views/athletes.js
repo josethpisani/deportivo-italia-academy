@@ -126,6 +126,33 @@ export function renderAthleteDetail(){
     return `<div class="tor-row"><div><div class="tname">${escapeHtml(t.nombre)}</div><div class="tmeta">${t.fecha} · $${t.monto}</div></div>${badge(pagado?"Pagado":"Pendiente", pagado?"good":"bad")}</div>`;
   }).join("") : `<p class="empty-msg">Sin torneos para esta categoría.</p>`;
 
+  const torneosInscritos = state.torneos.filter(t=> a.torneos.some(at=>at.torneoId===t.id));
+  let statsHtml = "";
+  if(torneosInscritos.length){
+    const statsRows = torneosInscritos.map(t=>{
+      const st = (a.estadisticas && a.estadisticas[t.id]) || {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0};
+      return `<tr>
+        <td style="font-weight:600;">${escapeHtml(t.nombre)}</td>
+        <td style="text-align:center;">${t.fecha}</td>
+        <td style="text-align:center;">${st.partidosJugados}</td>
+        <td style="text-align:center;font-weight:700;">${st.goles}</td>
+        <td style="text-align:center;">${st.asistencias}</td>
+        <td style="text-align:center;color:var(--pitch);">${st.tarjetasAmarillas}</td>
+        <td style="text-align:center;color:var(--red);">${st.tarjetasRojas}</td>
+      </tr>`;
+    }).join("");
+    statsHtml = `
+      <div class="section"><h3 class="dia-title">Estadísticas por torneo</h3>
+        <div class="table-wrap"><table><thead><tr>
+          <th>Torneo</th><th>Fecha</th><th style="text-align:center;">Partidos</th><th style="text-align:center;">Goles</th><th style="text-align:center;">Asist.</th><th style="text-align:center;">TA</th><th style="text-align:center;">TR</th>
+        </tr></thead><tbody>${statsRows}</tbody></table></div>
+      </div>`;
+  } else {
+    statsHtml = `<div class="section"><h3 class="dia-title">Estadísticas por torneo</h3><p class="empty-msg">Este atleta no está inscrito en ningún torneo.</p></div>`;
+  }
+
+  const observaciones = a.observaciones || "";
+
   return `
     <button class="back-btn" id="btnBack">${ic.back} Volver a atletas</button>
     <div class="profile-head">
@@ -161,6 +188,8 @@ export function renderAthleteDetail(){
       </div>
     </div>
 
+    ${statsHtml}
+
     <div class="section"><h3 class="dia-title">Asistencia a entrenamientos (Lun · Mié · Vie)</h3>
       ${attendGrid(trainingSessions, a.asistenciaEntrenamiento, a.id, "training")}
     </div>
@@ -170,5 +199,14 @@ export function renderAthleteDetail(){
     </div>
 
     <div class="section"><h3 class="dia-title">Torneos</h3>${torneosHtml}</div>
+
+    <div class="section"><h3 class="dia-title">Observaciones / Notas</h3>
+      <div class="notes-box">
+        <textarea id="observacionesText" rows="5" placeholder="Escribe observaciones o notas sobre este atleta...">${escapeHtml(observaciones)}</textarea>
+        <div class="notes-actions">
+          <button class="save-btn" id="btnSaveObs">Guardar notas</button>
+        </div>
+      </div>
+    </div>
   `;
 }

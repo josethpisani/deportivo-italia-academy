@@ -1,6 +1,6 @@
-import { state } from './state.js';
-import { toggleAttendance, setMatricula, setTorneoPago } from './mutations.js';
-import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal } from './modals.js';
+import { state } from '../state.js';
+import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones } from './mutations.js';
+import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
 
 export function attachEvents(){
@@ -28,6 +28,12 @@ export function attachEvents(){
   if(editAthBtn) editAthBtn.onclick = ()=> openEditAthleteModal(state.selectedId);
   const addTorBtn = document.getElementById("btnAddTorneo");
   if(addTorBtn) addTorBtn.onclick = openAddTorneoModal;
+  document.querySelectorAll("[data-edit-torneo]").forEach(btn=>{
+    btn.onclick = ()=> openEditTorneoModal(btn.dataset.editTorneo);
+  });
+  document.querySelectorAll("[data-stats-torneo]").forEach(btn=>{
+    btn.onclick = ()=> openTorneoStatsModal(btn.dataset.statsTorneo);
+  });
   document.querySelectorAll("[data-attend]").forEach(btn=>{
     btn.onclick = ()=>{
       const [athleteId, type, dateKey, status] = btn.dataset.attend.split("|");
@@ -53,6 +59,14 @@ export function attachEvents(){
   if(btnViewGrid) btnViewGrid.onclick = ()=>{ state.athViewMode="grid"; if(window.__render) window.__render(); };
   const btnViewList = document.getElementById("btnViewList");
   if(btnViewList) btnViewList.onclick = ()=>{ state.athViewMode="list"; if(window.__render) window.__render(); };
+
+  const btnSaveObs = document.getElementById("btnSaveObs");
+  if(btnSaveObs) btnSaveObs.onclick = ()=>{
+    const text = document.getElementById("observacionesText").value;
+    saveObservaciones(state.selectedId, text);
+    btnSaveObs.textContent = "Guardado!";
+    setTimeout(()=>{ btnSaveObs.textContent = "Guardar notas"; }, 1500);
+  };
 
   const regTipoSelect = document.getElementById("regTipoSelect");
   if(regTipoSelect) regTipoSelect.onchange = (e)=>{ state.regTipo = e.target.value; if(window.__render) window.__render(); };

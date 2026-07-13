@@ -19,6 +19,8 @@ export function makeAthlete(category, idx){
     torneos: [],
     asistenciaEntrenamiento: {},
     asistenciaJuegos: {},
+    observaciones: "",
+    estadisticas: {},
   };
 }
 
