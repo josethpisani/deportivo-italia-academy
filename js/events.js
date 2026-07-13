@@ -1,4 +1,4 @@
-import { state } from '../state.js';
+import { state } from './state.js';
 import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones } from './mutations.js';
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
