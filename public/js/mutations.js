@@ -25,6 +25,7 @@ export function addAthlete(data){
     nombre:data.nombre, apellido:data.apellido, edad:Number(data.edad),
     categoria:data.categoria, posicion:data.posicion, representante:data.representante,
     telefono:data.telefono, fechaNacimiento:data.fechaNacimiento,
+    direccion:data.direccion||"",
     matricula:{ estado:"pendiente", monto:35, fecha:todayISO() },
   });
   state.athletes.push(newA);
