@@ -1,7 +1,7 @@
 import { state } from '../state.js';
 import { ic } from '../icons.js';
 
-const LOGO_SRC = "/img/logo.svg";
+const LOGO_SRC = "/img/logo.jpg";
 
 export function renderSidebar(){
   const items = [
