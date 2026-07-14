@@ -66,7 +66,7 @@ export function renderAdmin(){
       </div></div>`).join("");
     body = `<div class="mat-grid">${cards}</div>`;
   } else {
-    const torneosHtml = state.torneos.map(t=>{
+    let torneosHtml = state.torneos.map(t=>{
       const elegibles = state.athletes.filter(a=>a.categoria===t.categoria);
       const inscritos = elegibles.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
 
