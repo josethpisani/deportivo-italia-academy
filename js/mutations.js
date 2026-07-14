@@ -15,6 +15,10 @@ export function toggleAttendance(athleteId, type, dateKey, status){
   const field = type==="training" ? "asistenciaEntrenamiento" : "asistenciaJuegos";
   if(a[field][dateKey]===status) delete a[field][dateKey];
   else a[field][dateKey] = status;
+  if(!a.statsGenerales) a.statsGenerales = { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0, entrenamientosAsistidos:0, entrenamientosTotales:0 };
+  const trainEntries = Object.entries(a.asistenciaEntrenamiento);
+  a.statsGenerales.entrenamientosTotales = trainEntries.length;
+  a.statsGenerales.entrenamientosAsistidos = trainEntries.filter(([,v])=>v==="presente").length;
   saveAthletes();
   if(window.__render) window.__render();
 }
