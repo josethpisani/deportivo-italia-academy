@@ -99,4 +99,23 @@ export function attachEvents(){
   document.querySelectorAll("[data-edit-costs]").forEach(btn=>{
     btn.onclick = ()=> openEditAthleteCostsModal(btn.dataset.editCosts);
   });
+  const btnAdminLogin = document.getElementById("btnAdminLogin");
+  if(btnAdminLogin) btnAdminLogin.onclick = ()=>{
+    const pass = document.getElementById("adminPassword").value;
+    if(pass === "admin12345"){
+      state.adminAuth = true;
+      if(window.__render) window.__render();
+    } else {
+      document.getElementById("adminPassError").style.display = "block";
+      document.getElementById("adminPassword").value = "";
+      document.getElementById("adminPassword").focus();
+    }
+  };
+  const adminPassInput = document.getElementById("adminPassword");
+  if(adminPassInput) adminPassInput.onkeydown = (e)=>{
+    if(e.key==="Enter") document.getElementById("btnAdminLogin").click();
+  };
+  if(adminPassInput) adminPassInput.oninput = ()=>{
+    document.getElementById("adminPassError").style.display = "none";
+  };
 }

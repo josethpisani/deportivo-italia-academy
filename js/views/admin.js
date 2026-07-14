@@ -5,6 +5,21 @@ import { escapeHtml } from '../utils.js';
 import { statPill, badge } from '../render-helpers.js';
 
 export function renderAdmin(){
+  if(!state.adminAuth){
+    return `
+      <h1 class="page-title dia-title">Panel Administrativo</h1>
+      <p class="page-sub">Acceso restringido</p>
+      <div class="admin-login">
+        <div class="admin-login-card">
+          <div style="text-align:center;margin-bottom:16px;">${ic.shield}</div>
+          <h3 class="dia-title" style="text-align:center;margin:0 0 6px;">Contraseña requerida</h3>
+          <p style="text-align:center;font-size:12px;color:var(--muted);margin:0 0 16px;">Ingresa la contraseña para acceder al panel.</p>
+          <input type="password" id="adminPassword" placeholder="Contraseña..." style="width:100%;padding:10px 12px;border:1px solid var(--chalk-dim);border-radius:8px;font-size:14px;margin-bottom:12px;">
+          <p id="adminPassError" style="color:var(--red);font-size:12px;margin:0 0 10px;display:none;">Contraseña incorrecta</p>
+          <button class="btn-primary" id="btnAdminLogin" style="width:100%;justify-content:center;">Entrar</button>
+        </div>
+      </div>`;
+  }
   const totalMensualidadesMes = state.athletes.filter(a=>{
     const m = a.mensualidades && a.mensualidades[state.mensualMonth];
     return m && m.estado==="pagado";
