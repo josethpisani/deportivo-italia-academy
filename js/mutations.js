@@ -159,3 +159,18 @@ export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto){
   saveAthletes();
   if(window.__render) window.__render();
 }
+
+export function saveStatsGenerales(athleteId, stats){
+  const a = state.athletes.find(x=>x.id===athleteId);
+  if(!a) return;
+  if(!a.statsGenerales) a.statsGenerales = {};
+  Object.assign(a.statsGenerales, stats);
+  saveAthletes();
+}
+
+export function saveObservacionesStats(athleteId, text){
+  const a = state.athletes.find(x=>x.id===athleteId);
+  if(!a) return;
+  a.observaciones = text;
+  saveAthletes();
+}

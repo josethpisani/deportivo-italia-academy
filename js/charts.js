@@ -145,3 +145,32 @@ export function drawRegChart(){
     options: doughnutOpts("Asistencia del día")
   });
 }
+
+export function drawStatsCharts(){
+  const d = window.__statsDetailData;
+  if(!d) return;
+
+  makeChart("chartStatsGoalsAst", {
+    type:"doughnut",
+    data:{ labels:["Goles","Asistencias"], datasets:[{ data:[d.goles||1,d.asistencias||1], backgroundColor:[C.pitch, C.green] }] },
+    options: doughnutOpts("Goles vs Asistencias")
+  });
+
+  makeChart("chartStatsCards", {
+    type:"doughnut",
+    data:{ labels:["Amarillas","Rojas"], datasets:[{ data:[d.ta||1,d.tr||1], backgroundColor:[C.orange, C.red] }] },
+    options: doughnutOpts("Tarjetas")
+  });
+
+  makeChart("chartStatsTrain", {
+    type:"doughnut",
+    data:{ labels:["Presente","Ausente"], datasets:[{ data:[d.trainPresent||1,d.trainAusente||1], backgroundColor:[C.green, "#95d4a8"] }] },
+    options: doughnutOpts("Entrenamientos")
+  });
+
+  makeChart("chartStatsGames", {
+    type:"doughnut",
+    data:{ labels:["Presente","Ausente"], datasets:[{ data:[d.gamePresent||1,d.gameAusente||1], backgroundColor:[C.teal, "#8ecfd6"] }] },
+    options: doughnutOpts("Juegos")
+  });
+}

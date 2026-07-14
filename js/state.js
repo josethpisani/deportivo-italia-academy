@@ -25,4 +25,6 @@ export const state = {
   statsTorneo: null,
   mensualMonth: new Date().toISOString().slice(0,7),
   adminAuth: false,
+  statsAthleteId: null,
+  statsCategory: "Todos",
 };

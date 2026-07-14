@@ -1,11 +1,12 @@
 import { state } from './state.js';
-import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades } from './mutations.js';
+import { ic } from './icons.js';
+import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats } from './mutations.js';
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
 
 export function attachEvents(){
   document.querySelectorAll("[data-nav]").forEach(btn=>{
-    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; if(window.__render) window.__render(); };
+    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(window.__render) window.__render(); };
   });
   document.querySelectorAll("[data-goto-cat]").forEach(btn=>{
     btn.onclick = ()=>{ state.activeCategory = btn.dataset.gotoCat; state.view="atleta-list"; if(window.__render) window.__render(); };
@@ -117,5 +118,30 @@ export function attachEvents(){
   };
   if(adminPassInput) adminPassInput.oninput = ()=>{
     document.getElementById("adminPassError").style.display = "none";
+  };
+  document.querySelectorAll("[data-statscat]").forEach(btn=>{
+    btn.onclick = ()=>{ state.statsCategory = btn.dataset.statscat; if(window.__render) window.__render(); };
+  });
+  document.querySelectorAll("[data-statsplayer]").forEach(btn=>{
+    btn.onclick = ()=>{ state.statsAthleteId = btn.dataset.statsplayer; if(window.__render) window.__render(); };
+  });
+  const btnBackStats = document.getElementById("btnBackStats");
+  if(btnBackStats) btnBackStats.onclick = ()=>{ state.statsAthleteId = null; if(window.__render) window.__render(); };
+  const btnSaveStats = document.getElementById("btnSaveStats");
+  if(btnSaveStats) btnSaveStats.onclick = ()=>{
+    const stats = {};
+    document.querySelectorAll(".sg-input").forEach(inp=>{
+      stats[inp.dataset.sgkey] = Number(inp.value)||0;
+    });
+    saveStatsGenerales(state.statsAthleteId, stats);
+    btnSaveStats.textContent = "Guardado!";
+    setTimeout(()=>{ btnSaveStats.innerHTML = ic.check + " Guardar estadísticas"; }, 1500);
+  };
+  const btnSaveStatsObs = document.getElementById("btnSaveStatsObs");
+  if(btnSaveStatsObs) btnSaveStatsObs.onclick = ()=>{
+    const text = document.getElementById("statsObservacionesText").value;
+    saveObservacionesStats(state.statsAthleteId, text);
+    btnSaveStatsObs.textContent = "Guardado!";
+    setTimeout(()=>{ btnSaveStatsObs.textContent = "Guardar notas"; }, 1500);
   };
 }

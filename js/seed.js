@@ -22,6 +22,7 @@ export function makeAthlete(category, idx){
     asistenciaJuegos: {},
     observaciones: "",
     estadisticas: {},
+    statsGenerales: { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0, entrenamientosAsistidos:0, entrenamientosTotales:0 },
   };
 }
 
