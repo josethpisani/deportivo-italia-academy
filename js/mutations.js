@@ -100,21 +100,17 @@ export function saveEstadistica(athleteId, torneoId, stats){
 }
 
 export function saveConfigData(newConfig){
-  const oldConfig = JSON.parse(JSON.stringify(state.config));
   Object.assign(state.config, newConfig);
   state.athletes.forEach(a=>{
     if(!a.mensualidades) a.mensualidades = {};
-    if(a.matricula.estado==="pendiente"){
-      const oldMonto = (oldConfig[a.categoria] && oldConfig[a.categoria].matricula) || 35;
-      const newMonto = (newConfig[a.categoria] && newConfig[a.categoria].matricula) || 35;
-      if(a.matricula.monto === oldMonto) a.matricula.monto = newMonto;
+    const catCfg = newConfig[a.categoria] || {};
+    if(a.matricula.estado==="pendiente" && catCfg.matricula != null){
+      a.matricula.monto = Number(catCfg.matricula);
     }
     Object.keys(a.mensualidades).forEach(mes=>{
       const m = a.mensualidades[mes];
-      if(m.estado==="pendiente"){
-        const oldMen = (oldConfig[a.categoria] && oldConfig[a.categoria].mensualidad) || 20;
-        const newMen = (newConfig[a.categoria] && newConfig[a.categoria].mensualidad) || 20;
-        if(m.monto === oldMen) m.monto = newMen;
+      if(m.estado==="pendiente" && catCfg.mensualidad != null){
+        m.monto = Number(catCfg.mensualidad);
       }
     });
   });
