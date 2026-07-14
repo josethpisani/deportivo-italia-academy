@@ -178,3 +178,28 @@ export function saveObservacionesStats(athleteId, text){
   a.observaciones = text;
   saveAthletes();
 }
+
+export function saveEvaluacion(athleteId, evalData){
+  const a = state.athletes.find(x=>x.id===athleteId);
+  if(!a) return;
+  if(!a.evaluaciones) a.evaluaciones = {};
+  if(evalData.id){
+    const idx = a.evaluaciones.findIndex(e=>e.id===evalData.id);
+    if(idx>=0) a.evaluaciones[idx] = evalData;
+    else a.evaluaciones.push(evalData);
+  } else {
+    evalData.id = uid("eval");
+    evalData.fecha = todayISO();
+    a.evaluaciones.push(evalData);
+  }
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
+export function deleteEvaluacion(athleteId, evalId){
+  const a = state.athletes.find(x=>x.id===athleteId);
+  if(!a) return;
+  a.evaluaciones = (a.evaluaciones||[]).filter(e=>e.id!==evalId);
+  saveAthletes();
+  if(window.__render) window.__render();
+}

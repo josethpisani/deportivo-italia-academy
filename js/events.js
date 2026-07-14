@@ -1,12 +1,12 @@
 import { state } from './state.js';
 import { ic } from './icons.js';
-import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats } from './mutations.js';
+import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion } from './mutations.js';
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
 
 export function attachEvents(){
   document.querySelectorAll("[data-nav]").forEach(btn=>{
-    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(window.__render) window.__render(); };
+    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(state.view!=="evaluaciones"){ state.evalAthleteId=null; state.evalEditingId=null; } if(window.__render) window.__render(); };
   });
   document.querySelectorAll("[data-goto-cat]").forEach(btn=>{
     btn.onclick = ()=>{ state.activeCategory = btn.dataset.gotoCat; state.view="atleta-list"; if(window.__render) window.__render(); };
@@ -144,4 +144,44 @@ export function attachEvents(){
     btnSaveStatsObs.textContent = "Guardado!";
     setTimeout(()=>{ btnSaveStatsObs.textContent = "Guardar notas"; }, 1500);
   };
+  document.querySelectorAll("[data-evalcat]").forEach(btn=>{
+    btn.onclick = ()=>{ state.evalCategory = btn.dataset.evalcat; if(window.__render) window.__render(); };
+  });
+  document.querySelectorAll("[data-evalplayer]").forEach(btn=>{
+    btn.onclick = ()=>{ state.evalAthleteId = btn.dataset.evalplayer; if(window.__render) window.__render(); };
+  });
+  const btnBackEval = document.getElementById("btnBackEval");
+  if(btnBackEval) btnBackEval.onclick = ()=>{ state.evalAthleteId = null; if(window.__render) window.__render(); };
+  document.querySelectorAll(".eval-range").forEach(inp=>{
+    const idx = inp.closest(".stat-input-card")?.querySelector(".eval-range-val");
+    if(idx) idx.textContent = inp.value;
+    inp.oninput = ()=>{ if(idx) idx.textContent = inp.value; };
+  });
+  const btnSaveEval = document.getElementById("btnSaveEval");
+  if(btnSaveEval) btnSaveEval.onclick = ()=>{
+    const items = {};
+    document.querySelectorAll(".eval-range").forEach(inp=>{
+      items[inp.dataset.item] = Number(inp.value);
+    });
+    const editId = document.getElementById("evalEditId")?.value || "";
+    saveEvaluacion(state.evalAthleteId, {
+      id: editId || undefined,
+      items,
+      descripcion: document.getElementById("evalDescripcion")?.value?.trim() || "",
+      observaciones: document.getElementById("evalObservaciones")?.value?.trim() || "",
+    });
+    state.evalEditingId = null;
+  };
+  const btnCancelEval = document.getElementById("btnCancelEval");
+  if(btnCancelEval) btnCancelEval.onclick = ()=>{ state.evalEditingId = null; if(window.__render) window.__render(); };
+  document.querySelectorAll("[data-edit-eval]").forEach(btn=>{
+    btn.onclick = ()=>{ state.evalEditingId = btn.dataset.editEval; if(window.__render) window.__render(); };
+  });
+  document.querySelectorAll("[data-delete-eval]").forEach(btn=>{
+    btn.onclick = ()=>{
+      if(confirm("¿Eliminar esta evaluación?")){
+        deleteEvaluacion(state.evalAthleteId, btn.dataset.deleteEval);
+      }
+    };
+  });
 }

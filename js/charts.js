@@ -174,3 +174,13 @@ export function drawStatsCharts(){
     options: doughnutOpts("Juegos")
   });
 }
+
+export function drawEvalCharts(){
+  const d = window.__evalDetailData;
+  if(!d) return;
+  makeChart("chartEvalItems", {
+    type:"doughnut",
+    data:{ labels:d.labels, datasets:[{ data:d.values, backgroundColor:CAT_COLORS.concat([C.teal,C.orange,C.purple,C.red,C.green]) }] },
+    options: doughnutOpts("Puntajes última evaluación")
+  });
+}

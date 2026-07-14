@@ -9,9 +9,10 @@ export function renderSidebar(){
     {key:"atleta-list", label:"Atletas", icon:ic.users},
     {key:"asistencia", label:"Asistencia", icon:ic.cal2},
     {key:"estadisticas", label:"Estadísticas", icon:ic.trophy},
+    {key:"evaluaciones", label:"Evaluaciones", icon:ic.trend},
     {key:"admin", label:"Administración", icon:ic.clipboard},
   ];
-  const pageLabels = {home:"Resumen","atleta-list":"Atletas","atleta-detail":"Perfil",asistencia:"Asistencia",estadisticas:"Estadísticas",admin:"Administración"};
+  const pageLabels = {home:"Resumen","atleta-list":"Atletas","atleta-detail":"Perfil",asistencia:"Asistencia",estadisticas:"Estadísticas",evaluaciones:"Evaluaciones",admin:"Administración"};
   const currentLabel = pageLabels[state.view] || "Academia";
 
   const isAct = k => state.view===k || (k==="atleta-list" && state.view==="atleta-detail");

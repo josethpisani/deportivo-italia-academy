@@ -6,7 +6,8 @@ import { renderAthleteList, renderAthleteDetail } from './views/athletes.js';
 import { renderAttendanceTab } from './views/attendance.js';
 import { renderAdmin } from './views/admin.js';
 import { renderEstadisticas } from './views/estadisticas.js';
-import { drawHomeCharts, drawAthListChart, drawAthDetailChart, drawRegChart, drawAdminCharts, drawStatsCharts } from './charts.js';
+import { renderEvaluacion } from './views/evaluacion.js';
+import { drawHomeCharts, drawAthListChart, drawAthDetailChart, drawRegChart, drawAdminCharts, drawStatsCharts, drawEvalCharts } from './charts.js';
 import { attachEvents } from './events.js';
 
 function render(){
@@ -21,6 +22,7 @@ function render(){
   else if(state.view==="asistencia") mainContent = renderAttendanceTab();
   else if(state.view==="admin") mainContent = renderAdmin();
   else if(state.view==="estadisticas") mainContent = renderEstadisticas();
+  else if(state.view==="evaluaciones") mainContent = renderEvaluacion();
 
   document.getElementById("app").innerHTML = `${renderSidebar()}<div id="main">${mainContent}</div>`;
   attachEvents();
@@ -31,6 +33,7 @@ function render(){
   else if(state.view==="asistencia") drawRegChart();
   else if(state.view==="admin") drawAdminCharts();
   else if(state.view==="estadisticas") drawStatsCharts();
+  else if(state.view==="evaluaciones") drawEvalCharts();
 }
 
 setRenderCallbacks(render, renderSaveStatus);

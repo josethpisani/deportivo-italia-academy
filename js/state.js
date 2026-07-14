@@ -27,4 +27,7 @@ export const state = {
   adminAuth: false,
   statsAthleteId: null,
   statsCategory: "Todos",
+  evalAthleteId: null,
+  evalCategory: "Todos",
+  evalEditingId: null,
 };
