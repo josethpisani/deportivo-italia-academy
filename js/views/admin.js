@@ -5,7 +5,11 @@ import { escapeHtml } from '../utils.js';
 import { statPill, badge } from '../render-helpers.js';
 
 export function renderAdmin(){
-  const totalIngresos = state.athletes.filter(a=>a.matricula.estado==="pagado").reduce((s,a)=>s+a.matricula.monto,0);
+  const totalMensualidadesMes = state.athletes.filter(a=>{
+    const m = a.mensualidades && a.mensualidades[state.mensualMonth];
+    return m && m.estado==="pagado";
+  }).reduce((s,a)=>s+((a.mensualidades[state.mensualMonth]||{}).monto||0),0);
+  const totalIngresos = state.athletes.filter(a=>a.matricula.estado==="pagado").reduce((s,a)=>s+a.matricula.monto,0) + totalMensualidadesMes;
   const torneoIngresos = state.torneos.reduce((sum,t)=>{
     const pagantes = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
     return sum + pagantes*t.monto;
@@ -16,6 +20,7 @@ export function renderAdmin(){
     {key:"config",label:"Configuración"},
     {key:"atletas",label:"Todos los atletas"},
     {key:"matriculas",label:"Pagos de matrícula"},
+    {key:"mensualidades",label:"Mensualidades"},
     {key:"torneos",label:"Torneos y pagos"},
   ].map(t=>`<button class="admin-tab ${state.adminTab===t.key?"active":""}" data-admintab="${t.key}">${t.label}</button>`).join("");
 
@@ -65,6 +70,52 @@ export function renderAdmin(){
         <button class="bd ${a.matricula.estado==="pendiente"?"on":""}" data-matricula="${a.id}|pendiente">Pendiente</button>
       </div></div>`).join("");
     body = `<div class="mat-grid">${cards}</div>`;
+  } else if(state.adminTab==="mensualidades"){
+    const mesActual = state.mensualMonth;
+    const meses = [];
+    for(let m=1;m<=12;m++){
+      const key = `2026-${String(m).padStart(2,"0")}`;
+      const label = ["","Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"][m];
+      meses.push({key,label:label+" 2026"});
+    }
+    const monthBtns = meses.map(m=>
+      `<button class="chip ${state.mensualMonth===m.key?"active":""}" data-mensualmonth="${m.key}">${m.label}</button>`
+    ).join("");
+    const totalMensualidades = state.athletes.filter(a=>{
+      const m = a.mensualidades && a.mensualidades[mesActual];
+      return m && m.estado==="pagado";
+    }).reduce((s,a)=>{
+      const m = a.mensualidades[mesActual];
+      return s + (m ? m.monto : 0);
+    },0);
+    const pendientesMes = state.athletes.filter(a=>{
+      const m = a.mensualidades && a.mensualidades[mesActual];
+      return !m || m.estado!=="pagado";
+    }).length;
+    const cards = state.athletes.map(a=>{
+      if(!a.mensualidades) a.mensualidades = {};
+      const m = a.mensualidades[mesActual];
+      const estado = m ? m.estado : "pendiente";
+      const monto = m ? m.monto : ((state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20);
+      const fecha = m ? m.fecha : "—";
+      return `<div class="mat-card">
+        <div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div>
+        <div class="info">Monto: $${monto} · Última fecha: ${fecha}</div>
+        <div class="btns">
+          <button class="bp ${estado==="pagado"?"on":""}" data-mensualidad="${a.id}|${mesActual}|1">Pagado</button>
+          <button class="bd ${estado==="pendiente"?"on":""}" data-mensualidad="${a.id}|${mesActual}|0">Pendiente</button>
+        </div></div>`;
+    }).join("");
+    body = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div class="stats-row" style="margin:0;flex:1;">
+          ${statPill(ic.dollar,"Recaudado mes","$"+totalMensualidades,"var(--green)")}
+          ${statPill(ic.alert,"Pendientes",pendientesMes,"var(--red)")}
+        </div>
+        <button class="btn-primary green" id="btnInitMensualidades">${ic.plus} Iniciar mes</button>
+      </div>
+      <div class="filters" style="margin-bottom:14px;">${monthBtns}</div>
+      <div class="mat-grid">${cards}</div>`;
   } else {
     let torneosHtml = state.torneos.map(t=>{
       const elegibles = state.athletes.filter(a=>a.categoria===t.categoria);
@@ -123,6 +174,7 @@ export function renderAdmin(){
     <div class="admin-tabs">${tabs}</div>
     ${state.adminTab!=="config" ? `<div class="charts-row">
       <div class="chart-card"><h4>Matrículas: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMatricula"></canvas></div></div>
+      <div class="chart-card"><h4>Mensualidades: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMensualidades"></canvas></div></div>
       <div class="chart-card"><h4>Recaudación por torneo ($)</h4><div class="chart-wrap short"><canvas id="chartAdminTorneos"></canvas></div></div>
       <div class="chart-card"><h4>Inscritos a torneos por categoría</h4><div class="chart-wrap short"><canvas id="chartAdminCatTorneos"></canvas></div></div>
     </div>` : ""}

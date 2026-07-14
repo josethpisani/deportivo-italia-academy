@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { CATEGORIES, POSITIONS } from './constants.js';
 import { ic } from './icons.js';
-import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadistica, saveConfigData } from './mutations.js';
+import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadistica, saveConfigData, updateAthleteCosts } from './mutations.js';
 import { escapeHtml } from './utils.js';
 
 export function closeModal(){
@@ -267,4 +267,35 @@ export function openTorneoStatsModal(torneoId){
       closeModal();
     };
   }
+}
+
+export function openEditAthleteCostsModal(athleteId){
+  closeModal();
+  const a = state.athletes.find(x=>x.id===athleteId);
+  if(!a) return;
+  const catCfg = state.config[a.categoria] || {matricula:35, mensualidad:20};
+  const html = `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <div class="mh"><h3 class="dia-title">Costos — ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</h3><button id="modalClose">${ic.x}</button></div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Edita los costos individuales de este atleta (solo aplica a montos pendientes).</p>
+        <div class="config-row">
+          <div class="config-cat">${a.categoria}</div>
+          <div class="config-fields">
+            <div><label>Matrícula ($)</label><input type="number" min="0" id="ac_matricula" value="${a.matricula.monto}"></div>
+            <div><label>Mensualidad ($)</label><input type="number" min="0" id="ac_mensualidad" value="${a._mensualidadMonto || catCfg.mensualidad}"></div>
+          </div>
+        </div>
+        <div class="config-info">
+          <p>${ic.alert} La mensualidad se aplica a todos los meses pendientes del atleta.</p>
+        </div>
+        <button class="save-btn" id="ac_save">Guardar costos</button>
+      </div>
+    </div>`;
+  document.getElementById("app").insertAdjacentHTML("beforeend", html);
+  document.getElementById("modalClose").onclick = closeModal;
+  document.getElementById("modalOverlay").addEventListener("click", e=>{ if(e.target.id==="modalOverlay") closeModal(); });
+  document.getElementById("ac_save").onclick = ()=>{
+    updateAthleteCosts(athleteId, document.getElementById("ac_matricula").value, document.getElementById("ac_mensualidad").value);
+  };
 }

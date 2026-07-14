@@ -1,6 +1,6 @@
 import { state } from './state.js';
-import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones } from './mutations.js';
-import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal } from './modals.js';
+import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades } from './mutations.js';
+import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
 
 export function attachEvents(){
@@ -84,5 +84,19 @@ export function attachEvents(){
       const dateKey = `${state.regDate}|${dayName}`;
       toggleAttendance(athleteId, state.regTipo, dateKey, status);
     };
+  });
+  document.querySelectorAll("[data-mensualmonth]").forEach(btn=>{
+    btn.onclick = ()=>{ state.mensualMonth = btn.dataset.mensualmonth; if(window.__render) window.__render(); };
+  });
+  document.querySelectorAll("[data-mensualidad]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const [athleteId, mes, flag] = btn.dataset.mensualidad.split("|");
+      setMensualidad(athleteId, mes, flag==="1");
+    };
+  });
+  const btnInitMes = document.getElementById("btnInitMensualidades");
+  if(btnInitMes) btnInitMes.onclick = ()=> markAllMensualidades(state.mensualMonth);
+  document.querySelectorAll("[data-edit-costs]").forEach(btn=>{
+    btn.onclick = ()=> openEditAthleteCostsModal(btn.dataset.editCosts);
   });
 }

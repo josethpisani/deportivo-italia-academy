@@ -163,6 +163,7 @@ export function renderAthleteDetail(){
           ${badge(a.categoria,"neutral")}${badge(a.posicion,"neutral")}
           ${badge("Matrícula "+a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}
           <button class="btn-outline" id="btnEditAthlete">${ic.pencil} Editar</button>
+          <button class="btn-outline" data-edit-costs="${a.id}">${ic.dollar} Costos</button>
         </div>
       </div>
     </div>
@@ -199,6 +200,34 @@ export function renderAthleteDetail(){
     </div>
 
     <div class="section"><h3 class="dia-title">Torneos</h3>${torneosHtml}</div>
+
+    <div class="section"><h3 class="dia-title">Pagos</h3>
+      <div class="mat-card" style="margin-bottom:10px;">
+        <div class="row1"><div class="name">Matrícula</div>${badge(a.matricula.estado==="pagado"?"Pagado":"Pendiente", a.matricula.estado==="pagado"?"good":"bad")}</div>
+        <div class="info">Monto: $${a.matricula.monto} · Última fecha: ${a.matricula.fecha}</div>
+      </div>
+      <h4 class="dia-title" style="font-size:13px;margin:12px 0 8px;">Mensualidades</h4>
+      ${(() => {
+        const meses = [];
+        for(let m=1;m<=12;m++){
+          const key = `2026-${String(m).padStart(2,"0")}`;
+          const label = ["","Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"][m];
+          if(!a.mensualidades) a.mensualidades = {};
+          const mp = a.mensualidades[key];
+          const estado = mp ? mp.estado : "pendiente";
+          const monto = mp ? mp.monto : ((state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20);
+          meses.push(`<div class="attend-cell ${estado==="pagado"?"presente":"ausente"}">
+            <div class="date">${label}</div>
+            <div style="font-weight:700;font-size:12px;">$${monto}</div>
+            <div class="btns">
+              <button class="ok ${estado==="pagado"?"on":""}" data-mensualidad="${a.id}|${key}|1">${ic.check}</button>
+              <button class="no ${estado==="pendiente"?"on":""}" data-mensualidad="${a.id}|${key}|0">${ic.x}</button>
+            </div>
+          </div>`);
+        }
+        return `<div class="attend-grid">${meses.join("")}</div>`;
+      })()}
+    </div>
 
     <div class="section"><h3 class="dia-title">Observaciones / Notas</h3>
       <div class="notes-box">

@@ -16,6 +16,7 @@ export function makeAthlete(category, idx){
     direccion: "Caracas, Venezuela",
     fechaIngreso: `2025-0${(idx%9)+1}-0${(idx%8)+1}`,
     matricula: { estado: idx%4===0 ? "pendiente":"pagado", monto:35, fecha:"2026-06-01" },
+    mensualidades: {},
     torneos: [],
     asistenciaEntrenamiento: {},
     asistenciaJuegos: {},

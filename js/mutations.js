@@ -100,6 +100,66 @@ export function saveEstadistica(athleteId, torneoId, stats){
 }
 
 export function saveConfigData(newConfig){
+  const oldConfig = JSON.parse(JSON.stringify(state.config));
   Object.assign(state.config, newConfig);
+  state.athletes.forEach(a=>{
+    if(!a.mensualidades) a.mensualidades = {};
+    if(a.matricula.estado==="pendiente"){
+      const oldMonto = (oldConfig[a.categoria] && oldConfig[a.categoria].matricula) || 35;
+      const newMonto = (newConfig[a.categoria] && newConfig[a.categoria].matricula) || 35;
+      if(a.matricula.monto === oldMonto) a.matricula.monto = newMonto;
+    }
+    Object.keys(a.mensualidades).forEach(mes=>{
+      const m = a.mensualidades[mes];
+      if(m.estado==="pendiente"){
+        const oldMen = (oldConfig[a.categoria] && oldConfig[a.categoria].mensualidad) || 20;
+        const newMen = (newConfig[a.categoria] && newConfig[a.categoria].mensualidad) || 20;
+        if(m.monto === oldMen) m.monto = newMen;
+      }
+    });
+  });
   saveConfig();
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
+export function setMensualidad(athleteId, mes, estado){
+  const a = state.athletes.find(x=>x.id===athleteId);
+  if(!a) return;
+  if(!a.mensualidades) a.mensualidades = {};
+  const costo = (state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20;
+  if(estado){
+    a.mensualidades[mes] = { estado:"pagado", monto: a.mensualidades[mes]?.monto || costo, fecha: todayISO() };
+  } else {
+    a.mensualidades[mes] = { estado:"pendiente", monto: a.mensualidades[mes]?.monto || costo, fecha: todayISO() };
+  }
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
+export function markAllMensualidades(mes){
+  state.athletes.forEach(a=>{
+    if(!a.mensualidades) a.mensualidades = {};
+    if(!a.mensualidades[mes]){
+      const costo = (state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20;
+      a.mensualidades[mes] = { estado:"pendiente", monto:costo, fecha:todayISO() };
+    }
+  });
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
+export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto){
+  const a = state.athletes.find(x=>x.id===athleteId);
+  if(!a) return;
+  if(a.matricula.estado==="pendiente") a.matricula.monto = Number(matriculaMonto);
+  if(!a.mensualidades) a.mensualidades = {};
+  Object.keys(a.mensualidades).forEach(mes=>{
+    if(a.mensualidades[mes].estado==="pendiente"){
+      a.mensualidades[mes].monto = Number(mensualidadMonto);
+    }
+  });
+  a._mensualidadMonto = Number(mensualidadMonto);
+  saveAthletes();
+  if(window.__render) window.__render();
 }

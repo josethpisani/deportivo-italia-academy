@@ -91,6 +91,18 @@ export function drawAdminCharts(){
     options: doughnutOpts("Matrículas: pagado vs pendiente")
   });
 
+  const mes = state.mensualMonth || new Date().toISOString().slice(0,7);
+  const menPagado = state.athletes.filter(a=>{
+    const m = a.mensualidades && a.mensualidades[mes];
+    return m && m.estado==="pagado";
+  }).length;
+  const menPendiente = state.athletes.length - menPagado;
+  makeChart("chartAdminMensualidades", {
+    type:"doughnut",
+    data:{ labels:["Pagado","Pendiente"], datasets:[{ data:[menPagado,menPendiente], backgroundColor:[C.green, C.red] }] },
+    options: doughnutOpts("Mensualidades ("+mes+"): pagado vs pendiente")
+  });
+
   const torLabels = state.torneos.map(t=>t.nombre);
   const torData = state.torneos.map(t=>{
     const inscritos = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;

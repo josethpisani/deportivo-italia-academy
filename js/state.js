@@ -23,4 +23,5 @@ export const state = {
   athViewMode: "grid",
   editingTorneo: null,
   statsTorneo: null,
+  mensualMonth: new Date().toISOString().slice(0,7),
 };

@@ -11,6 +11,11 @@ export function renderHome(){
     const pagantes = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
     return sum + pagantes*t.monto;
   },0);
+  const mesActual = new Date().toISOString().slice(0,7);
+  const mensualidadIngresos = state.athletes.filter(a=>{
+    const m = a.mensualidades && a.mensualidades[mesActual];
+    return m && m.estado==="pagado";
+  }).reduce((s,a)=>s+((a.mensualidades[mesActual]||{}).monto||0),0);
 
   const catCards = CATEGORIES.map(cat=>{
     const count = state.athletes.filter(a=>a.categoria===cat).length;
@@ -28,7 +33,8 @@ export function renderHome(){
       ${statPill(ic.users,"Atletas activos",totalAthletes,"var(--pitch)")}
       ${statPill(ic.alert,"Matrículas pendientes",matriculasPendientes,"var(--red)")}
       ${statPill(ic.dollar,"Ingresos matrícula","$"+ingresos,"var(--green)")}
-      ${statPill(ic.trophy,"Ingresos torneos","$"+torneoIngresos,"var(--pitch)")}
+      ${statPill(ic.dollar,"Ingresos mensualidad","$"+mensualidadIngresos,"var(--pitch)")}
+      ${statPill(ic.trophy,"Ingresos torneos","$"+torneoIngresos,"var(--red)")}
     </div>
     <h2 class="dia-title" style="font-size:16px;margin:0 0 12px;">Atletas por categoría</h2>
     <div class="cat-grid">${catCards}</div>
