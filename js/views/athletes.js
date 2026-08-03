@@ -163,6 +163,7 @@ export function renderAthleteDetail(){
           ${badge(a.categoria,"neutral")}${badge(a.posicion,"neutral")}
           ${badge("Matrícula "+a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}
           <button class="btn-outline" id="btnEditAthlete">${ic.pencil} Editar</button>
+          <button class="btn-outline" id="btnDeleteAthlete" style="color:var(--red);border-color:var(--red);">${ic.x} Eliminar</button>
           <button class="btn-outline" data-edit-costs="${a.id}">${ic.dollar} Costos</button>
         </div>
       </div>

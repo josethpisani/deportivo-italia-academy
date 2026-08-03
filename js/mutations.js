@@ -196,6 +196,15 @@ export function saveEvaluacion(athleteId, evalData){
   if(window.__render) window.__render();
 }
 
+export function deleteAthlete(athleteId){
+  if(!confirm("¿Seguro que deseas eliminar este atleta? Esta acción no se puede deshacer.")) return;
+  state.athletes = state.athletes.filter(a=>a.id!==athleteId);
+  state.selectedId = null;
+  state.view = "atleta-list";
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
 export function deleteEvaluacion(athleteId, evalId){
   const a = state.athletes.find(x=>x.id===athleteId);
   if(!a) return;

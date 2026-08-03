@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { ic } from './icons.js';
-import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion } from './mutations.js';
+import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete } from './mutations.js';
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
 
@@ -27,6 +27,8 @@ export function attachEvents(){
   if(addAthBtn) addAthBtn.onclick = openAddAthleteModal;
   const editAthBtn = document.getElementById("btnEditAthlete");
   if(editAthBtn) editAthBtn.onclick = ()=> openEditAthleteModal(state.selectedId);
+  const deleteAthBtn = document.getElementById("btnDeleteAthlete");
+  if(deleteAthBtn) deleteAthBtn.onclick = ()=> deleteAthlete(state.selectedId);
   const addTorBtn = document.getElementById("btnAddTorneo");
   if(addTorBtn) addTorBtn.onclick = openAddTorneoModal;
   const editConfigBtn = document.getElementById("btnEditConfig");
