@@ -95,6 +95,17 @@ export function saveObservaciones(athleteId, text){
   saveAthletes();
 }
 
+export function saveEstadisticas(entries){
+  entries.forEach(({athleteId, torneoId, stats})=>{
+    const a = state.athletes.find(x=>x.id===athleteId);
+    if(!a) return;
+    if(!a.estadisticas) a.estadisticas = {};
+    a.estadisticas[torneoId] = { ...stats };
+  });
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
 export function saveEstadistica(athleteId, torneoId, stats){
   const a = state.athletes.find(x=>x.id===athleteId);
   if(!a.estadisticas) a.estadisticas = {};

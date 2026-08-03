@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { CATEGORIES, POSITIONS } from './constants.js';
 import { ic } from './icons.js';
-import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadistica, saveConfigData, updateAthleteCosts } from './mutations.js';
+import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadisticas, saveConfigData, updateAthleteCosts } from './mutations.js';
 import { escapeHtml } from './utils.js';
 
 export function closeModal(){
@@ -256,14 +256,15 @@ export function openTorneoStatsModal(torneoId){
   const saveBtn = document.getElementById("st_save");
   if(saveBtn){
     saveBtn.onclick = ()=>{
-      elegibles.forEach(a=>{
+      const entries = elegibles.map(a=>{
         const stats = { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0 };
         Object.keys(stats).forEach(key=>{
           const inp = document.querySelector(`[data-st="${a.id}|${key}"]`);
           if(inp) stats[key] = Number(inp.value)||0;
         });
-        saveEstadistica(a.id, torneoId, stats);
+        return { athleteId:a.id, torneoId, stats };
       });
+      saveEstadisticas(entries);
       closeModal();
     };
   }
