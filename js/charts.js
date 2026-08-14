@@ -224,7 +224,7 @@ export function drawEvalCharts(){
   if(!d) return;
   makeChart("chartEvalItems", {
     type:"doughnut",
-    data:{ labels:d.labels, datasets:[{ data:d.values, backgroundColor:CAT_COLORS.concat([C.teal,C.orange,C.purple,C.red,C.green]) }] },
+    data:{ labels:d.labels, datasets:[{ data:d.values, backgroundColor:CAT_COLORS.concat([C.teal,C.orange,C.purple,C.red,C.green,"#E67E22","#16A085","#2980B9"]) }] },
     options: doughnutOpts("Puntajes última evaluación")
   });
 }
