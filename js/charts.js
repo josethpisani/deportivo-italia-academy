@@ -27,6 +27,15 @@ const doughnutOpts = (title) => ({
   }
 });
 
+function doughnutData(labels, values, colors, emptyLabel){
+  const vals = values.map(v=>Number(v)||0);
+  const total = vals.reduce((s,v)=>s+v,0);
+  if(total===0){
+    return { labels:[emptyLabel||"Sin datos"], datasets:[{ data:[1], backgroundColor:["#E1E8EF"] }] };
+  }
+  return { labels, datasets:[{ data:vals, backgroundColor:colors }] };
+}
+
 export function drawHomeCharts(){
   makeChart("chartHomeCat", {
     type:"doughnut",
@@ -49,7 +58,7 @@ export function drawHomeCharts(){
   });
   makeChart("chartHomeAsistencia", {
     type:"doughnut",
-    data:{ labels:CATEGORIES, datasets:[{ data:catAttend.map(v=>v||1), backgroundColor:CAT_COLORS }] },
+    data: doughnutData(CATEGORIES, catAttend, CAT_COLORS, "Sin registros"),
     options: doughnutOpts("Asistencia entrenamientos (%)")
   });
 
@@ -65,12 +74,12 @@ export function drawHomeCharts(){
     });
     makeChart("chartHomeTorResultados", {
       type:"doughnut",
-      data:{ labels:["Ganados","Empatados","Perdidos"], datasets:[{ data:[torAgg.ganados||1,torAgg.empatados||1,torAgg.perdidos||1], backgroundColor:[C.green,C.orange,C.red] }] },
+      data: doughnutData(["Ganados","Empatados","Perdidos"], [torAgg.ganados,torAgg.empatados,torAgg.perdidos], [C.green,C.orange,C.red], "Sin partidos jugados"),
       options: doughnutOpts("Resultados del equipo")
     });
     makeChart("chartHomeTorGoles", {
       type:"doughnut",
-      data:{ labels:["Goles a favor","Goles en contra"], datasets:[{ data:[torAgg.gf||1,torAgg.gc||1], backgroundColor:[C.pitch,C.red] }] },
+      data: doughnutData(["Goles a favor","Goles en contra"], [torAgg.gf,torAgg.gc], [C.pitch,C.red], "Sin goles registrados"),
       options: doughnutOpts("Goles: a favor vs en contra")
     });
   }
@@ -84,7 +93,7 @@ export function drawAthListChart(){
   });
   makeChart("chartAthListAttend", {
     type:"doughnut",
-    data:{ labels:CATEGORIES, datasets:[{ data:catAttend.map(v=>v||1), backgroundColor:CAT_COLORS }] },
+    data: doughnutData(CATEGORIES, catAttend, CAT_COLORS, "Sin registros"),
     options: doughnutOpts("Asistencia por categoría")
   });
 }
@@ -94,9 +103,12 @@ export function drawAthDetailChart(){
   if(!d) return;
   makeChart("chartAthDetail", {
     type:"doughnut",
-    data:{ labels:["Entren. presentes","Entren. ausentes","Juegos presentes","Juegos ausentes"],
-      datasets:[{ data:[d.trainPresent||0,d.trainAusente||0,d.gamePresent||0,d.gameAusente||0],
-        backgroundColor:[C.green, "#95d4a8", C.teal, "#8ecfd6"] }] },
+    data: doughnutData(
+      ["Entren. presentes","Entren. ausentes","Juegos presentes","Juegos ausentes"],
+      [d.trainPresent||0,d.trainAusente||0,d.gamePresent||0,d.gameAusente||0],
+      [C.green, "#95d4a8", C.teal, "#8ecfd6"],
+      "Sin registros"
+    ),
     options: doughnutOpts("Entrenamientos vs. juegos")
   });
 }
@@ -133,21 +145,16 @@ export function drawAdminCharts(){
   if(torLabels.length){
     makeChart("chartAdminTorneos", {
       type:"doughnut",
-      data:{ labels:torLabels, datasets:[{ data:torData, backgroundColor:CAT_COLORS }] },
+      data: doughnutData(torLabels, torData, CAT_COLORS, "Sin inscritos"),
       options: doughnutOpts("Recaudación por torneo ($)")
     });
   }
 
-  const catInscritos = CATEGORIES.map(c=>{
-    return state.torneos.reduce((sum,t)=>{
-      if(t.categoria!==c) return sum;
-      return sum + state.athletes.filter(a=>a.categoria===c && a.torneos.some(at=>at.torneoId===t.id)).length;
-    },0);
-  });
+  const catInscritos = CATEGORIES.map(c=> state.athletes.filter(a=>a.categoria===c && a.torneos.length>0).length);
   if(catInscritos.some(v=>v>0)){
     makeChart("chartAdminCatTorneos", {
       type:"doughnut",
-      data:{ labels:CATEGORIES, datasets:[{ data:catInscritos, backgroundColor:CAT_COLORS }] },
+      data: doughnutData(CATEGORIES, catInscritos, CAT_COLORS, "Sin inscritos"),
       options: doughnutOpts("Inscritos a torneos por categoría")
     });
   }
@@ -163,7 +170,7 @@ export function drawRegChart(){
   const totalAus = ausData.reduce((s,v)=>s+v,0);
   makeChart("chartRegDay", {
     type:"doughnut",
-    data:{ labels:["Presentes","Ausentes"], datasets:[{ data:[totalPres||0,totalAus||0], backgroundColor:[C.green,C.red] }] },
+    data: doughnutData(["Presentes","Ausentes"], [totalPres,totalAus], [C.green,C.red], "Sin registros del día"),
     options: doughnutOpts("Asistencia del día")
   });
 }
@@ -174,25 +181,25 @@ export function drawStatsCharts(){
 
   makeChart("chartStatsGoalsAst", {
     type:"doughnut",
-    data:{ labels:["Goles","Asistencias"], datasets:[{ data:[d.goles||1,d.asistencias||1], backgroundColor:[C.pitch, C.green] }] },
+    data: doughnutData(["Goles","Asistencias"], [d.goles,d.asistencias], [C.pitch, C.green], "Sin registros"),
     options: doughnutOpts("Goles vs Asistencias")
   });
 
   makeChart("chartStatsCards", {
     type:"doughnut",
-    data:{ labels:["Amarillas","Rojas"], datasets:[{ data:[d.ta||1,d.tr||1], backgroundColor:[C.orange, C.red] }] },
+    data: doughnutData(["Amarillas","Rojas"], [d.ta,d.tr], [C.orange, C.red], "Sin tarjetas"),
     options: doughnutOpts("Tarjetas")
   });
 
   makeChart("chartStatsTrain", {
     type:"doughnut",
-    data:{ labels:["Presente","Ausente"], datasets:[{ data:[d.trainPresent||1,d.trainAusente||1], backgroundColor:[C.green, "#95d4a8"] }] },
+    data: doughnutData(["Presente","Ausente"], [d.trainPresent,d.trainAusente], [C.green, "#95d4a8"], "Sin registros"),
     options: doughnutOpts("Entrenamientos")
   });
 
   makeChart("chartStatsGames", {
     type:"doughnut",
-    data:{ labels:["Presente","Ausente"], datasets:[{ data:[d.gamePresent||1,d.gameAusente||1], backgroundColor:[C.teal, "#8ecfd6"] }] },
+    data: doughnutData(["Presente","Ausente"], [d.gamePresent,d.gameAusente], [C.teal, "#8ecfd6"], "Sin registros"),
     options: doughnutOpts("Juegos")
   });
 }
@@ -202,12 +209,12 @@ export function drawTorneoCharts(){
   if(!d) return;
   makeChart("chartTorneoResultados", {
     type:"doughnut",
-    data:{ labels:["Ganados","Empatados","Perdidos"], datasets:[{ data:[d.ganados||1,d.empatados||1,d.perdidos||1], backgroundColor:[C.green,C.orange,C.red] }] },
+    data: doughnutData(["Ganados","Empatados","Perdidos"], [d.ganados,d.empatados,d.perdidos], [C.green,C.orange,C.red], "Sin partidos jugados"),
     options: doughnutOpts("Resultados del equipo")
   });
   makeChart("chartTorneoGoals", {
     type:"doughnut",
-    data:{ labels:["Goles a favor","Goles en contra"], datasets:[{ data:[d.gf||1,d.gc||1], backgroundColor:[C.pitch,C.red] }] },
+    data: doughnutData(["Goles a favor","Goles en contra"], [d.gf,d.gc], [C.pitch,C.red], "Sin goles registrados"),
     options: doughnutOpts("Goles: a favor vs en contra")
   });
 }
