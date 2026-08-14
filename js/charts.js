@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { CATEGORIES } from './constants.js';
-import { attendanceRate, dayNameFromDate } from './utils.js';
+import { attendanceRate, dayNameFromDate, computeTorneoTeamStats } from './utils.js';
 
 const C = { pitch:"#0E4C86", green:"#1FA855", red:"#C23B33", grayBg:"#E1E8EF", ink:"#162233", orange:"#E8922D", purple:"#7B4FD4", teal:"#2BA5AD" };
 const CAT_COLORS = ["#0E4C86","#1FA855","#E8922D","#C23B33","#7B4FD4"];
@@ -52,6 +52,28 @@ export function drawHomeCharts(){
     data:{ labels:CATEGORIES, datasets:[{ data:catAttend.map(v=>v||1), backgroundColor:CAT_COLORS }] },
     options: doughnutOpts("Asistencia entrenamientos (%)")
   });
+
+  if(state.torneos.length){
+    const torAgg = { ganados:0, empatados:0, perdidos:0, gf:0, gc:0 };
+    state.torneos.forEach(t=>{
+      const team = computeTorneoTeamStats(t);
+      torAgg.ganados += team.ganados;
+      torAgg.empatados += team.empatados;
+      torAgg.perdidos += team.perdidos;
+      torAgg.gf += team.gf;
+      torAgg.gc += team.gc;
+    });
+    makeChart("chartHomeTorResultados", {
+      type:"doughnut",
+      data:{ labels:["Ganados","Empatados","Perdidos"], datasets:[{ data:[torAgg.ganados||1,torAgg.empatados||1,torAgg.perdidos||1], backgroundColor:[C.green,C.orange,C.red] }] },
+      options: doughnutOpts("Resultados del equipo")
+    });
+    makeChart("chartHomeTorGoles", {
+      type:"doughnut",
+      data:{ labels:["Goles a favor","Goles en contra"], datasets:[{ data:[torAgg.gf||1,torAgg.gc||1], backgroundColor:[C.pitch,C.red] }] },
+      options: doughnutOpts("Goles: a favor vs en contra")
+    });
+  }
 }
 
 export function drawAthListChart(){
