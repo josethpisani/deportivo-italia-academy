@@ -19,9 +19,10 @@ const DEFAULT_ITEMS = [
   "Juego en equipo",
   "Reglas del juego",
   "Toma de decisiones",
+  "Pasar el balón",
 ];
 
-const ITEM_COLORS = ["#0E4C86","#1FA855","#E8922D","#C23B33","#7B4FD4","#2BA5AD","#4A90D9","#D4A843","#8E44AD","#27AE60","#E67E22","#16A085","#2980B9"];
+const ITEM_COLORS = ["#0E4C86","#1FA855","#E8922D","#C23B33","#7B4FD4","#2BA5AD","#4A90D9","#D4A843","#8E44AD","#27AE60","#E67E22","#16A085","#2980B9","#6C3483"];
 
 function avgScore(items){
   const vals = Object.values(items);
