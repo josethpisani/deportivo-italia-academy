@@ -1,7 +1,7 @@
 import { state } from '../state.js';
 import { CATEGORIES } from '../constants.js';
 import { ic } from '../icons.js';
-import { escapeHtml, attendanceRate } from '../utils.js';
+import { escapeHtml, attendanceRate, sumTorneoStats } from '../utils.js';
 import { statPill, badge, initials } from '../render-helpers.js';
 
 export function renderEstadisticas(){
@@ -41,7 +41,16 @@ export function renderEstadisticas(){
 
   const a = selectedAthlete;
   if(!a.statsGenerales) a.statsGenerales = { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0, entrenamientosAsistidos:0, entrenamientosTotales:0 };
-  const sg = a.statsGenerales;
+  const anio = sumTorneoStats(a);
+  const sg = {
+    goles: anio.goles,
+    asistencias: anio.asistencias,
+    tarjetasAmarillas: anio.tarjetasAmarillas,
+    tarjetasRojas: anio.tarjetasRojas,
+    partidosJugados: anio.partidosJugados,
+    entrenamientosAsistidos: Object.values(a.asistenciaEntrenamiento).filter(v=>v==="presente").length,
+    entrenamientosTotales: Object.keys(a.asistenciaEntrenamiento).length,
+  };
 
   const trainTotal = Object.keys(a.asistenciaEntrenamiento).length || 1;
   const trainPresent = Object.values(a.asistenciaEntrenamiento).filter(v=>v==="presente").length;
@@ -63,7 +72,7 @@ export function renderEstadisticas(){
       <div class="stat-input-icon" style="background:${f.color};">${f.icon}</div>
       <div class="stat-input-body">
         <label>${f.label}</label>
-        <input type="number" min="0" class="sg-input" data-sgkey="${f.key}" value="${sg[f.key]||0}">
+        <div class="sg-value">${sg[f.key]||0}</div>
       </div>
     </div>`
   ).join("");
@@ -115,11 +124,9 @@ export function renderEstadisticas(){
       </div>
     </div>
 
-    <div class="section"><h3 class="dia-title">Registro general</h3>
+    <div class="section"><h3 class="dia-title">Totales del año (suma de todos los torneos)</h3>
       <div class="stats-input-grid">${statsInputs}</div>
-      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
-        <button class="btn-primary" id="btnSaveStats">${ic.check} Guardar estadísticas</button>
-      </div>
+      <p class="page-sub" style="margin:10px 0 0;">${ic.activity} Las estadísticas de goles, asistencias, tarjetas y partidos se cargan desde el panel de Torneos (juego por juego) y aquí se muestran los totales acumulados durante el año.</p>
     </div>
 
     <div class="section"><h3 class="dia-title">Gráficos de rendimiento</h3>

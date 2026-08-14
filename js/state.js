@@ -30,4 +30,5 @@ export const state = {
   evalAthleteId: null,
   evalCategory: "Todos",
   evalEditingId: null,
+  torneoId: null,
 };

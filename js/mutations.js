@@ -40,7 +40,7 @@ export function addAthlete(data){
 }
 
 export function addTorneo(data){
-  state.torneos.push({ id: uid("tor"), nombre:data.nombre, fecha:data.fecha, categoria:data.categoria, monto:Number(data.monto), descripcion:data.descripcion||"" });
+  state.torneos.push({ id: uid("tor"), nombre:data.nombre, fecha:data.fecha, categoria:data.categoria, monto:Number(data.monto), descripcion:data.descripcion||"", juegos:[] });
   saveTorneos();
   closeModal();
   if(window.__render) window.__render();
@@ -59,6 +59,7 @@ export function deleteTorneo(id){
   state.athletes.forEach(a=>{
     a.torneos = a.torneos.filter(t=>t.torneoId!==id);
     if(a.estadisticas) delete a.estadisticas[id];
+    if(a.juegosStats) delete a.juegosStats[id];
   });
   saveTorneos();
   saveAthletes();
@@ -110,6 +111,76 @@ export function saveEstadistica(athleteId, torneoId, stats){
   const a = state.athletes.find(x=>x.id===athleteId);
   if(!a.estadisticas) a.estadisticas = {};
   a.estadisticas[torneoId] = { ...stats };
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
+export function addJuego(torneoId, data){
+  const t = state.torneos.find(x=>x.id===torneoId);
+  if(!t) return;
+  if(!t.juegos) t.juegos = [];
+  t.juegos.push({ id: uid("jue"), rival:data.rival, fecha:data.fecha, marcadorF:Number(data.marcadorF)||0, marcadorC:Number(data.marcadorC)||0, estado:data.estado });
+  saveTorneos();
+  closeModal();
+  if(window.__render) window.__render();
+}
+
+export function updateJuego(torneoId, juegoId, patch){
+  const t = state.torneos.find(x=>x.id===torneoId);
+  if(!t) return;
+  const j = (t.juegos||[]).find(x=>x.id===juegoId);
+  if(!j) return;
+  Object.assign(j, patch);
+  if(patch.marcadorF != null) j.marcadorF = Number(patch.marcadorF)||0;
+  if(patch.marcadorC != null) j.marcadorC = Number(patch.marcadorC)||0;
+  saveTorneos();
+  closeModal();
+  if(window.__render) window.__render();
+}
+
+export function recomputeTorneoStats(torneoId){
+  state.athletes.forEach(a=>{
+    const games = a.juegosStats && a.juegosStats[torneoId];
+    if(!games) return;
+    const totals = { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0 };
+    const played = Object.keys(games).filter(gid=>{
+      const s = games[gid];
+      return (s.goles||0)+(s.asistencias||0)+(s.tarjetasAmarillas||0)+(s.tarjetasRojas||0) > 0;
+    });
+    totals.partidosJugados = played.length;
+    Object.values(games).forEach(s=>{
+      totals.goles += s.goles||0;
+      totals.asistencias += s.asistencias||0;
+      totals.tarjetasAmarillas += s.tarjetasAmarillas||0;
+      totals.tarjetasRojas += s.tarjetasRojas||0;
+    });
+    if(!a.estadisticas) a.estadisticas = {};
+    a.estadisticas[torneoId] = totals;
+  });
+}
+
+export function saveJuegoStats(torneoId, juegoId, entries){
+  entries.forEach(({athleteId, stats})=>{
+    const a = state.athletes.find(x=>x.id===athleteId);
+    if(!a) return;
+    if(!a.juegosStats) a.juegosStats = {};
+    if(!a.juegosStats[torneoId]) a.juegosStats[torneoId] = {};
+    a.juegosStats[torneoId][juegoId] = { ...stats };
+  });
+  recomputeTorneoStats(torneoId);
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
+export function deleteJuego(torneoId, juegoId){
+  const t = state.torneos.find(x=>x.id===torneoId);
+  if(!t) return;
+  t.juegos = (t.juegos||[]).filter(j=>j.id!==juegoId);
+  state.athletes.forEach(a=>{
+    if(a.juegosStats && a.juegosStats[torneoId]) delete a.juegosStats[torneoId][juegoId];
+  });
+  recomputeTorneoStats(torneoId);
+  saveTorneos();
   saveAthletes();
   if(window.__render) window.__render();
 }

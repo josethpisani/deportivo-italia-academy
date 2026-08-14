@@ -1,0 +1,29 @@
+/* TORNEOS PANEL */
+.tor-btn{display:block;width:100%;text-align:left;cursor:pointer;transition:border-color .15s,box-shadow .15s;}
+.tor-btn:hover{border-color:var(--pitch);box-shadow:0 2px 10px #0e4c8622;}
+.tor-btn .tname{color:var(--pitch);}
+.tor-team-line{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+
+/* JUEGOS */
+.juego-row{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--chalk-dim);border-radius:10px;padding:12px 14px;margin-bottom:8px;flex-wrap:wrap;}
+.juego-row .juego-info{flex:1;min-width:180px;}
+.juego-rival{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:6px;}
+.juego-rival svg{color:var(--pitch);}
+.juego-meta{font-size:12px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px;}
+.juego-marcador{font-weight:800;font-size:15px;color:var(--pitch);background:var(--page);border-radius:8px;padding:6px 12px;white-space:nowrap;}
+.juego-actions{display:flex;gap:6px;align-items:center;}
+.juego-actions .btn-icon.red{color:var(--red);}
+.juego-actions .btn-icon.red:hover{border-color:var(--red);}
+
+/* INSCRITOS */
+.enroll-grid{display:flex;gap:8px;flex-wrap:wrap;}
+.enroll-chip{border:1px solid var(--chalk-dim);border-radius:100px;padding:6px 12px;font-size:12px;font-weight:600;background:#fff;color:var(--ink);display:flex;align-items:center;gap:6px;cursor:pointer;transition:all .15s;}
+.enroll-chip.on{border-color:var(--pitch);background:#DCEFE3;color:#1F6E45;}
+.enroll-chip:hover{border-color:var(--pitch);}
+
+/* RADIO PILLS (modal juegos) */
+.radio-pill{display:flex;align-items:center;gap:6px;border:1px solid var(--chalk-dim);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;background:#fff;cursor:pointer;flex:1;}
+.radio-pill:has(input:checked){border-color:var(--pitch);background:var(--page);color:var(--pitch);}
+
+/* STATS YEARLY VALUE (panel estadísticas) */
+.sg-value{font-size:20px;font-weight:800;color:var(--ink);line-height:1.1;}

@@ -43,6 +43,9 @@
   .bnav-btn svg{width:20px;height:20px;}
   .bnav-btn.active{color:var(--green);}
   .bnav-btn span{margin-top:2px;}
+  #bottom-nav{overflow-x:auto;}
+  #bottom-nav::-webkit-scrollbar{display:none;}
+  .bnav-btn{min-width:64px;flex:1 0 auto;}
 
   /* Main content */
   #main{padding:68px 14px 82px;max-height:100vh;overflow-y:auto;}

@@ -1,12 +1,12 @@
 import { state } from './state.js';
 import { ic } from './icons.js';
-import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete } from './mutations.js';
-import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal } from './modals.js';
+import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, deleteJuego, deleteTorneo } from './mutations.js';
+import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
 
 export function attachEvents(){
   document.querySelectorAll("[data-nav]").forEach(btn=>{
-    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(state.view!=="evaluaciones"){ state.evalAthleteId=null; state.evalEditingId=null; } if(window.__render) window.__render(); };
+    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(state.view!=="evaluaciones"){ state.evalAthleteId=null; state.evalEditingId=null; } if(state.view!=="torneos" && state.view!=="torneo-detail") state.torneoId=null; if(window.__render) window.__render(); };
   });
   document.querySelectorAll("[data-goto-cat]").forEach(btn=>{
     btn.onclick = ()=>{ state.activeCategory = btn.dataset.gotoCat; state.view="atleta-list"; if(window.__render) window.__render(); };
@@ -185,5 +185,43 @@ export function attachEvents(){
         deleteEvaluacion(state.evalAthleteId, btn.dataset.deleteEval);
       }
     };
+  });
+
+  document.querySelectorAll("[data-torcard]").forEach(btn=>{
+    btn.onclick = ()=>{ state.torneoId = btn.dataset.torcard; state.view = "torneo-detail"; if(window.__render) window.__render(); };
+  });
+  const btnBackTorneo = document.getElementById("btnBackTorneo");
+  if(btnBackTorneo) btnBackTorneo.onclick = ()=>{ state.view="torneos"; state.torneoId=null; if(window.__render) window.__render(); };
+  const btnEditTorneo = document.getElementById("btnEditTorneo");
+  if(btnEditTorneo) btnEditTorneo.onclick = ()=> openEditTorneoModal(state.torneoId);
+  const btnDeleteTorneo = document.getElementById("btnDeleteTorneo");
+  if(btnDeleteTorneo) btnDeleteTorneo.onclick = ()=>{
+    if(confirm("¿Eliminar este torneo? Se desasociará de todos los atletas.")){
+      const id = state.torneoId;
+      state.view = "torneos";
+      state.torneoId = null;
+      deleteTorneo(id);
+    }
+  };
+  const btnAddJuego = document.getElementById("btnAddJuego");
+  if(btnAddJuego) btnAddJuego.onclick = ()=> openJuegoModal(state.torneoId);
+  document.querySelectorAll("[data-edit-juego]").forEach(btn=>{
+    btn.onclick = ()=> openJuegoModal(state.torneoId, btn.dataset.editJuego);
+  });
+  document.querySelectorAll("[data-del-juego]").forEach(btn=>{
+    btn.onclick = ()=>{
+      if(confirm("¿Eliminar este juego? Se quitarán sus estadísticas de los atletas.")){
+        deleteJuego(state.torneoId, btn.dataset.delJuego);
+      }
+    };
+  });
+  document.querySelectorAll("[data-juego-stats]").forEach(btn=>{
+    btn.onclick = ()=> openJuegoStatsModal(state.torneoId, btn.dataset.juegoStats);
+  });
+  document.querySelectorAll("[data-tor-enroll]").forEach(btn=>{
+    btn.onclick = ()=> toggleTorneoAtleta(btn.dataset.torEnroll, state.torneoId);
+  });
+  document.querySelectorAll("[data-torstats]").forEach(btn=>{
+    btn.onclick = ()=> openTorneoStatsModal(state.torneoId);
   });
 }

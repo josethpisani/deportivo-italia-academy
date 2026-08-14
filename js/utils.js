@@ -30,3 +30,27 @@ export function dayNameFromDate(iso){
   const d = new Date(iso + "T12:00:00");
   return names[d.getDay()];
 }
+export function computeTorneoTeamStats(t){
+  const juegos = (t.juegos||[]).filter(j=>j.estado==="jugado");
+  let ganados=0, empatados=0, perdidos=0, gf=0, gc=0;
+  juegos.forEach(j=>{
+    const f=Number(j.marcadorF||0), c=Number(j.marcadorC||0);
+    gf+=f; gc+=c;
+    if(f>c) ganados++;
+    else if(f===c) empatados++;
+    else perdidos++;
+  });
+  return { partidos:juegos.length, ganados, empatados, perdidos, gf, gc };
+}
+export function sumTorneoStats(a){
+  const acc = { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0 };
+  Object.keys(a.estadisticas||{}).forEach(torId=>{
+    const st = a.estadisticas[torId]||{};
+    acc.goles += st.goles||0;
+    acc.asistencias += st.asistencias||0;
+    acc.tarjetasAmarillas += st.tarjetasAmarillas||0;
+    acc.tarjetasRojas += st.tarjetasRojas||0;
+    acc.partidosJugados += st.partidosJugados||0;
+  });
+  return acc;
+}

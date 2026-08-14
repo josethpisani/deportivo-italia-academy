@@ -175,6 +175,21 @@ export function drawStatsCharts(){
   });
 }
 
+export function drawTorneoCharts(){
+  const d = window.__torneoDetailData;
+  if(!d) return;
+  makeChart("chartTorneoResultados", {
+    type:"doughnut",
+    data:{ labels:["Ganados","Empatados","Perdidos"], datasets:[{ data:[d.ganados||1,d.empatados||1,d.perdidos||1], backgroundColor:[C.green,C.orange,C.red] }] },
+    options: doughnutOpts("Resultados del equipo")
+  });
+  makeChart("chartTorneoGoals", {
+    type:"doughnut",
+    data:{ labels:["Goles a favor","Goles en contra"], datasets:[{ data:[d.gf||1,d.gc||1], backgroundColor:[C.pitch,C.red] }] },
+    options: doughnutOpts("Goles: a favor vs en contra")
+  });
+}
+
 export function drawEvalCharts(){
   const d = window.__evalDetailData;
   if(!d) return;
