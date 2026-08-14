@@ -16,6 +16,9 @@ function render(){
     return;
   }
   let mainContent = "";
+  const prevView = state.view;
+  const mainEl = document.getElementById("main");
+  const savedScroll = mainEl ? mainEl.scrollTop : 0;
   if(state.view==="home") mainContent = renderHome();
   else if(state.view==="atleta-list") mainContent = renderAthleteList();
   else if(state.view==="atleta-detail") mainContent = renderAthleteDetail();
@@ -34,6 +37,11 @@ function render(){
   else if(state.view==="admin") drawAdminCharts();
   else if(state.view==="estadisticas") drawStatsCharts();
   else if(state.view==="evaluaciones") drawEvalCharts();
+
+  if(state.view === prevView && savedScroll > 0){
+    const newMain = document.getElementById("main");
+    if(newMain) newMain.scrollTop = savedScroll;
+  }
 }
 
 setRenderCallbacks(render, renderSaveStatus);
