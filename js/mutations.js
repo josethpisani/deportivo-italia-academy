@@ -90,6 +90,15 @@ export function toggleTorneoAtleta(athleteId, torneoId){
   if(window.__render) window.__render();
 }
 
+export function setTorneoEnrollAll(torneoId, categoria, enroll){
+  state.athletes.filter(a=>a.categoria===categoria).forEach(a=>{
+    a.torneos = a.torneos.filter(t=>t.torneoId!==torneoId);
+    if(enroll) a.torneos.push({ torneoId, fecha: todayISO() });
+  });
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
 export function saveObservaciones(athleteId, text){
   const a = state.athletes.find(x=>x.id===athleteId);
   a.observaciones = text;

@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { ic } from './icons.js';
-import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, deleteJuego, deleteTorneo } from './mutations.js';
+import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo } from './mutations.js';
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
 
@@ -220,6 +220,9 @@ export function attachEvents(){
   });
   document.querySelectorAll("[data-tor-enroll]").forEach(btn=>{
     btn.onclick = ()=> toggleTorneoAtleta(btn.dataset.torEnroll, state.torneoId);
+  });
+  document.querySelectorAll("[data-tor-enrollall]").forEach(btn=>{
+    btn.onclick = ()=> setTorneoEnrollAll(state.torneoId, btn.dataset.torEnrollall, btn.dataset.all!=="1");
   });
   document.querySelectorAll("[data-torstats]").forEach(btn=>{
     btn.onclick = ()=> openTorneoStatsModal(state.torneoId);

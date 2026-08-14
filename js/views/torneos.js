@@ -2,6 +2,7 @@ import { state } from '../state.js';
 import { ic } from '../icons.js';
 import { escapeHtml, computeTorneoTeamStats } from '../utils.js';
 import { statPill, badge } from '../render-helpers.js';
+import { CATEGORIES } from '../constants.js';
 
 export function renderTorneos(){
   const cards = state.torneos.map(t=>{
@@ -61,10 +62,24 @@ export function renderTorneoDetail(){
     </div>`;
   }).join("") || '<p class="empty-msg">Aún no hay juegos registrados. Agrega el primer juego con el botón superior.</p>';
 
-  const enrollChips = elegibles.map(a=>{
-    const insc = a.torneos.some(at=>at.torneoId===t.id);
-    return `<button class="enroll-chip ${insc?"on":""}" data-tor-enroll="${a.id}">
-      ${insc?ic.check:ic.plus} ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)} <span class="enroll-cat">${a.categoria}</span></button>`;
+  const enrollGroups = CATEGORIES.map(c=>{
+    const list = state.athletes.filter(a=>a.categoria===c);
+    if(!list.length) return "";
+    const inscCount = list.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
+    const allIn = inscCount===list.length;
+    const chips = list.map(a=>{
+      const insc = a.torneos.some(at=>at.torneoId===t.id);
+      return `<button class="enroll-chip ${insc?"on":""}" data-tor-enroll="${a.id}">
+        ${insc?ic.check:ic.plus} ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</button>`;
+    }).join("");
+    return `<div class="enroll-group">
+      <div class="enroll-group-head">
+        <span class="enroll-group-name">${c}</span>
+        <span class="enroll-group-count">${inscCount}/${list.length} inscritos</span>
+        <button class="enroll-group-toggle" data-tor-enrollall="${c}" data-all="${allIn?"1":"0"}">${allIn?ic.x+" Quitar todos":ic.check+" Inscribir todos"}</button>
+      </div>
+      <div class="enroll-grid">${chips}</div>
+    </div>`;
   }).join("");
 
   const statRows = inscritos.map(a=>{
@@ -122,8 +137,8 @@ export function renderTorneoDetail(){
 
     <div class="section">
       <h3 class="dia-title">Atletas inscritos (${inscritos.length}/${elegibles.length})</h3>
-      <p class="page-sub" style="margin:0 0 10px;">Puedes inscribir atletas de cualquier categoría; todos juegan juntos en el mismo equipo. Toca cada atleta para inscribirlo o quitarlo del torneo.</p>
-      <div class="enroll-grid">${enrollChips || '<p class="empty-msg">No hay atletas registrados.</p>'}</div>
+      <p class="page-sub" style="margin:0 0 10px;">Elige atletas de cualquier categoría; todos juegan juntos en el mismo equipo. Toca cada atleta para inscribirlo o quitarlo del torneo.</p>
+      ${enrollGroups || '<p class="empty-msg">No hay atletas registrados.</p>'}
     </div>
 
     <div class="section">
