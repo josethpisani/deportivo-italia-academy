@@ -149,7 +149,7 @@ export function openAddTorneoModal(){
         <label>Nombre del torneo</label><input id="t_nombre">
         <label>Fecha</label><input id="t_fecha" type="date">
         <div class="row2">
-          <div><label>Categoría</label><select id="t_categoria">${CATEGORIES.map(c=>`<option>${c}</option>`).join("")}</select></div>
+          <div><label>Categoría</label><select id="t_categoria"><option>Mixto</option>${CATEGORIES.map(c=>`<option>${c}</option>`).join("")}</select></div>
           <div><label>Monto ($)</label><input id="t_monto" type="number" value="20"></div>
         </div>
         <label>Descripción</label><textarea id="t_desc" rows="2" placeholder="Detalles del torneo..."></textarea>
@@ -186,7 +186,7 @@ export function openEditTorneoModal(torneoId){
         <label>Nombre del torneo</label><input id="et_nombre" value="${escapeHtml(t.nombre)}">
         <label>Fecha</label><input id="et_fecha" type="date" value="${t.fecha}">
         <div class="row2">
-          <div><label>Categoría</label><select id="et_categoria">${CATEGORIES.map(c=>`<option ${c===t.categoria?"selected":""}>${c}</option>`).join("")}</select></div>
+          <div><label>Categoría</label><select id="et_categoria"><option ${!CATEGORIES.includes(t.categoria)?"selected":""}>Mixto</option>${CATEGORIES.map(c=>`<option ${c===t.categoria?"selected":""}>${c}</option>`).join("")}</select></div>
           <div><label>Monto ($)</label><input id="et_monto" type="number" value="${t.monto}"></div>
         </div>
         <label>Descripción</label><textarea id="et_desc" rows="2">${escapeHtml(t.descripcion||"")}</textarea>
@@ -224,7 +224,7 @@ export function openTorneoStatsModal(torneoId){
   closeModal();
   const t = state.torneos.find(x=>x.id===torneoId);
   if(!t) return;
-  const elegibles = state.athletes.filter(a=>a.categoria===t.categoria && a.torneos.some(x=>x.torneoId===torneoId));
+  const elegibles = state.athletes.filter(a=>a.torneos.some(x=>x.torneoId===torneoId));
 
   const rows = elegibles.map(a=>{
     const stats = (a.estadisticas && a.estadisticas[torneoId]) || {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0};
@@ -242,7 +242,7 @@ export function openTorneoStatsModal(torneoId){
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal" style="max-width:600px;">
         <div class="mh"><h3 class="dia-title">Estadísticas — ${escapeHtml(t.nombre)}</h3><button id="modalClose">${ic.x}</button></div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Categoría ${t.categoria} · ${elegibles.length} atletas inscritos</p>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">${elegibles.length} atletas inscritos</p>
         ${elegibles.length === 0 ? '<p class="empty-msg">No hay atletas inscritos en este torneo.</p>' : `
         <div style="overflow-x:auto;">
         <table><thead><tr><th>Atleta</th><th>Goles</th><th>Asist.</th><th>TA</th><th>TR</th><th>Partidos</th></tr></thead>

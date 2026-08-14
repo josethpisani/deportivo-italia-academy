@@ -40,7 +40,7 @@ export function renderTorneoDetail(){
   const t = state.torneos.find(x=>x.id===state.torneoId);
   if(!t) return `<p>Torneo no encontrado.</p>`;
   const inscritos = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
-  const elegibles = state.athletes.filter(a=>a.categoria===t.categoria);
+  const elegibles = state.athletes;
   const team = computeTorneoTeamStats(t);
 
   window.__torneoDetailData = { ganados: team.ganados, empatados: team.empatados, perdidos: team.perdidos, gf: team.gf, gc: team.gc };
@@ -64,7 +64,7 @@ export function renderTorneoDetail(){
   const enrollChips = elegibles.map(a=>{
     const insc = a.torneos.some(at=>at.torneoId===t.id);
     return `<button class="enroll-chip ${insc?"on":""}" data-tor-enroll="${a.id}">
-      ${insc?ic.check:ic.plus} ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</button>`;
+      ${insc?ic.check:ic.plus} ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)} <span class="enroll-cat">${a.categoria}</span></button>`;
   }).join("");
 
   const statRows = inscritos.map(a=>{
@@ -122,8 +122,8 @@ export function renderTorneoDetail(){
 
     <div class="section">
       <h3 class="dia-title">Atletas inscritos (${inscritos.length}/${elegibles.length})</h3>
-      <p class="page-sub" style="margin:0 0 10px;">Toca cada atleta para inscribirlo o quitarlo del torneo.</p>
-      <div class="enroll-grid">${enrollChips || '<p class="empty-msg">No hay atletas en la categoría '+escapeHtml(t.categoria)+'.</p>'}</div>
+      <p class="page-sub" style="margin:0 0 10px;">Puedes inscribir atletas de cualquier categoría; todos juegan juntos en el mismo equipo. Toca cada atleta para inscribirlo o quitarlo del torneo.</p>
+      <div class="enroll-grid">${enrollChips || '<p class="empty-msg">No hay atletas registrados.</p>'}</div>
     </div>
 
     <div class="section">

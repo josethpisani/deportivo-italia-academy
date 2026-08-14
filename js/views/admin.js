@@ -133,13 +133,13 @@ export function renderAdmin(){
       <div class="mat-grid">${cards}</div>`;
   } else {
     let torneosHtml = state.torneos.map(t=>{
-      const elegibles = state.athletes.filter(a=>a.categoria===t.categoria);
+      const elegibles = state.athletes;
       const inscritos = elegibles.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
 
       const chips = elegibles.map(a=>{
         const inscrito = a.torneos.some(at=>at.torneoId===t.id);
         return `<button class="pay-chip ${inscrito?"paid":""}" data-torneopago="${a.id}|${t.id}|${inscrito?0:1}">
-          ${inscrito?ic.check:ic.clock} ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</button>`;
+          ${inscrito?ic.check:ic.clock} ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)} <span class="pay-cat">${a.categoria}</span></button>`;
       }).join("");
 
       const statsSummary = inscritos.length > 0 ? (() => {
@@ -165,7 +165,7 @@ export function renderAdmin(){
           </div>
         </div>
         ${statsSummary}
-        <div class="pay-chips-label">Atletas de ${t.categoria}:</div>
+        <div class="pay-chips-label">Atletas (toca para marcar pago):</div>
         <div class="pay-chips">${chips}</div>
       </div>`;
     }).join("");

@@ -120,11 +120,10 @@ export function renderAthleteDetail(){
     gamePresent, gameAusente: gameTotal - gamePresent,
   };
 
-  const torneosCat = state.torneos.filter(t=>t.categoria===a.categoria);
-  const torneosHtml = torneosCat.length ? torneosCat.map(t=>{
-    const pagado = a.torneos.some(at=>at.torneoId===t.id);
-    return `<div class="tor-row"><div><div class="tname">${escapeHtml(t.nombre)}</div><div class="tmeta">${t.fecha} · $${t.monto}</div></div>${badge(pagado?"Pagado":"Pendiente", pagado?"good":"bad")}</div>`;
-  }).join("") : `<p class="empty-msg">Sin torneos para esta categoría.</p>`;
+  const torneosInscrito = state.torneos.filter(t=> a.torneos.some(at=>at.torneoId===t.id));
+  const torneosHtml = torneosInscrito.length ? torneosInscrito.map(t=>{
+    return `<div class="tor-row"><div><div class="tname">${escapeHtml(t.nombre)}</div><div class="tmeta">${t.fecha} · $${t.monto} · Categoría ${t.categoria}</div></div>${badge("Inscrito","good")}</div>`;
+  }).join("") : `<p class="empty-msg">Este atleta no está inscrito en ningún torneo.</p>`;
 
   const torneosInscritos = state.torneos.filter(t=> a.torneos.some(at=>at.torneoId===t.id));
   let statsHtml = "";
