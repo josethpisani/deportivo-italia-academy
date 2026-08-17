@@ -332,22 +332,23 @@ export function openJuegoModal(torneoId, juegoId){
     document.getElementById("j_save").disabled = !ok;
   };
   ["j_rival","j_fecha"].forEach(id=> document.getElementById(id).addEventListener("input", checkValid));
+  checkValid();
   document.getElementById("j_save").onclick = ()=>{
     const estado = document.querySelector('input[name="j_estado"]:checked')?.value || "pendiente";
     if(j){
       updateJuego(torneoId, juegoId, {
         rival: document.getElementById("j_rival").value.trim(),
         fecha: document.getElementById("j_fecha").value,
-        marcadorF: document.getElementById("j_gf").value,
-        marcadorC: document.getElementById("j_gc").value,
+        marcadorF: Number(document.getElementById("j_gf").value)||0,
+        marcadorC: Number(document.getElementById("j_gc").value)||0,
         estado,
       });
     } else {
       addJuego(torneoId, {
         rival: document.getElementById("j_rival").value.trim(),
         fecha: document.getElementById("j_fecha").value,
-        marcadorF: document.getElementById("j_gf").value,
-        marcadorC: document.getElementById("j_gc").value,
+        marcadorF: Number(document.getElementById("j_gf").value)||0,
+        marcadorC: Number(document.getElementById("j_gc").value)||0,
         estado,
       });
     }
