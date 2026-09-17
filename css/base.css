@@ -1,0 +1,32 @@
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Inter',sans-serif;color:var(--ink);background:var(--pitch-dark);}
+.dia-title{font-family:'Oswald',sans-serif;letter-spacing:.5px;}
+button{cursor:pointer;font-family:'Inter',sans-serif;}
+input,select{font-family:'Inter',sans-serif;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#c9d2dd;border-radius:4px;}
+
+#app{display:flex;min-height:100vh;}
+
+/* MAIN */
+#main{flex:1;background:var(--page);padding:28px 32px;overflow-y:auto;max-height:100vh;}
+h1.page-title{font-size:24px;margin:0 0 4px;}
+p.page-sub{color:var(--muted);margin:0 0 22px;font-size:13.5px;}
+
+/* STAT PILLS */
+.stats-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;}
+.stat-pill{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--chalk-dim);border-radius:10px;padding:14px 16px;flex:1;min-width:150px;}
+.stat-pill .icon{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:16px;}
+.stat-pill .val{font-size:20px;font-weight:800;line-height:1.1;}
+.stat-pill .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+
+/* BADGE */
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;display:inline-block;}
+.badge.neutral{background:#E7ECF2;color:#52606d;}
+.badge.good{background:#DCEFE3;color:#1F6E45;}
+.badge.bad{background:#F6DEDB;color:var(--red);}
+.badge.warn{background:#FBEFD0;color:#8A6512;}
+
+/* MISC */
+.loading-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;color:#fff;flex-direction:column;gap:10px;}
+.empty-msg{color:#999;font-size:13px;}

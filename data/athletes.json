@@ -1,0 +1,1025 @@
+﻿[
+    {
+        "id":  "ath_u4_001",
+        "nombre":  "Luca",
+        "apellido":  "Camacho",
+        "categoria":  "U4",
+        "edad":  4,
+        "fechaNacimiento":  "2022-05-23",
+        "posicion":  "Portero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u4_002",
+        "nombre":  "Lorenzo",
+        "apellido":  "Palacios Delgado",
+        "categoria":  "U4",
+        "edad":  4,
+        "fechaNacimiento":  "2022-02-02",
+        "posicion":  "Defensa",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u4_003",
+        "nombre":  "Ignacio Manuel",
+        "apellido":  "Taylor Ledezma",
+        "categoria":  "U4",
+        "edad":  4,
+        "fechaNacimiento":  "2022-01-10",
+        "posicion":  "Mediocampo",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u6_001",
+        "nombre":  "Massimo",
+        "apellido":  "Samaniego CannavÃ³",
+        "categoria":  "U6",
+        "edad":  4,
+        "fechaNacimiento":  "2021-11-19",
+        "posicion":  "Portero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u6_002",
+        "nombre":  "Matheo David",
+        "apellido":  "Rodriguez Rodriguez",
+        "categoria":  "U6",
+        "edad":  4,
+        "fechaNacimiento":  "2021-10-07",
+        "posicion":  "Defensa",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u6_003",
+        "nombre":  "Federico",
+        "apellido":  "Espil",
+        "categoria":  "U6",
+        "edad":  4,
+        "fechaNacimiento":  "2021-07-28",
+        "posicion":  "Mediocampo",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u6_004",
+        "nombre":  "Gabriel Felipe JosÃ©",
+        "apellido":  "Endara Andrade",
+        "categoria":  "U6",
+        "edad":  5,
+        "fechaNacimiento":  "2021-05-05",
+        "posicion":  "Delantero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u6_005",
+        "nombre":  "Yibram Alejandro",
+        "apellido":  "Herrera SÃ¡nchez",
+        "categoria":  "U6",
+        "edad":  5,
+        "fechaNacimiento":  "2021-02-12",
+        "posicion":  "Portero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u6_006",
+        "nombre":  "JoaquÃ­n",
+        "apellido":  "GarzÃ³n Gonzalez",
+        "categoria":  "U6",
+        "edad":  5,
+        "fechaNacimiento":  "2020-09-20",
+        "posicion":  "Defensa",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u6_007",
+        "nombre":  "Joshua Alejandro",
+        "apellido":  "Orobio Collo",
+        "categoria":  "U6",
+        "edad":  5,
+        "fechaNacimiento":  "2020-09-15",
+        "posicion":  "Mediocampo",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u6_008",
+        "nombre":  "Javier ArcÃ¡ngel",
+        "apellido":  "Vargas Martinez",
+        "categoria":  "U6",
+        "edad":  5,
+        "fechaNacimiento":  "2020-09-09",
+        "posicion":  "Delantero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_001",
+        "nombre":  "Daniel Alessandro",
+        "apellido":  "Carbone Tam",
+        "categoria":  "U8",
+        "edad":  7,
+        "fechaNacimiento":  "2019-03-21",
+        "posicion":  "Portero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_002",
+        "nombre":  "Lucca",
+        "apellido":  "Hutchinson De LeÃ³n",
+        "categoria":  "U8",
+        "edad":  7,
+        "fechaNacimiento":  "2019-03-06",
+        "posicion":  "Defensa",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_003",
+        "nombre":  "Rogelio A.",
+        "apellido":  "Duque D.",
+        "categoria":  "U8",
+        "edad":  7,
+        "fechaNacimiento":  "2019-02-21",
+        "posicion":  "Mediocampo",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_004",
+        "nombre":  "Andrew Mirko",
+        "apellido":  "Richards UreÃ±a",
+        "categoria":  "U8",
+        "edad":  7,
+        "fechaNacimiento":  "2019-01-29",
+        "posicion":  "Delantero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_005",
+        "nombre":  "Daniel De Jesus",
+        "apellido":  "Trujillo Valdes",
+        "categoria":  "U8",
+        "edad":  7,
+        "fechaNacimiento":  "2018-10-16",
+        "posicion":  "Portero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_006",
+        "nombre":  "Luis Carlos",
+        "apellido":  "Garcia",
+        "categoria":  "U8",
+        "edad":  8,
+        "fechaNacimiento":  "2018-07-02",
+        "posicion":  "Defensa",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_007",
+        "nombre":  "Federico",
+        "apellido":  "MÃ¡rquez",
+        "categoria":  "U8",
+        "edad":  8,
+        "fechaNacimiento":  "2018-06-07",
+        "posicion":  "Mediocampo",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_008",
+        "nombre":  "Diego",
+        "apellido":  "MÃ©ndez",
+        "categoria":  "U8",
+        "edad":  8,
+        "fechaNacimiento":  "2018-05-21",
+        "posicion":  "Delantero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_009",
+        "nombre":  "Lucas",
+        "apellido":  "MÃ©ndez",
+        "categoria":  "U8",
+        "edad":  8,
+        "fechaNacimiento":  "2018-05-21",
+        "posicion":  "Portero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_010",
+        "nombre":  "MatÃ­as Enrique",
+        "apellido":  "MorÃ¡n Castillo",
+        "categoria":  "U8",
+        "edad":  8,
+        "fechaNacimiento":  "2018-05-19",
+        "posicion":  "Defensa",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_011",
+        "nombre":  "Juan Diego",
+        "apellido":  "Araque Flors",
+        "categoria":  "U8",
+        "edad":  8,
+        "fechaNacimiento":  "2018-04-23",
+        "posicion":  "Mediocampo",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_012",
+        "nombre":  "Thiago AndrÃ©",
+        "apellido":  "Villarreal",
+        "categoria":  "U8",
+        "edad":  8,
+        "fechaNacimiento":  "2018-03-26",
+        "posicion":  "Delantero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u8_013",
+        "nombre":  "Santiago",
+        "apellido":  "Castillo",
+        "categoria":  "U8",
+        "edad":  8,
+        "fechaNacimiento":  "2018-03-14",
+        "posicion":  "Portero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u10_001",
+        "nombre":  "Ihan",
+        "apellido":  "VÃ¡squez",
+        "categoria":  "U10",
+        "edad":  8,
+        "fechaNacimiento":  "2017-10-17",
+        "posicion":  "Defensa",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u10_002",
+        "nombre":  "Gian Franco",
+        "apellido":  "Molina",
+        "categoria":  "U10",
+        "edad":  9,
+        "fechaNacimiento":  "2017-06-01",
+        "posicion":  "Mediocampo",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u10_003",
+        "nombre":  "Santiago",
+        "apellido":  "Morales",
+        "categoria":  "U10",
+        "edad":  9,
+        "fechaNacimiento":  "2017-05-31",
+        "posicion":  "Delantero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u10_004",
+        "nombre":  "Guillermo AndrÃ©s",
+        "apellido":  "PÃ©rez Velandia",
+        "categoria":  "U10",
+        "edad":  9,
+        "fechaNacimiento":  "2017-05-27",
+        "posicion":  "Portero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u10_005",
+        "nombre":  "Dylan Andrew",
+        "apellido":  "Wong",
+        "categoria":  "U10",
+        "edad":  9,
+        "fechaNacimiento":  "2017-04-08",
+        "posicion":  "Defensa",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u10_006",
+        "nombre":  "Esteban David",
+        "apellido":  "Montero",
+        "categoria":  "U10",
+        "edad":  10,
+        "fechaNacimiento":  "2016-05-04",
+        "posicion":  "Mediocampo",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u10_007",
+        "nombre":  "Gabriel",
+        "apellido":  "Gaspard",
+        "categoria":  "U10",
+        "edad":  10,
+        "fechaNacimiento":  "2016-01-24",
+        "posicion":  "Delantero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u12_001",
+        "nombre":  "Elon",
+        "apellido":  "Wong",
+        "categoria":  "U12",
+        "edad":  10,
+        "fechaNacimiento":  "2015-08-18",
+        "posicion":  "Portero",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    },
+    {
+        "id":  "ath_u12_002",
+        "nombre":  "Paolo",
+        "apellido":  "Tabbi",
+        "categoria":  "U12",
+        "edad":  11,
+        "fechaNacimiento":  "2015-07-10",
+        "posicion":  "Defensa",
+        "representante":  "",
+        "telefono":  "",
+        "direccion":  "",
+        "fechaIngreso":  "2026-07-13",
+        "matricula":  {
+                          "estado":  "pendiente",
+                          "monto":  35,
+                          "fecha":  "2026-07-13"
+                      },
+        "torneos":  [
+
+                    ],
+        "asistenciaEntrenamiento":  {
+
+                                    },
+        "asistenciaJuegos":  {
+
+                             },
+        "observaciones":  "",
+        "estadisticas":  {
+
+                         }
+    }
+]
