@@ -217,10 +217,12 @@ function navigateTo(href) {
 async function handleLogin(form) {
   const email = form.querySelector('[name="email"]').value;
   const password = form.querySelector('[name="password"]').value;
-  const btn = form.querySelector('#btnLogin');
+  const btn = form.querySelector('#btnLogin') || form.querySelector('.btn-sede-login');
   
-  btn.disabled = true;
-  btn.innerHTML = 'Entrando...';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `${ic.loader} Entrando...`;
+  }
   
   // Credenciales por sede
   const sede = state.targetSede;
@@ -242,8 +244,10 @@ async function handleLogin(form) {
     setRoute('home');
     render();
   } else {
-    btn.disabled = false;
-    btn.innerHTML = `${ic.logIn} Ingresar al sistema`;
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `${ic.logIn} Ingresar al sistema`;
+    }
     alert('Credenciales incorrectas');
   }
 }
