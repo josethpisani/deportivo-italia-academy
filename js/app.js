@@ -154,6 +154,8 @@ function setupGlobalEvents() {
       const sedeCode = loginForm.dataset.sedeCodigo;
       const sede = state.sedes.find(s => s.codigo === sedeCode);
       if (sede) {
+        // Set targetSede so handleLogin can validate credentials
+        state.targetSede = sede;
         const email = loginForm.querySelector('[name="email"]').value;
         const password = loginForm.querySelector('[name="password"]').value;
         const btn = loginForm.querySelector('.btn-sede-login');
