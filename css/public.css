@@ -296,7 +296,7 @@
 .acceso-header { padding: 24px 0; border-bottom: 1px solid var(--border-medium); }
 .acceso-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
 .acceso-logo img { width: 48px; }
-.acceso-logo span { font-family: 'Oswald', sans-serif; font-size: 20px; letter-spacing: 1px; font-weight: 600; color: var(--primary); }
+.acceso-logo span { font-family: 'Oswald', sans-serif; font-size: 20px; letter-spacing: 1px; font-weight: 600; color: #fff; }
 
 .acceso-main { flex: 1; display: flex; align-items: flex-start; padding: 60px 0; }
 .acceso-hero { text-align: center; margin-bottom: 48px; }
@@ -323,11 +323,13 @@
 .sede-card-content { position: relative; z-index: 2; padding: 32px; display: flex; flex-direction: column; height: 100%; }
 .sede-icon-wrapper { width: 56px; height: 56px; background: rgba(255,255,255,0.1); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; backdrop-filter: blur(10px); }
 .sede-icon { font-size: 24px; color: #fff; }
-.sede-name { font-size: 28px; color: var(--text-primary); margin: 0 0 4px; }
-.sede-code { color: var(--primary); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px; }
-.sede-desc { color: var(--text-secondary); font-size: 14px; margin: 0 0 16px; flex: 1; }
+.sede-name { font-size: 28px; color: #fff; margin: 0 0 4px; }
+.sede-code { color: #fff; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px; }
+.sede-desc { color: rgba(255,255,255,0.85); font-size: 14px; margin: 0 0 16px; flex: 1; }
 .sede-meta-acceso { margin-bottom: 16px; }
 .sede-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-full); font-size: 12px; font-weight: 600; }
+.sede-status.active { background: rgba(30, 58, 138, 0.2); color: #fff; }
+.sede-status.inactive { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }00; }
 .sede-status.active { background: rgba(30, 58, 138, 0.1); color: var(--primary); }
 .sede-status.inactive { background: rgba(255,255,255,0.05); color: var(--text-muted); }
 .status-dot { width: 8px; height: 8px; border-radius: var(--radius-full); background: currentColor; }
@@ -443,8 +445,8 @@
 .login-back:hover { color: var(--primary); }
 .login-brand { display: flex; align-items: center; gap: 12px; text-align: right; }
 .login-brand img { width: 40px; }
-.login-brand strong { display: block; color: var(--text-primary); font-family: 'Oswald', sans-serif; letter-spacing: 1px; }
-.login-brand span { color: var(--primary); font-size: 13px; font-weight: 600; }
+.login-brand strong { display: block; color: #fff; font-family: 'Oswald', sans-serif; letter-spacing: 1px; }
+.login-brand span { color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 600; }
 
 .login-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
 .login-card { width: 100%; max-width: 420px; background: var(--white); border: 2px solid var(--border-medium); border-radius: var(--radius-xl); padding: 48px 40px; }
