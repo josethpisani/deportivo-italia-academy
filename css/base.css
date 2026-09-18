@@ -1,8 +1,8 @@
 *{box-sizing:border-box;}
-body{margin:0;font-family:'Inter',sans-serif;color:var(--ink);background:var(--pitch-dark);}
+body{margin:0;font-family:'Inter',sans-serif;color:var(--text-primary);background:var(--bg-primary);}
 .dia-title{font-family:'Oswald',sans-serif;letter-spacing:.5px;}
 button{cursor:pointer;font-family:'Inter',sans-serif;}
-input,select{font-family:'Inter',sans-serif;background:#fff;color:var(--ink);}
+input,select{font-family:'Inter',sans-serif;background:#fff;color:var(--text-primary);}
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-thumb{background:#c9d2dd;border-radius:4px;}
 
