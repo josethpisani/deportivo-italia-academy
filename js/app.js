@@ -1,3 +1,4 @@
+console.log("APP MODULE LOADED");
 import { state } from "/js/state.js";
 import { loadData, setRenderCallbacks, loadSedes, setCurrentSede, loadSiteContent } from "/js/api.js";
 import { renderSidebar, renderSaveStatus } from "/js/views/sidebar.js";
