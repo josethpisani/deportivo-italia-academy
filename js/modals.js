@@ -1,9 +1,9 @@
-import { state } from './state.js';
-import { CATEGORIES, POSITIONS } from './constants.js';
-import { ic } from './icons.js';
-import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadisticas, saveConfigData, updateAthleteCosts, addJuego, updateJuego, saveJuegoStats } from './mutations.js';
-import { escapeHtml } from './utils.js';
-import { saveSede, updateSede, saveSiteContent } from './api.js';
+import { state } from "/js/state.js";
+import { CATEGORIES, POSITIONS } from "/js/constants.js";
+import { ic } from "/js/icons.js";
+import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadisticas, saveConfigData, updateAthleteCosts, addJuego, updateJuego, saveJuegoStats } from "/js/mutations.js";
+import { escapeHtml } from "/js/utils.js";
+import { saveSede, updateSede, saveSiteContent } from "/js/api.js";
 
 export function closeModal(){
   const ov = document.getElementById("modalOverlay");

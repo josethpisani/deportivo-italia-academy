@@ -1,5 +1,5 @@
-import { state } from '../state.js';
-import { ic } from '../icons.js';
+import { state } from "/js/views/state.js";
+import { ic } from "/js/views/icons.js";
 
 const LOGO_SRC = "/img/logo-deportivoitalia.png";
 

@@ -1,8 +1,8 @@
-import { state } from '../state.js';
-import { CATEGORIES } from '../constants.js';
-import { ic } from '../icons.js';
-import { escapeHtml, attendanceRate, sumTorneoStats } from '../utils.js';
-import { statPill, badge, initials } from '../render-helpers.js';
+import { state } from "/js/views/state.js";
+import { CATEGORIES } from "/js/views/constants.js";
+import { ic } from "/js/views/icons.js";
+import { escapeHtml, attendanceRate, sumTorneoStats } from "/js/views/utils.js";
+import { statPill, badge, initials } from "/js/views/render-helpers.js";
 
 export function renderEstadisticas(){
   const filtered = state.athletes.filter(a=>{

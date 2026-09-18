@@ -1,18 +1,18 @@
-import { state } from './state.js';
-import { loadData, setRenderCallbacks, loadSedes, setCurrentSede, loadSiteContent } from './api.js';
-import { renderSidebar, renderSaveStatus } from './views/sidebar.js';
-import { renderHome } from './views/home.js';
-import { renderAthleteList, renderAthleteDetail } from './views/athletes.js';
-import { renderAttendanceTab } from './views/attendance.js';
-import { renderAdmin } from './views/admin.js';
-import { renderEstadisticas } from './views/estadisticas.js';
-import { renderEvaluacion } from './views/evaluacion.js';
-import { renderTorneos, renderTorneoDetail } from './views/torneos.js';
-import { renderPublicHome } from './views/public-home.js';
-import { renderAcceso } from './views/acceso.js';
-import { drawHomeCharts, drawAthListChart, drawAthDetailChart, drawRegChart, drawAdminCharts, drawStatsCharts, drawEvalCharts, drawTorneoCharts } from './charts.js';
-import { attachEvents } from './events.js';
-import { ic } from './icons.js';
+import { state } from "/js/state.js";
+import { loadData, setRenderCallbacks, loadSedes, setCurrentSede, loadSiteContent } from "/js/api.js";
+import { renderSidebar, renderSaveStatus } from "/js/views/sidebar.js";
+import { renderHome } from "/js/views/home.js";
+import { renderAthleteList, renderAthleteDetail } from "/js/views/athletes.js";
+import { renderAttendanceTab } from "/js/views/attendance.js";
+import { renderAdmin } from "/js/views/admin.js";
+import { renderEstadisticas } from "/js/views/estadisticas.js";
+import { renderEvaluacion } from "/js/views/evaluacion.js";
+import { renderTorneos, renderTorneoDetail } from "/js/views/torneos.js";
+import { renderPublicHome } from "/js/views/public-home.js";
+import { renderAcceso } from "/js/views/acceso.js";
+import { drawHomeCharts, drawAthListChart, drawAthDetailChart, drawRegChart, drawAdminCharts, drawStatsCharts, drawEvalCharts, drawTorneoCharts } from "/js/charts.js";
+import { attachEvents } from "/js/events.js";
+import { ic } from "/js/icons.js";
 
 // Route handling
 function parseRoute() {

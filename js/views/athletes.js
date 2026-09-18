@@ -1,8 +1,8 @@
-import { state } from '../state.js';
-import { CATEGORIES, TRAINING_DAYS } from '../constants.js';
-import { ic } from '../icons.js';
-import { escapeHtml, attendanceRate, lastNDates } from '../utils.js';
-import { statPill, badge, initials } from '../render-helpers.js';
+import { state } from "/js/views/state.js";
+import { CATEGORIES, TRAINING_DAYS } from "/js/views/constants.js";
+import { ic } from "/js/views/icons.js";
+import { escapeHtml, attendanceRate, lastNDates } from "/js/views/utils.js";
+import { statPill, badge, initials } from "/js/views/render-helpers.js";
 
 function attendGrid(sessions, record, athleteId, type){
   return `<div class="attend-grid">${sessions.map(s=>{

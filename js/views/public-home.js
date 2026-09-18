@@ -1,6 +1,6 @@
-import { state } from '../state.js';
-import { ic } from '../icons.js';
-import { escapeHtml } from '../utils.js';
+import { state } from "/js/views/state.js";
+import { ic } from "/js/views/icons.js";
+import { escapeHtml } from "/js/views/utils.js";
 
 // Trial request modal state
 let trialModalOpen = false;

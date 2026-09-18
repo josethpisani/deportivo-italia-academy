@@ -1,6 +1,6 @@
-import { state } from '../state.js';
-import { ic } from '../icons.js';
-import { escapeHtml } from '../utils.js';
+import { state } from "/js/views/state.js";
+import { ic } from "/js/views/icons.js";
+import { escapeHtml } from "/js/views/utils.js";
 
 export function renderAcceso() {
   const sedes = state.sedes.filter(s => s.estado === 'activa');

@@ -1,5 +1,5 @@
-import { state } from './state.js';
-import { seedAthletes, seedTorneos } from './seed.js';
+import { state } from "/js/state.js";
+import { seedAthletes, seedTorneos } from "/js/seed.js";
 
 const API = "/api/data";
 const HEADERS = {"Content-Type":"application/json"};

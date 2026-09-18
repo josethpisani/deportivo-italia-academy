@@ -1,5 +1,5 @@
-import { todayISO } from './utils.js';
-import { CATEGORIES } from './constants.js';
+import { todayISO } from "/js/utils.js";
+import { CATEGORIES } from "/js/constants.js";
 
 const defaultConfig = {};
 CATEGORIES.forEach(c => {

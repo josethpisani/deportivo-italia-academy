@@ -1,8 +1,8 @@
-import { state } from '../state.js';
-import { CATEGORIES, TRAINING_DAYS } from '../constants.js';
-import { ic } from '../icons.js';
-import { escapeHtml, dayNameFromDate } from '../utils.js';
-import { statPill } from '../render-helpers.js';
+import { state } from "/js/views/state.js";
+import { CATEGORIES, TRAINING_DAYS } from "/js/views/constants.js";
+import { ic } from "/js/views/icons.js";
+import { escapeHtml, dayNameFromDate } from "/js/views/utils.js";
+import { statPill } from "/js/views/render-helpers.js";
 
 export function renderAttendanceTab(){
   const dayName = state.regDate ? dayNameFromDate(state.regDate) : "";

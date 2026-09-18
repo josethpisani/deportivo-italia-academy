@@ -1,5 +1,5 @@
-import { CATEGORIES, FIRST_NAMES, LAST_NAMES } from './constants.js';
-import { uid, todayISO } from './utils.js';
+import { CATEGORIES, FIRST_NAMES, LAST_NAMES } from "/js/constants.js";
+import { uid, todayISO } from "/js/utils.js";
 
 export function makeAthlete(category, idx){
   const fn = FIRST_NAMES[(idx*3+category.length) % FIRST_NAMES.length];

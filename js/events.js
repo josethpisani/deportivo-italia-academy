@@ -1,9 +1,9 @@
-import { state } from './state.js';
-import { ic } from './icons.js';
-import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo } from './mutations.js';
-import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from './modals.js';
-import { dayNameFromDate } from './utils.js';
-import { saveSede, updateSede, saveSiteContent, createTrialRequest, getTrialRequests } from './api.js';
+import { state } from "/js/state.js";
+import { ic } from "/js/icons.js";
+import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo } from "/js/mutations.js";
+import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from "/js/modals.js";
+import { dayNameFromDate } from "/js/utils.js";
+import { saveSede, updateSede, saveSiteContent, createTrialRequest, getTrialRequests } from "/js/api.js";
 
 export function attachEvents(){
   document.querySelectorAll("[data-nav]").forEach(btn=>{
