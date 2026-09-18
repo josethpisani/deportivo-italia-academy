@@ -36,6 +36,43 @@ async function getDb() {
     )
   `;
 
+  // Trial requests table
+  await sql`
+    CREATE TABLE IF NOT EXISTS trial_requests (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      representative_name TEXT NOT NULL,
+      athlete_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      sede_id TEXT NOT NULL,
+      preferred_date DATE NOT NULL,
+      preferred_time_slot TEXT NOT NULL, -- '16:30' or '17:00'
+      age_category TEXT NOT NULL, -- 'U4_U6' or 'U8_U12'
+      status TEXT NOT NULL DEFAULT 'pendiente', -- 'pendiente', 'confirmada', 'cancelada'
+      notes TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  // Create indexes for trial_requests
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_trial_requests_sede_id ON trial_requests(sede_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_trial_requests_date ON trial_requests(preferred_date)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_trial_requests_status ON trial_requests(status)`;
+  } catch (e) {
+    // Index might already exist
+  }
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS app_data (
+      key TEXT PRIMARY KEY,
+      value JSONB NOT NULL,
+      sede_id TEXT,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
   // Add sede_id column if it doesn't exist (for existing installations)
   try {
     await sql`ALTER TABLE app_data ADD COLUMN IF NOT EXISTS sede_id TEXT`;
@@ -89,6 +126,30 @@ export default async function handler(req, res) {
         if (!id) return res.status(400).json({ error: "Missing sede id" });
         const rows = await sql`SELECT * FROM sedes WHERE id = ${id}`;
         return res.status(200).json(rows[0] || null);
+      }
+
+      // Special endpoint: get trial requests
+      if (key === "trial_requests") {
+        const { status, date_from, date_to } = req.query;
+        let query = sql`SELECT * FROM trial_requests WHERE 1=1`;
+        const params = [];
+        
+        if (sede_id) {
+          query = sql`${query} AND sede_id = ${sede_id}`;
+        }
+        if (status) {
+          query = sql`${query} AND status = ${status}`;
+        }
+        if (date_from) {
+          query = sql`${query} AND preferred_date >= ${date_from}`;
+        }
+        if (date_to) {
+          query = sql`${query} AND preferred_date <= ${date_to}`;
+        }
+        
+        query = sql`${query} ORDER BY preferred_date ASC, preferred_time_slot ASC, created_at DESC`;
+        const rows = await query;
+        return res.status(200).json(rows);
       }
 
       // Regular data keys with sede filtering
@@ -161,8 +222,52 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
 
+      return res.status(200).json({ success: true });
+      }
+
+      // For trial_requests
+      if (key === "trial_requests") {
+        const { representative_name, athlete_name, email, phone, sede_id: bodySedeId, preferred_date, preferred_time_slot, age_category, notes } = value;
+        const targetSedeId = bodySedeId || sede_id;
+        
+        if (!representative_name || !athlete_name || !email || !phone || !targetSedeId || !preferred_date || !preferred_time_slot || !age_category) {
+          return res.status(400).json({ error: "Missing required fields for trial request" });
+        }
+        
+        // Validate date is Monday (1) or Wednesday (3)
+        const date = new Date(preferred_date);
+        const dayOfWeek = date.getUTCDay(); // 0 = Sunday, 1 = Monday, 3 = Wednesday
+        if (dayOfWeek !== 1 && dayOfWeek !== 3) {
+          return res.status(400).json({ error: "Las pruebas solo están disponibles los lunes y miércoles" });
+        }
+        
+        // Validate time slot
+        if (!['16:30', '17:00'].includes(preferred_time_slot)) {
+          return res.status(400).json({ error: "Horario inválido. Use 16:30 o 17:00" });
+        }
+        
+        // Validate age category
+        if (!['U4_U6', 'U8_U12'].includes(age_category)) {
+          return res.status(400).json({ error: "Categoría de edad inválida" });
+        }
+        
+        // Check if time slot matches age category
+        if (preferred_time_slot === '16:30' && age_category !== 'U4_U6') {
+          return res.status(400).json({ error: "El horario de 16:30 es solo para categorías U4 y U6 (hasta 6 años)" });
+        }
+        if (preferred_time_slot === '17:00' && age_category !== 'U8_U12') {
+          return res.status(400).json({ error: "El horario de 17:00 es solo para categorías U8, U10 y U12 (7+ años)" });
+        }
+        
+        await sql`
+          INSERT INTO trial_requests (representative_name, athlete_name, email, phone, sede_id, preferred_date, preferred_time_slot, age_category, notes, created_at, updated_at)
+          VALUES (${representative_name}, ${athlete_name}, ${email}, ${phone}, ${targetSedeId}, ${preferred_date}, ${preferred_time_slot}, ${age_category}, ${notes || ''}, NOW(), NOW())
+        `;
+        
+        return res.status(200).json({ success: true });
+      }
+
       // For app_data with sede_id
-      if (!targetSedeId) {
         return res.status(400).json({ error: "sede_id is required for data operations" });
       }
 
@@ -218,6 +323,34 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, item: existingData[index] });
     }
 
+    // ── PUT trial_requests ──
+    if (req.method === "PUT" && key === "trial_requests") {
+      const { itemId, updates } = req.body;
+      if (!itemId || !updates) {
+        return res.status(400).json({ error: "Missing itemId or updates" });
+      }
+      
+      // Only allow updating certain fields
+      const allowedFields = ['status', 'notes'];
+      const filteredUpdates = {};
+      for (const field of allowedFields) {
+        if (updates[field] !== undefined) {
+          filteredUpdates[field] = updates[field];
+        }
+      }
+      
+      if (Object.keys(filteredUpdates).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+      
+      filteredUpdates.updated_at = new Date().toISOString();
+      
+      const setClause = Object.keys(filteredUpdates).map(k => `${k} = ${filteredUpdates[k]}`).join(", ");
+      await sql`UPDATE trial_requests SET ${sql(setClause)} WHERE id = ${itemId}`;
+      
+      return res.status(200).json({ success: true });
+    }
+
     // ── DELETE ──
     if (req.method === "DELETE") {
       const { key, itemId, sede_id: bodySedeId } = req.body;
@@ -225,6 +358,12 @@ export default async function handler(req, res) {
       
       if (!key || !targetSedeId) {
         return res.status(400).json({ error: "Missing key or sede_id" });
+      }
+
+      // Delete trial_requests
+      if (key === "trial_requests" && itemId) {
+        await sql`DELETE FROM trial_requests WHERE id = ${itemId}`;
+        return res.status(200).json({ success: true });
       }
 
       // Delete entire key (for sedes)

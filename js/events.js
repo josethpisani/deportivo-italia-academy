@@ -3,7 +3,7 @@ import { ic } from './icons.js';
 import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo } from './mutations.js';
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from './modals.js';
 import { dayNameFromDate } from './utils.js';
-import { saveSede, updateSede, saveSiteContent } from './api.js';
+import { saveSede, updateSede, saveSiteContent, createTrialRequest, getTrialRequests } from './api.js';
 
 export function attachEvents(){
   document.querySelectorAll("[data-nav]").forEach(btn=>{
@@ -299,4 +299,330 @@ export function attachEvents(){
       }
     };
   });
+
+  // --- Trial Request Modal Events ---
+  const btnTrialRequest = document.getElementById("btnTrialRequest");
+  if (btnTrialRequest) {
+    btnTrialRequest.onclick = () => {
+      trialModalOpen = true;
+      openTrialModal();
+    };
+  }
+
+  const closeTrialModalBtn = document.getElementById("closeTrialModal");
+  if (closeTrialModalBtn) {
+    closeTrialModalBtn.onclick = closeTrialModal;
+  }
+
+  const trialModalOverlay = document.getElementById("trialModal");
+  if (trialModalOverlay) {
+    trialModalOverlay.onclick = (e) => {
+      if (e.target === trialModalOverlay) closeTrialModal();
+    };
+  }
+
+  // Calendar generation
+  function generateCalendar() {
+    const container = document.getElementById("calendarContainer");
+    if (!container) return;
+    
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    
+    // Generate current month and next 2 months
+    let html = '';
+    for (let m = 0; m < 3; m++) {
+      const currentMonth = (month + m) % 12;
+      const currentYear = year + Math.floor((month + m) / 12);
+      const monthName = new Date(currentYear, currentMonth, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay(); // 0 = Sunday
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      
+      html += `<div class="calendar-month">
+        <h4>${monthName.charAt(0).toUpperCase() + monthName.slice(1)}</h4>
+        <div class="calendar-grid">
+          <div class="cal-header">L</div><div class="cal-header">M</div><div class="cal-header">X</div><div class="cal-header">J</div><div class="cal-header">V</div><div class="cal-header">S</div><div class="cal-header">D</div>`;
+      
+      // Add empty cells for days before first day of month
+      for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
+        html += '<div class="cal-day empty"></div>';
+      }
+      
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(currentYear, currentMonth, d);
+        const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon, 3=Wed
+        const isMondayOrWednesday = dayOfWeek === 1 || dayOfWeek === 3;
+        const isPast = date < new Date(new Date().setHours(0,0,0,0));
+        const isSelected = selectedDate && selectedDate.getTime() === date.getTime();
+        
+        let classes = 'cal-day';
+        if (!isMondayOrWednesday || isPast) {
+          classes += ' disabled';
+        } else if (isSelected) {
+          classes += ' selected';
+        }
+        
+        const dateStr = date.toISOString().split('T')[0];
+        html += `<div class="${classes}" data-date="${dateStr}" ${isMondayOrWednesday && !isPast ? 'tabindex="0"' : ''}>${d}</div>`;
+      }
+      
+      html += '</div></div>';
+    }
+    
+    container.innerHTML = html;
+    
+    // Add click handlers for calendar days
+    container.querySelectorAll('.cal-day:not(.disabled):not(.empty)').forEach(day => {
+      day.onclick = () => {
+        selectedDate = new Date(day.dataset.date);
+        // Remove previous selection
+        container.querySelectorAll('.cal-day.selected').forEach(d => d.classList.remove('selected'));
+        day.classList.add('selected');
+        showTimeSlots();
+      };
+      // Keyboard support
+      day.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          day.click();
+        }
+      };
+    });
+  }
+
+  function showTimeSlots() {
+    const container = document.getElementById("timeSlots");
+    const slotOptions = document.getElementById("slotOptions");
+    if (!container || !slotOptions) return;
+    
+    if (!selectedDate) {
+      container.style.display = 'none';
+      return;
+    }
+    
+    const dayOfWeek = selectedDate.getDay();
+    const isMonday = selectedDate.getDay() === 1;
+    
+    let html = '';
+    // Both time slots available on Mon/Wed
+    html += `
+      <button type="button" class="slot-option" data-slot="16:30" data-category="U4_U6">
+        <span class="slot-time">${ic.clock} 16:30</span>
+        <span class="slot-category">U4 / U6 (hasta 6 años)</span>
+      </button>
+      <button type="button" class="slot-option" data-slot="17:00" data-category="U8_U12">
+        <span class="slot-time">${ic.clock} 17:00 - 18:30</span>
+        <span class="slot-category">U8 / U10 / U12 (7+ años)</span>
+      </button>
+    `;
+    
+    slotOptions.innerHTML = html;
+    container.style.display = 'block';
+    
+    // Add click handlers for time slots
+    slotOptions.querySelectorAll('.slot-option').forEach(btn => {
+      btn.onclick = () => {
+        selectedTimeSlot = btn.dataset.slot;
+        slotOptions.querySelectorAll('.slot-option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById("btnNextToForm").disabled = false;
+      };
+    });
+  }
+
+  const btnNextToForm = document.getElementById("btnNextToForm");
+  if (btnNextToForm) {
+    btnNextToForm.onclick = () => {
+      if (!selectedDate || !selectedTimeSlot) return;
+      document.getElementById("stepCalendar").style.display = 'none';
+      document.getElementById("stepForm").style.display = 'block';
+      // Auto-fill age category based on time slot
+      const timeSlot = selectedTimeSlot;
+      const ageCategory = timeSlot === '16:30' ? 'U4_U6' : 'U8_U12';
+      // Store for form submission
+      document.getElementById("trialForm").dataset.ageCategory = ageCategory;
+      document.getElementById("trialForm").dataset.timeSlot = timeSlot;
+      document.getElementById("trialForm").dataset.preferredDate = selectedDate.toISOString().split('T')[0];
+    };
+  }
+
+  const trialForm = document.getElementById("trialForm");
+  if (trialForm) {
+    trialForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(trialForm);
+      const data = {
+        representative_name: formData.get("repName"),
+        athlete_name: formData.get("athleteName"),
+        email: formData.get("email"),
+        phone: formData.get("phone"),
+        sede_id: formData.get("sede_id"),
+        preferred_date: trialForm.dataset.preferredDate,
+        preferred_time_slot: trialForm.dataset.timeSlot,
+        age_category: trialForm.dataset.ageCategory,
+        notes: `Solicitud desde web - Horario: ${trialForm.dataset.timeSlot} - Categoría: ${trialForm.dataset.ageCategory === 'U4_U6' ? 'U4/U6 (hasta 6 años)' : 'U8/U10/U12 (7+ años)'}`
+      };
+      
+      const submitBtn = trialForm.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enviando...';
+      }
+      
+      try {
+        const res = await fetch('/api/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'trial_requests', value: data })
+        });
+        
+        const result = await res.json();
+        if (result.success) {
+          document.getElementById("stepForm").style.display = 'none';
+          document.getElementById("modalSuccess").style.display = 'block';
+        } else {
+          alert('Error: ' + (result.error || 'Error al enviar solicitud'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error de conexión. Intenta nuevamente.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Enviar Solicitud';
+        }
+      }
+    };
+  }
+
+  const btnCloseSuccess = document.getElementById("btnCloseSuccess");
+  if (btnCloseSuccess) {
+    btnCloseSuccess.onclick = closeTrialModal;
+  }
+
+  function openTrialModal() {
+    const modal = document.getElementById("trialModal");
+    if (modal) {
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      // Reset state
+      selectedDate = null;
+      selectedTimeSlot = null;
+      document.getElementById("stepCalendar").style.display = 'block';
+      document.getElementById("stepForm").style.display = 'none';
+      document.getElementById("modalSuccess").style.display = 'none';
+      document.getElementById("timeSlots").style.display = 'none';
+      document.getElementById("btnNextToForm").disabled = true;
+      trialForm?.reset();
+      trialForm.dataset.ageCategory = '';
+      trialForm.dataset.timeSlot = '';
+      trialForm.dataset.preferredDate = '';
+      generateCalendar();
+    }
+  }
+
+  function closeTrialModal() {
+    const modal = document.getElementById("trialModal");
+    if (modal) {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+      trialModalOpen = false;
+    }
+  }
+
+  // Admin Trial Requests Panel
+  const btnAdminTabPruebas = document.querySelector('[data-admintab="pruebas"]');
+  if (btnAdminTabPruebas) {
+    btnAdminTabPruebas.onclick = async () => {
+      state.adminTab = 'pruebas';
+      if (window.__render) window.__render();
+      // Load trial requests for admin view
+      loadAdminTrialRequests();
+    };
+  }
 }
+
+async function loadAdminTrialRequests() {
+  try {
+    const res = await fetch('/api/data?key=trial_requests');
+    const requests = await res.json();
+    state.adminTrialRequests = requests || [];
+    if (window.__render) window.__render();
+  } catch (err) {
+    console.error('Error loading trial requests:', err);
+  }
+}
+
+// Admin Trial Requests Event Handlers
+document.addEventListener('click', async (e) => {
+  // Trial request status changes
+  const statusBtn = e.target.closest('[data-trial-status]');
+  if (statusBtn) {
+    e.preventDefault();
+    const [itemId, newStatus] = statusBtn.dataset.trialStatus.split('|');
+    if (itemId && newStatus) {
+      try {
+        const res = await fetch('/api/data', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'trial_requests', itemId, updates: { status: newStatus } })
+        });
+        const result = await res.json();
+        if (result.success) {
+          loadAdminTrialRequests();
+        }
+      } catch (err) {
+        console.error('Error updating trial request:', err);
+      }
+    }
+    return;
+  }
+
+  // Export trial requests to CSV
+  const exportBtn = document.getElementById('btnExportPruebas');
+  if (e.target.closest('#btnExportPruebas')) {
+    e.preventDefault();
+    const requests = state.adminTrialRequests || [];
+    if (requests.length === 0) {
+      alert('No hay solicitudes para exportar');
+      return;
+    }
+    
+    const headers = ['Representante', 'Atleta', 'Fecha', 'Horario', 'Categoría', 'Sede', 'Email', 'Teléfono', 'Estado', 'Fecha Solicitud'];
+    const rows = state.adminTrialRequests.map(r => {
+      const sede = state.sedes.find(s => s.id === r.sede_id);
+      const sedeName = sede ? sede.nombre : 'Desconocida';
+      const date = new Date(r.preferred_date).toLocaleDateString('es-ES');
+      const timeLabel = r.preferred_time_slot === '16:30' ? '16:30 (U4/U6)' : '17:00-18:30 (U8/U10/U12)';
+      const category = r.age_category === 'U4_U6' ? 'U4/U6 (≤6 años)' : 'U8/U10/U12 (7+ años)';
+      const createdDate = new Date(r.created_at).toLocaleDateString('es-ES');
+      return [r.representative_name, r.athlete_name, date, timeLabel, category, sedeName, r.email, r.phone, r.status, createdDate]
+        .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+    });
+    
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `solicitudes_pruebas_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    return;
+  }
+
+  // Filter trial requests
+  const filterStatus = document.getElementById('filterStatus');
+  if (filterStatus && e.target === filterStatus) {
+    setTimeout(() => loadAdminTrialRequests(), 0);
+  }
+  
+  const filterSede = document.getElementById('filterSede');
+  if (filterSede && e.target === filterSede) {
+    setTimeout(() => loadAdminTrialRequests(), 0);
+  }
+  
+  const filterDate = document.getElementById('filterDate');
+  if (filterDate && e.target === filterDate) {
+    setTimeout(() => loadAdminTrialRequests(), 0);
+  }
+});

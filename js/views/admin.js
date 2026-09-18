@@ -39,6 +39,7 @@ export function renderAdmin(){
     {key:"torneos",label:"Torneos y pagos"},
     {key:"sedes",label:"Gestión de sedes"},
     {key:"site",label:"Configuración del sitio"},
+    {key:"pruebas",label:"Pruebas de Ingreso"},
   ].map(t=>`<button class="admin-tab ${state.adminTab===t.key?"active":""}" data-admintab="${t.key}">${t.label}</button>`).join("");
 
   let body = "";
@@ -297,6 +298,81 @@ export function renderAdmin(){
           <button class="btn-primary" id="btnAddGaleria">${ic.plus} Agregar imagen</button>
         </div>
         ${renderGaleriaAdmin()}
+      </div>
+    `;
+  } else if(state.adminTab==="pruebas"){
+    const requests = state.adminTrialRequests || [];
+    const pendingCount = requests.filter(r => r.status === 'pendiente').length;
+    const confirmedCount = requests.filter(r => r.status === 'confirmada').length;
+    const cancelledCount = requests.filter(r => r.status === 'cancelada').length;
+    
+    const rows = requests.map(r => {
+      const sede = state.sedes.find(s => s.id === r.sede_id);
+      const sedeName = sede ? sede.nombre : 'Desconocida';
+      const date = new Date(r.preferred_date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+      const timeLabel = r.preferred_time_slot === '16:30' ? '16:30 (U4/U6)' : '17:00-18:30 (U8/U10/U12)';
+      const statusBadge = badge(r.status, r.status === 'confirmada' ? 'good' : r.status === 'cancelada' ? 'bad' : 'neutral');
+      
+      return `<tr>
+        <td>${escapeHtml(r.representative_name)}</td>
+        <td>${escapeHtml(r.athlete_name)}</td>
+        <td>${date}</td>
+        <td>${timeLabel}</td>
+        <td>${escapeHtml(r.age_category === 'U4_U6' ? 'U4/U6 (≤6 años)' : 'U8/U10/U12 (7+ años)')}</td>
+        <td>${escapeHtml(sedeName)}</td>
+        <td>${escapeHtml(r.email)}</td>
+        <td>${escapeHtml(r.phone)}</td>
+        <td>${statusBadge}</td>
+        <td>
+          <div class="btn-group">
+            ${r.status === 'pendiente' ? `<button class="bp" data-trial-status="${r.id}|confirmada">${ic.check} Confirmar</button>` : ''}
+            ${r.status !== 'cancelada' ? `<button class="bd" data-trial-status="${r.id}|cancelada">${ic.x} Cancelar</button>` : ''}
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+    
+    body = `
+      <div class="pruebas-header">
+        <div class="pruebas-stats">
+          <div class="stat-card total">${ic.clipboard} <span>${requests.length}</span> <span>Total</span></div>
+          <div class="stat-card pending">${ic.clock} <span>${pendingCount}</span> <span>Pendientes</span></div>
+          <div class="stat-card confirmed">${ic.checkCircle} <span>${confirmedCount}</span> <span>Confirmadas</span></div>
+          <div class="stat-card cancelled">${ic.xCircle} <span>${cancelledCount}</span> <span>Canceladas</span></div>
+        </div>
+        <div class="pruebas-filters">
+          <select id="filterStatus" class="filter-select">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="confirmada">Confirmadas</option>
+            <option value="cancelada">Canceladas</option>
+          </select>
+          <select id="filterSede" class="filter-select">
+            <option value="">Todas las sedes</option>
+            ${state.sedes.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.nombre)}</option>`).join('')}
+          </select>
+          <input type="date" id="filterDate" class="filter-input">
+          <button class="btn-secondary" id="btnExportPruebas">${ic.download} Exportar CSV</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Representante</th>
+              <th>Atleta</th>
+              <th>Fecha</th>
+              <th>Horario</th>
+              <th>Categoría</th>
+              <th>Sede</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>${rows || `<tr><td colspan="10" class="empty-msg">No hay solicitudes de prueba registradas</td></tr>`}</tbody>
+        </table>
       </div>
     `;
   }

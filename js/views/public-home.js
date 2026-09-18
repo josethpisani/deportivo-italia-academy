@@ -2,7 +2,105 @@ import { state } from '../state.js';
 import { ic } from '../icons.js';
 import { escapeHtml } from '../utils.js';
 
+// Trial request modal state
+let trialModalOpen = false;
+let selectedDate = null;
+let selectedTimeSlot = null;
+
 export function renderPublicHome() {
+  const c = state.siteContent.hero;
+  const sedes = state.sedes.filter(s => s.estado === 'activa');
+  
+  return `
+    <div class="public-site">
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-bg pitch-bg"></div>
+        <div class="hero-content">
+          <div class="hero-logo">
+            <img src="/img/logo-deportivoitalia.png" alt="Deportivo Italia Academy" class="logo-img">
+          </div>
+          <h1 class="hero-title">${escapeHtml(c.title || "DEPORTIVO ITALIA ACADEMY")}</h1>
+          <p class="hero-subtitle">${escapeHtml(c.subtitle || "Formando futbolistas, desarrollando talentos y construyendo valores.")}</p>
+          <div class="hero-ctas">
+            <a href="#nosotros" class="btn-hero btn-hero-primary">${ic.users} ${escapeHtml(c.ctaPrimary || "Conoce nuestra academia")}</a>
+            <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary || "Acceder al sistema STAFF")}</a>
+            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu Entrenamiento de Prueba</button>
+          </div>
+        </div>
+        <div class="hero-scroll">${ic.chevronDown}</div>
+      </section>
+
+      <!-- Trial Request Modal -->
+      <div class="modal-overlay" id="trialModal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="trialModalTitle">
+        <div class="modal modal-trial">
+          <button class="modal-close" id="closeTrialModal" aria-label="Cerrar">${ic.x}</button>
+          <div class="modal-header">
+            <h2 id="trialModalTitle">${ic.calendar} Solicitar Entrenamiento de Prueba</h2>
+            <p class="modal-subtitle">Selecciona día, horario y completa tus datos</p>
+          </div>
+          <form id="trialForm" class="modal-body">
+            <div class="form-step" id="stepCalendar">
+              <h3>${ic.calendar} Paso 1: Selecciona día y horario</h3>
+              <div class="calendar-info">
+                <div class="info-badge">${ic.info} Disponible solo lunes y miércoles</div>
+                <div class="info-badge">${ic.users} Turno 16:30 - U4 y U6 (hasta 6 años)</div>
+                <div class="info-badge">${ic.users} Turno 17:00-18:30 - U8, U10, U12 (7+ años)</div>
+              </div>
+              <div class="calendar-container" id="calendarContainer"></div>
+              <div class="time-slots" id="timeSlots" style="display: none;">
+                <h4>${ic.clock} Horarios disponibles para el día seleccionado:</h4>
+                <div class="slot-options" id="slotOptions"></div>
+              </div>
+              <button type="button" class="btn-next" id="btnNextToForm" disabled>${ic.arrowRight} Continuar</button>
+            </div>
+            <div class="form-step" id="stepForm" style="display: none;">
+              <h3>${ic.user} Paso 2: Datos del representante y atleta</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="repName">${ic.user} Nombre del Representante *</label>
+                  <input type="text" id="repName" name="repName" required placeholder="Juan Pérez">
+                </div>
+                <div class="form-group">
+                  <label for="athleteName">${ic.user} Nombre del Atleta *</label>
+                  <input type="text" id="athleteName" name="athleteName" required placeholder="Carlos Pérez">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="trialEmail">${ic.mail} Correo Electrónico *</label>
+                  <input type="email" id="trialEmail" name="email" required placeholder="juan@email.com">
+                </div>
+                <div class="form-group">
+                  <label for="trialPhone">${ic.phone} Teléfono *</label>
+                  <input type="tel" id="trialPhone" name="phone" required placeholder="+507 6000-0000">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="trialSede">${ic.mapPin} Sede para la Práctica *</label>
+                <select id="trialSede" name="sede_id" required>
+                  <option value="">Selecciona una sede</option>
+                  ${sedes.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.nombre)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>${ic.info} Categoría según edad (se asigna automática según horario)</label>
+                <div class="age-info">
+                  <span class="age-badge u4">16:30 → U4/U6 (≤6 años)</span>
+                  <span class="age-badge u8">17:00 → U8/U10/U12 (7+ años)</span>
+                </div>
+              </div>
+              <button type="submit" class="btn-submit-trial">${ic.send} Enviar Solicitud</button>
+            </div>
+          </form>
+          <div class="modal-success" id="modalSuccess" style="display: none;">
+            <div class="success-icon">${ic.checkCircle}</div>
+            <h3>¡Solicitud Enviada!</h3>
+            <p>Te contactaremos pronto para confirmar tu entrenamiento de prueba.</p>
+            <button type="button" class="btn-close-success" id="btnCloseSuccess">${ic.check} Cerrar</button>
+          </div>
+        </div>
+      </div>
   const c = state.siteContent.hero;
   const sedes = state.sedes.filter(s => s.estado === 'activa');
   

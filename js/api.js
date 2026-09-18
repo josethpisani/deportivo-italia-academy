@@ -171,3 +171,30 @@ export function setCurrentSede(sede) {
   state.evalAthleteId = null;
   state.torneoId = null;
 }
+
+export async function createTrialRequest(data) {
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: HEADERS,
+      body: JSON.stringify({ key: "trial_requests", value: data })
+    });
+    return await res.json();
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+export async function getTrialRequests(filters = {}) {
+  try {
+    const params = new URLSearchParams();
+    params.set('key', 'trial_requests');
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) params.set(k, v);
+    });
+    const res = await fetch(`${API}?${params.toString()}`);
+    return await res.json();
+  } catch (e) {
+    return [];
+  }
+}
