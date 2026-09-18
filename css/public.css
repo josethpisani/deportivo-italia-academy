@@ -294,7 +294,27 @@
 /* ACCESO PAGE */
 .acceso-page { min-height: 100vh; background: var(--bg-dark); display: flex; flex-direction: column; }
 .acceso-header { padding: 24px 0; border-bottom: 1px solid var(--border-medium); }
-.acceso-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+.acceso-header .container { display: flex; align-items: center; gap: 16px; }
+.acceso-back-btn { 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center; 
+  width: 44px; 
+  height: 44px; 
+  border-radius: var(--radius-md); 
+  background: rgba(255,255,255,0.1); 
+  color: #fff; 
+  text-decoration: none; 
+  transition: all 0.2s ease; 
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.acceso-back-btn:hover { 
+  background: rgba(255,255,255,0.2); 
+  color: #fff; 
+  transform: translateX(-2px);
+}
+.acceso-back-btn svg { width: 22px; height: 22px; }
+.acceso-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; flex: 1; }
 .acceso-logo img { width: 48px; }
 .acceso-logo span { font-family: 'Oswald', sans-serif; font-size: 20px; letter-spacing: 1px; font-weight: 600; color: #fff; }
 

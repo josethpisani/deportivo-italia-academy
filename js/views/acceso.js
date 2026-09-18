@@ -17,6 +17,9 @@ export function renderAcceso() {
       <!-- Header -->
       <header class="acceso-header">
         <div class="container">
+          <a href="/" class="acceso-back-btn" title="Volver al inicio">
+            ${ic.arrowLeft}
+          </a>
           <a href="/" class="acceso-logo">
             <img src="/img/logo-deportivoitalia.png" alt="Deportivo Italia Academy">
             <span>DEPORTIVO ITALIA ACADEMY</span>
