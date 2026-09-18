@@ -329,11 +329,9 @@
 .sede-meta-acceso { margin-bottom: 16px; }
 .sede-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-full); font-size: 12px; font-weight: 600; }
 .sede-status.active { background: rgba(30, 58, 138, 0.2); color: #fff; }
-.sede-status.inactive { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }00; }
-.sede-status.active { background: rgba(30, 58, 138, 0.1); color: var(--primary); }
-.sede-status.inactive { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+.sede-status.inactive { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
 .status-dot { width: 8px; height: 8px; border-radius: var(--radius-full); background: currentColor; }
-.sede-location { color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; display: flex; align-items: center; gap: 6px; }
+.sede-location { color: rgba(255,255,255,0.85); font-size: 13px; margin-bottom: 24px; display: flex; align-items: center; gap: 6px; }
 .btn-acceso-enter { 
   display: flex; align-items: center; justify-content: center; gap: 10px; 
   padding: 16px; 
@@ -355,7 +353,7 @@
 .login-fields { display: flex; flex-direction: column; gap: 12px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .sede-login-form .form-group { display: flex; flex-direction: column; gap: 6px; }
-.sede-login-form .form-group label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px; }
+.sede-login-form .form-group label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
 .sede-login-form .form-group input { 
   padding: 12px 14px; 
   border: 2px solid var(--border-medium); 
