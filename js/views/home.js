@@ -1,8 +1,8 @@
-import { state } from "/js/views/state.js";
-import { CATEGORIES } from "/js/views/constants.js";
-import { ic } from "/js/views/icons.js";
-import { statPill, badge } from "/js/views/render-helpers.js";
-import { escapeHtml, computeTorneoTeamStats } from "/js/views/utils.js";
+import { state } from "../state.js";
+import { CATEGORIES } from "../constants.js";
+import { ic } from "../icons.js";
+import { statPill, badge } from "../render-helpers.js";
+import { escapeHtml, computeTorneoTeamStats } from "../utils.js";
 
 export function renderHome(){
   const totalAthletes = state.athletes.length;

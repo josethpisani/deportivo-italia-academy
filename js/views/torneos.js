@@ -1,8 +1,8 @@
-import { state } from "/js/views/state.js";
-import { ic } from "/js/views/icons.js";
-import { escapeHtml, computeTorneoTeamStats } from "/js/views/utils.js";
-import { statPill, badge } from "/js/views/render-helpers.js";
-import { CATEGORIES } from "/js/views/constants.js";
+import { state } from "../state.js";
+import { ic } from "../icons.js";
+import { escapeHtml, computeTorneoTeamStats } from "../utils.js";
+import { statPill, badge } from "../render-helpers.js";
+import { CATEGORIES } from "../constants.js";
 
 export function renderTorneos(){
   const cards = state.torneos.map(t=>{

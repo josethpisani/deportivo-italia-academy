@@ -1,8 +1,8 @@
-import { state } from "/js/state.js";
-import { uid, todayISO } from "/js/utils.js";
-import { makeAthlete } from "/js/seed.js";
-import { saveAthletes, saveTorneos, saveConfig } from "/js/api.js";
-import { closeModal } from "/js/modals.js";
+import { state } from "./state.js";
+import { uid, todayISO } from "./utils.js";
+import { makeAthlete } from "./seed.js";
+import { saveAthletes, saveTorneos, saveConfig } from "./api.js";
+import { closeModal } from "./modals.js";
 
 export function updateAthlete(id, patch){
   const a = state.athletes.find(x=>x.id===id);

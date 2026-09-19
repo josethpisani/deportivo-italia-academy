@@ -1,9 +1,9 @@
-import { state } from "/js/state.js";
-import { ic } from "/js/icons.js";
-import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo } from "/js/mutations.js";
-import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from "/js/modals.js";
-import { dayNameFromDate } from "/js/utils.js";
-import { saveSede, updateSede, saveSiteContent, createTrialRequest, getTrialRequests } from "/js/api.js";
+import { state } from "./state.js";
+import { ic } from "./icons.js";
+import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo } from "./mutations.js";
+import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from "./modals.js";
+import { dayNameFromDate } from "./utils.js";
+import { saveSede, updateSede, saveSiteContent, createTrialRequest, getTrialRequests } from "./api.js";
 
 export function attachEvents(){
   document.querySelectorAll("[data-nav]").forEach(btn=>{
@@ -545,7 +545,8 @@ export function attachEvents(){
 
 async function loadAdminTrialRequests() {
   try {
-    const res = await fetch('/api/data?key=trial_requests');
+    const sedeId = state.currentSede?.id;
+    const res = await fetch(`/api/data?key=trial_requests${sedeId ? `&sede_id=${encodeURIComponent(sedeId)}` : ''}`);
     const requests = await res.json();
     state.adminTrialRequests = requests || [];
     if (window.__render) window.__render();

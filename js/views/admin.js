@@ -1,8 +1,8 @@
-import { state } from "/js/views/state.js";
-import { CATEGORIES } from "/js/views/constants.js";
-import { ic } from "/js/views/icons.js";
-import { escapeHtml } from "/js/views/utils.js";
-import { statPill, badge } from "/js/views/render-helpers.js";
+import { state } from "../state.js";
+import { CATEGORIES } from "../constants.js";
+import { ic } from "../icons.js";
+import { escapeHtml } from "../utils.js";
+import { statPill, badge } from "../render-helpers.js";
 
 export function renderAdmin(){
   if(!state.adminAuth){
@@ -216,7 +216,7 @@ export function renderAdmin(){
         <p>${ic.alert} Cada sede tiene su propia base de datos aislada. Los atletas, torneos y pagos pertenecen a una sede específica.</p>
       </div>
     `;
-  } else {
+  } else if(state.adminTab==="site") {
     // Site content management
     const sc = state.siteContent;
     body = `

@@ -64,15 +64,6 @@ async function getDb() {
     // Index might already exist
   }
 
-  await sql`
-    CREATE TABLE IF NOT EXISTS app_data (
-      key TEXT PRIMARY KEY,
-      value JSONB NOT NULL,
-      sede_id TEXT,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `;
-
   // Add sede_id column if it doesn't exist (for existing installations)
   try {
     await sql`ALTER TABLE app_data ADD COLUMN IF NOT EXISTS sede_id TEXT`;
@@ -91,9 +82,29 @@ async function getDb() {
 }
 
 function filterBySede(data, sedeId) {
-  if (!data || !Array.isArray(data)) return [];
+  if (data === null || data === undefined) return data;
+  // Preserve object-shaped legacy data such as config.
+  if (!Array.isArray(data)) return data;
   if (!sedeId) return data; // If no sede_id specified, return all (for superadmin)
-  return data.filter(item => item.sede_id === sedeId);
+  // Keep legacy rows without sede_id visible until an explicit migration is approved.
+  return data.filter(item => !item.sede_id || item.sede_id === sedeId);
+}
+
+async function updateSedeRecord(sql, id, updates = {}) {
+  const setters = {
+    nombre: value => sql`UPDATE sedes SET nombre = ${value}, updated_at = NOW() WHERE id = ${id}`,
+    codigo: value => sql`UPDATE sedes SET codigo = ${value}, updated_at = NOW() WHERE id = ${id}`,
+    estado: value => sql`UPDATE sedes SET estado = ${value}, updated_at = NOW() WHERE id = ${id}`,
+    direccion: value => sql`UPDATE sedes SET direccion = ${value}, updated_at = NOW() WHERE id = ${id}`,
+    telefono: value => sql`UPDATE sedes SET telefono = ${value}, updated_at = NOW() WHERE id = ${id}`,
+    email: value => sql`UPDATE sedes SET email = ${value}, updated_at = NOW() WHERE id = ${id}`,
+    logo: value => sql`UPDATE sedes SET logo = ${value}, updated_at = NOW() WHERE id = ${id}`,
+    imagen_principal: value => sql`UPDATE sedes SET imagen_principal = ${value}, updated_at = NOW() WHERE id = ${id}`,
+    descripcion: value => sql`UPDATE sedes SET descripcion = ${value}, updated_at = NOW() WHERE id = ${id}`
+  };
+  for (const [field, value] of Object.entries(updates)) {
+    if (setters[field]) await setters[field](value);
+  }
 }
 
 export default async function handler(req, res) {
@@ -130,6 +141,7 @@ export default async function handler(req, res) {
 
       // Special endpoint: get trial requests
       if (key === "trial_requests") {
+        if (!sede_id) return res.status(400).json({ error: "sede_id is required" });
         const { status, date_from, date_to } = req.query;
         let query = sql`SELECT * FROM trial_requests WHERE 1=1`;
         const params = [];
@@ -215,14 +227,8 @@ export default async function handler(req, res) {
         const { id, ...updates } = value;
         if (!id) return res.status(400).json({ error: "Missing sede id" });
         
-        const setClause = Object.keys(updates).map(k => `${k} = ${updates[k]}`).join(", ");
-        if (setClause) {
-          await sql`UPDATE sedes SET ${sql(setClause)}, updated_at = NOW() WHERE id = ${id}`;
-        }
+        await updateSedeRecord(sql, id, updates);
         return res.status(200).json({ success: true });
-      }
-
-      return res.status(200).json({ success: true });
       }
 
       // For trial_requests
@@ -267,7 +273,26 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
 
-      // For app_data with sede_id
+      // Site content is global; operational data is isolated by sede.
+      if (key === "siteContent") {
+        await sql`
+          INSERT INTO app_data (key, value, updated_at)
+          VALUES (${key}, ${JSON.stringify(value)}, NOW())
+          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+        `;
+        return res.status(200).json({ success: true });
+      }
+
+      if (key === "config") {
+        await sql`
+          INSERT INTO app_data (key, value, sede_id, updated_at)
+          VALUES (${key}, ${JSON.stringify(value)}, ${targetSedeId || null}, NOW())
+          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, sede_id = EXCLUDED.sede_id, updated_at = NOW()
+        `;
+        return res.status(200).json({ success: true });
+      }
+
+      if (!targetSedeId) {
         return res.status(400).json({ error: "sede_id is required for data operations" });
       }
 
@@ -300,6 +325,32 @@ export default async function handler(req, res) {
     if (req.method === "PUT") {
       const { key, itemId, updates, sede_id: bodySedeId } = req.body;
       const targetSedeId = bodySedeId || sede_id;
+
+      if (key === "trial_requests") {
+        if (!targetSedeId || !itemId || !updates || !Object.keys(updates).some(field => ["status", "notes"].includes(field))) {
+          return res.status(400).json({ error: "Missing itemId or valid updates" });
+        }
+        if (updates.status !== undefined && !["pendiente", "confirmada", "cancelada"].includes(updates.status)) {
+          return res.status(400).json({ error: "Invalid trial request status" });
+        }
+        if (updates.status !== undefined && updates.notes !== undefined) {
+          await sql`UPDATE trial_requests SET status = ${updates.status}, notes = ${updates.notes}, updated_at = NOW() WHERE id = ${itemId} AND sede_id = ${targetSedeId}`;
+        } else if (updates.status !== undefined) {
+          await sql`UPDATE trial_requests SET status = ${updates.status}, updated_at = NOW() WHERE id = ${itemId} AND sede_id = ${targetSedeId}`;
+        } else {
+          await sql`UPDATE trial_requests SET notes = ${updates.notes}, updated_at = NOW() WHERE id = ${itemId} AND sede_id = ${targetSedeId}`;
+        }
+        return res.status(200).json({ success: true });
+      }
+
+      if (key === "sede") {
+        const { id, ...updatesForSede } = updates || {};
+        const sedeId = id || itemId;
+        if (!sedeId) return res.status(400).json({ error: "Missing sede id" });
+        if (Object.keys(updatesForSede).length === 0) return res.status(400).json({ error: "No valid sede fields to update" });
+        await updateSedeRecord(sql, sedeId, updatesForSede);
+        return res.status(200).json({ success: true });
+      }
       
       if (!key || !itemId || !updates || !targetSedeId) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -323,46 +374,19 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, item: existingData[index] });
     }
 
-    // ── PUT trial_requests ──
-    if (req.method === "PUT" && key === "trial_requests") {
-      const { itemId, updates } = req.body;
-      if (!itemId || !updates) {
-        return res.status(400).json({ error: "Missing itemId or updates" });
-      }
-      
-      // Only allow updating certain fields
-      const allowedFields = ['status', 'notes'];
-      const filteredUpdates = {};
-      for (const field of allowedFields) {
-        if (updates[field] !== undefined) {
-          filteredUpdates[field] = updates[field];
-        }
-      }
-      
-      if (Object.keys(filteredUpdates).length === 0) {
-        return res.status(400).json({ error: "No valid fields to update" });
-      }
-      
-      filteredUpdates.updated_at = new Date().toISOString();
-      
-      const setClause = Object.keys(filteredUpdates).map(k => `${k} = ${filteredUpdates[k]}`).join(", ");
-      await sql`UPDATE trial_requests SET ${sql(setClause)} WHERE id = ${itemId}`;
-      
-      return res.status(200).json({ success: true });
-    }
-
     // ── DELETE ──
     if (req.method === "DELETE") {
       const { key, itemId, sede_id: bodySedeId } = req.body;
       const targetSedeId = bodySedeId || sede_id;
       
-      if (!key || !targetSedeId) {
+      if (!key || (!targetSedeId && key !== "sedes" && key !== "trial_requests")) {
         return res.status(400).json({ error: "Missing key or sede_id" });
       }
 
       // Delete trial_requests
       if (key === "trial_requests" && itemId) {
-        await sql`DELETE FROM trial_requests WHERE id = ${itemId}`;
+        if (!targetSedeId) return res.status(400).json({ error: "sede_id is required" });
+        await sql`DELETE FROM trial_requests WHERE id = ${itemId} AND sede_id = ${targetSedeId}`;
         return res.status(200).json({ success: true });
       }
 

@@ -1,6 +1,6 @@
-import { state } from "/js/views/state.js";
-import { ic } from "/js/views/icons.js";
-import { escapeHtml } from "/js/views/utils.js";
+import { state } from "../state.js";
+import { ic } from "../icons.js";
+import { escapeHtml } from "../utils.js";
 
 // Trial request modal state
 let trialModalOpen = false;
@@ -8,9 +8,11 @@ let selectedDate = null;
 let selectedTimeSlot = null;
 
 export function renderPublicHome() {
+  /* Legacy duplicated template kept out of the render path. */
   const c = state.siteContent.hero;
   const sedes = state.sedes.filter(s => s.estado === 'activa');
   
+  /*
   return `
     <div class="public-site">
       <!-- Hero Section -->
@@ -25,6 +27,7 @@ export function renderPublicHome() {
           <div class="hero-ctas">
             <a href="#nosotros" class="btn-hero btn-hero-primary">${ic.users} ${escapeHtml(c.ctaPrimary || "Conoce nuestra academia")}</a>
             <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary || "Acceder al sistema STAFF")}</a>
+            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu Entrenamiento de Prueba</button>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu Entrenamiento de Prueba</button>
           </div>
         </div>
@@ -101,8 +104,7 @@ export function renderPublicHome() {
           </div>
         </div>
       </div>
-  const c = state.siteContent.hero;
-  const sedes = state.sedes.filter(s => s.estado === 'activa');
+  */
   
   return `
     <div class="public-site">
@@ -122,6 +124,30 @@ export function renderPublicHome() {
         </div>
         <div class="hero-scroll">${ic.chevronDown}</div>
       </section>
+
+      <div class="modal-overlay" id="trialModal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="trialModalTitle">
+        <div class="modal modal-trial">
+          <button class="modal-close" id="closeTrialModal" aria-label="Cerrar">${ic.x}</button>
+          <div class="modal-header"><h2 id="trialModalTitle">${ic.calendar} Solicitar Entrenamiento de Prueba</h2><p class="modal-subtitle">Selecciona día, horario y completa tus datos</p></div>
+          <form id="trialForm" class="modal-body">
+            <div class="form-step" id="stepCalendar">
+              <h3>${ic.calendar} Paso 1: Selecciona día y horario</h3>
+              <div class="calendar-info"><div class="info-badge">${ic.info} Disponible solo lunes y miércoles</div><div class="info-badge">${ic.users} 16:30 — U4/U6</div><div class="info-badge">${ic.users} 17:00 — U8/U10/U12</div></div>
+              <div class="calendar-container" id="calendarContainer"></div>
+              <div class="time-slots" id="timeSlots" style="display:none"><h4>${ic.clock} Horarios disponibles</h4><div class="slot-options" id="slotOptions"></div></div>
+              <button type="button" class="btn-next" id="btnNextToForm" disabled>${ic.arrowRight} Continuar</button>
+            </div>
+            <div class="form-step" id="stepForm" style="display:none">
+              <h3>${ic.user} Paso 2: Datos del representante y atleta</h3>
+              <div class="form-row"><div class="form-group"><label for="repName">${ic.user} Representante *</label><input type="text" id="repName" name="repName" required></div><div class="form-group"><label for="athleteName">${ic.user} Atleta *</label><input type="text" id="athleteName" name="athleteName" required></div></div>
+              <div class="form-row"><div class="form-group"><label for="trialEmail">${ic.mail} Correo *</label><input type="email" id="trialEmail" name="email" required></div><div class="form-group"><label for="trialPhone">${ic.phone} Teléfono *</label><input type="tel" id="trialPhone" name="phone" required></div></div>
+              <div class="form-group"><label for="trialSede">${ic.mapPin} Sede *</label><select id="trialSede" name="sede_id" required><option value="">Selecciona una sede</option>${sedes.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.nombre)}</option>`).join('')}</select></div>
+              <button type="submit" class="btn-submit-trial">${ic.send} Enviar Solicitud</button>
+            </div>
+          </form>
+          <div class="modal-success" id="modalSuccess" style="display:none"><div class="success-icon">${ic.checkCircle}</div><h3>¡Solicitud Enviada!</h3><p>Te contactaremos pronto para confirmar tu entrenamiento de prueba.</p><button type="button" class="btn-close-success" id="btnCloseSuccess">${ic.check} Cerrar</button></div>
+        </div>
+      </div>
 
       <!-- About Section -->
       <section id="nosotros" class="section-nosotros">

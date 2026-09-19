@@ -1,4 +1,4 @@
-import { escapeHtml } from "/js/utils.js";
+import { escapeHtml } from "./utils.js";
 
 export function statPill(icon, label, value, accent){
   return `<div class="stat-pill"><div class="icon" style="background:${accent}">${icon}</div>

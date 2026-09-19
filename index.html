@@ -24,35 +24,6 @@
 
 <div id="app"><div class="loading-screen"><div style="font-size:28px;">&#x1f6e1;&#xfe0f;</div><div style="font-size:13px;opacity:.8;">Cargando datos de la academia&#8230;</div></div></div>
 
-<script>
-  console.log("HTML loaded, testing JS execution...");
-  document.body.style.border = "5px solid red";
-  document.getElementById("test-result").textContent = "Inline script executed";
-  
-  // Test 1: Simple script load
-  var testScript = document.createElement("script");
-  testScript.src = "/js/app.js";
-  testScript.onload = function() {
-    console.log("Script loaded via regular script tag");
-    document.getElementById("test-result").textContent = "Script loaded";
-  };
-  testScript.onerror = function(err) {
-    console.error("Script load failed:", err);
-    document.getElementById("test-result").textContent = "Script load failed";
-  };
-  document.head.appendChild(testScript);
-  
-  // Test 2: Dynamic import
-  setTimeout(function() {
-    import("/js/app.js").then(function() {
-      console.log("Dynamic import succeeded");
-      document.getElementById("test-result").textContent = "Dynamic import succeeded";
-    }).catch(function(err) {
-      console.error("Dynamic import failed:", err);
-      document.getElementById("test-result").textContent = "Dynamic import failed: " + err.message;
-    });
-  }, 100);
-</script>
-<div id="test-result" style="position: fixed; top: 10px; right: 10px; background: #fff; padding: 10px; border: 2px solid #333; z-index: 9999; font-family: monospace; font-size: 12px;">Testing...</div>
+<script type="module" src="/js/app.js"></script>
 </body>
 </html>

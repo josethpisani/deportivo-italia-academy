@@ -1,5 +1,5 @@
-import { state } from "/js/state.js";
-import { seedAthletes, seedTorneos } from "/js/seed.js";
+import { state } from "./state.js";
+import { seedAthletes, seedTorneos } from "./seed.js";
 
 const API = "/api/data";
 const HEADERS = {"Content-Type":"application/json"};
@@ -96,10 +96,12 @@ export async function saveTorneos(){
 
 export async function saveConfig(){
   try{
-    const res = await fetch(API,{
+    const sedeId = getSedeId();
+    if (!sedeId) throw new Error("No sede selected");
+    const res = await fetch(`${API}?sede_id=${encodeURIComponent(sedeId)}`,{
       method:"POST",
       headers:HEADERS,
-      body:JSON.stringify({key:"config", value:state.config})
+      body:JSON.stringify({key:"config", value:state.config, sede_id:sedeId})
     });
     const d = await res.json();
     state.saveError = !d.success;

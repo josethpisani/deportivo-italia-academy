@@ -1,9 +1,9 @@
-import { state } from "/js/views/state.js";
-import { CATEGORIES } from "/js/views/constants.js";
-import { ic } from "/js/views/icons.js";
-import { escapeHtml } from "/js/views/utils.js";
-import { statPill, badge, initials } from "/js/views/render-helpers.js";
-import { todayISO } from "/js/views/utils.js";
+import { state } from "../state.js";
+import { CATEGORIES } from "../constants.js";
+import { ic } from "../icons.js";
+import { escapeHtml } from "../utils.js";
+import { statPill, badge, initials } from "../render-helpers.js";
+import { todayISO } from "../utils.js";
 
 const DEFAULT_ITEMS = [
   "Técnica individual",

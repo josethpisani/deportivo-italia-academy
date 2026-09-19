@@ -1,6 +1,6 @@
-import { state } from "/js/state.js";
-import { CATEGORIES } from "/js/constants.js";
-import { attendanceRate, dayNameFromDate, computeTorneoTeamStats } from "/js/utils.js";
+import { state } from "./state.js";
+import { CATEGORIES } from "./constants.js";
+import { attendanceRate, dayNameFromDate, computeTorneoTeamStats } from "./utils.js";
 
 const C = { pitch:"#0E4C86", green:"#1FA855", red:"#C23B33", grayBg:"#E1E8EF", ink:"#162233", orange:"#E8922D", purple:"#7B4FD4", teal:"#2BA5AD" };
 const CAT_COLORS = ["#0E4C86","#1FA855","#E8922D","#C23B33","#7B4FD4"];
