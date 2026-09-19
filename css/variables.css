@@ -95,4 +95,9 @@
   --warning: var(--accent-amber);
   --danger: var(--accent-red);
   --info: var(--primary-light);
+
+  /* Aliases used by the legacy dashboard styles. */
+  --red: var(--accent-red);
+  --green: var(--accent-green);
+  --muted: var(--text-muted);
 }
