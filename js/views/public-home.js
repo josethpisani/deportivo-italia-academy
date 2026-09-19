@@ -130,14 +130,14 @@ export function renderPublicHome() {
             <div class="form-step" id="stepCalendar">
               <h3>${ic.calendar} Paso 1: Sede, categoría y fecha</h3>
               <div class="form-row"><div class="form-group"><label for="trialSede">${ic.mapPin} Sede *</label><select id="trialSede" name="sede_id" required><option value="">Selecciona una sede</option>${sedes.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.nombre)}</option>`).join('')}</select></div><div class="form-group"><label for="trialCategory">${ic.users} Categoría *</label><select id="trialCategory" name="category" required><option value="">Selecciona categoría</option><option value="U4">U4 — 4:30 PM</option><option value="U6">U6 — 4:30 PM</option><option value="U8">U8 — 5:00 PM</option><option value="U10">U10 — 5:00 PM</option><option value="U12">U12 — 5:00 PM</option></select></div></div>
-              <div class="calendar-info"><div class="info-badge">${ic.info} Disponible solo lunes y miércoles</div><div class="info-badge" id="selectedSchedule">Selecciona una categoría y un día</div></div>
+              <div class="calendar-info"><div class="info-badge">${ic.alert} Disponible solo lunes y miércoles</div><div class="info-badge" id="selectedSchedule">Selecciona una categoría y un día</div></div>
               <div class="calendar-container" id="calendarContainer"></div>
               <button type="button" class="btn-next" id="btnNextToForm" disabled>${ic.arrowRight} Continuar</button>
             </div>
             <div class="form-step" id="stepForm" style="display:none">
-              <h3>${ic.user} Paso 2: Datos del representante y atleta</h3>
-              <div class="form-row"><div class="form-group"><label for="athleteName">${ic.user} Nombre completo del atleta *</label><input type="text" id="athleteName" name="athleteName" required></div><div class="form-group"><label for="athleteAge">${ic.user} Edad *</label><input type="number" id="athleteAge" name="athlete_age" min="3" max="12" required></div></div>
-              <div class="form-group"><label for="repName">${ic.user} Nombre completo del representante *</label><input type="text" id="repName" name="repName" required></div>
+              <h3>${ic.users} Paso 2: Datos del representante y atleta</h3>
+              <div class="form-row"><div class="form-group"><label for="athleteName">${ic.users} Nombre completo del atleta *</label><input type="text" id="athleteName" name="athleteName" required></div><div class="form-group"><label for="athleteAge">${ic.users} Edad *</label><input type="number" id="athleteAge" name="athlete_age" min="3" max="12" required></div></div>
+              <div class="form-group"><label for="repName">${ic.users} Nombre completo del representante *</label><input type="text" id="repName" name="repName" required></div>
               <div class="form-row"><div class="form-group"><label for="trialEmail">${ic.mail} Correo *</label><input type="email" id="trialEmail" name="email" required></div><div class="form-group"><label for="trialPhone">${ic.phone} Teléfono *</label><input type="tel" id="trialPhone" name="phone" pattern="(?:\\+?507[\\s-]?)?[2-9][0-9]{3}[\\s-]?[0-9]{4}" title="Ejemplo: +507 6000-0000" required></div></div>
               <div class="form-group"><label for="trialNotes">Observaciones / comentarios</label><textarea id="trialNotes" name="notes" rows="3"></textarea></div>
               <p class="trial-summary" id="trialSummary"></p>

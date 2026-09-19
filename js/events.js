@@ -10,6 +10,18 @@ let trialModalOpen = false;
 let selectedDate = null;
 let selectedTimeSlot = null;
 
+function parseLocalDate(dateString) {
+  const [year, month, day] = String(dateString).split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatDateInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function attachEvents(){
   document.querySelectorAll("[data-nav]").forEach(btn=>{
     btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(state.view!=="evaluaciones"){ state.evalAthleteId=null; state.evalEditingId=null; } if(state.view!=="torneos" && state.view!=="torneo-detail") state.torneoId=null; if(window.__render) window.__render(); };
@@ -381,7 +393,7 @@ export function attachEvents(){
           classes += ' selected';
         }
         
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = formatDateInput(date);
         html += `<div class="${classes}" data-date="${dateStr}" ${isMondayOrWednesday && !isPast ? 'tabindex="0"' : ''}>${d}</div>`;
       }
       
@@ -393,7 +405,7 @@ export function attachEvents(){
     // Add click handlers for calendar days
     container.querySelectorAll('.cal-day:not(.disabled):not(.empty)').forEach(day => {
       day.onclick = () => {
-        selectedDate = new Date(day.dataset.date);
+        selectedDate = parseLocalDate(day.dataset.date);
         // Remove previous selection
         container.querySelectorAll('.cal-day.selected').forEach(d => d.classList.remove('selected'));
         day.classList.add('selected');
@@ -424,7 +436,7 @@ export function attachEvents(){
       const timeSlot = selectedTimeSlot;
       document.getElementById("trialForm").dataset.category = trialCategory.value;
       document.getElementById("trialForm").dataset.timeSlot = timeSlot;
-      document.getElementById("trialForm").dataset.preferredDate = selectedDate.toISOString().split('T')[0];
+      document.getElementById("trialForm").dataset.preferredDate = formatDateInput(selectedDate);
       const summary = document.getElementById('trialSummary');
       if (summary) summary.textContent = `Sede: ${trialSede.options[trialSede.selectedIndex].text} · ${trialCategory.value} · ${selectedDate.toLocaleDateString('es-PA')} · ${timeSlot === '16:30' ? '4:30 PM' : '5:00 PM'}`;
     };
