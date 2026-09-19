@@ -5,6 +5,11 @@ import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEdit
 import { dayNameFromDate } from "./utils.js";
 import { saveSede, updateSede, saveSiteContent, createTrialRequest, getTrialRequests } from "./api.js";
 
+// Estado local del flujo público de práctica de prueba.
+let trialModalOpen = false;
+let selectedDate = null;
+let selectedTimeSlot = null;
+
 export function attachEvents(){
   document.querySelectorAll("[data-nav]").forEach(btn=>{
     btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(state.view!=="evaluaciones"){ state.evalAthleteId=null; state.evalEditingId=null; } if(state.view!=="torneos" && state.view!=="torneo-detail") state.torneoId=null; if(window.__render) window.__render(); };

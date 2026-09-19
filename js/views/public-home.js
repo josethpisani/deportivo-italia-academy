@@ -2,11 +2,6 @@ import { state } from "../state.js";
 import { ic } from "../icons.js";
 import { escapeHtml } from "../utils.js";
 
-// Trial request modal state
-let trialModalOpen = false;
-let selectedDate = null;
-let selectedTimeSlot = null;
-
 export function renderPublicHome() {
   /* Legacy duplicated template kept out of the render path. */
   const c = state.siteContent.hero;
