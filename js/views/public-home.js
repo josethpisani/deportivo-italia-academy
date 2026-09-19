@@ -27,6 +27,7 @@ export function renderPublicHome() {
           <div class="hero-ctas">
             <a href="#nosotros" class="btn-hero btn-hero-primary">${ic.users} ${escapeHtml(c.ctaPrimary || "Conoce nuestra academia")}</a>
             <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary || "Acceder al sistema STAFF")}</a>
+            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} PRÁCTICA DE PRUEBA</button>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu Entrenamiento de Prueba</button>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu Entrenamiento de Prueba</button>
           </div>
@@ -120,6 +121,7 @@ export function renderPublicHome() {
           <div class="hero-ctas">
             <a href="#nosotros" class="btn-hero btn-hero-primary">${ic.users} ${escapeHtml(c.ctaPrimary || "Conoce nuestra academia")}</a>
             <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary || "Acceder al sistema STAFF")}</a>
+            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} PRÁCTICA DE PRUEBA</button>
           </div>
         </div>
         <div class="hero-scroll">${ic.chevronDown}</div>
@@ -131,21 +133,23 @@ export function renderPublicHome() {
           <div class="modal-header"><h2 id="trialModalTitle">${ic.calendar} Solicitar Entrenamiento de Prueba</h2><p class="modal-subtitle">Selecciona día, horario y completa tus datos</p></div>
           <form id="trialForm" class="modal-body">
             <div class="form-step" id="stepCalendar">
-              <h3>${ic.calendar} Paso 1: Selecciona día y horario</h3>
-              <div class="calendar-info"><div class="info-badge">${ic.info} Disponible solo lunes y miércoles</div><div class="info-badge">${ic.users} 16:30 — U4/U6</div><div class="info-badge">${ic.users} 17:00 — U8/U10/U12</div></div>
+              <h3>${ic.calendar} Paso 1: Sede, categoría y fecha</h3>
+              <div class="form-row"><div class="form-group"><label for="trialSede">${ic.mapPin} Sede *</label><select id="trialSede" name="sede_id" required><option value="">Selecciona una sede</option>${sedes.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.nombre)}</option>`).join('')}</select></div><div class="form-group"><label for="trialCategory">${ic.users} Categoría *</label><select id="trialCategory" name="category" required><option value="">Selecciona categoría</option><option value="U4">U4 — 4:30 PM</option><option value="U6">U6 — 4:30 PM</option><option value="U8">U8 — 5:00 PM</option><option value="U10">U10 — 5:00 PM</option><option value="U12">U12 — 5:00 PM</option></select></div></div>
+              <div class="calendar-info"><div class="info-badge">${ic.info} Disponible solo lunes y miércoles</div><div class="info-badge" id="selectedSchedule">Selecciona una categoría y un día</div></div>
               <div class="calendar-container" id="calendarContainer"></div>
-              <div class="time-slots" id="timeSlots" style="display:none"><h4>${ic.clock} Horarios disponibles</h4><div class="slot-options" id="slotOptions"></div></div>
               <button type="button" class="btn-next" id="btnNextToForm" disabled>${ic.arrowRight} Continuar</button>
             </div>
             <div class="form-step" id="stepForm" style="display:none">
               <h3>${ic.user} Paso 2: Datos del representante y atleta</h3>
-              <div class="form-row"><div class="form-group"><label for="repName">${ic.user} Representante *</label><input type="text" id="repName" name="repName" required></div><div class="form-group"><label for="athleteName">${ic.user} Atleta *</label><input type="text" id="athleteName" name="athleteName" required></div></div>
-              <div class="form-row"><div class="form-group"><label for="trialEmail">${ic.mail} Correo *</label><input type="email" id="trialEmail" name="email" required></div><div class="form-group"><label for="trialPhone">${ic.phone} Teléfono *</label><input type="tel" id="trialPhone" name="phone" required></div></div>
-              <div class="form-group"><label for="trialSede">${ic.mapPin} Sede *</label><select id="trialSede" name="sede_id" required><option value="">Selecciona una sede</option>${sedes.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.nombre)}</option>`).join('')}</select></div>
+              <div class="form-row"><div class="form-group"><label for="athleteName">${ic.user} Nombre completo del atleta *</label><input type="text" id="athleteName" name="athleteName" required></div><div class="form-group"><label for="athleteAge">${ic.user} Edad *</label><input type="number" id="athleteAge" name="athlete_age" min="3" max="12" required></div></div>
+              <div class="form-group"><label for="repName">${ic.user} Nombre completo del representante *</label><input type="text" id="repName" name="repName" required></div>
+              <div class="form-row"><div class="form-group"><label for="trialEmail">${ic.mail} Correo *</label><input type="email" id="trialEmail" name="email" required></div><div class="form-group"><label for="trialPhone">${ic.phone} Teléfono *</label><input type="tel" id="trialPhone" name="phone" pattern="(?:\\+?507[\\s-]?)?[2-9][0-9]{3}[\\s-]?[0-9]{4}" title="Ejemplo: +507 6000-0000" required></div></div>
+              <div class="form-group"><label for="trialNotes">Observaciones / comentarios</label><textarea id="trialNotes" name="notes" rows="3"></textarea></div>
+              <p class="trial-summary" id="trialSummary"></p>
               <button type="submit" class="btn-submit-trial">${ic.send} Enviar Solicitud</button>
             </div>
           </form>
-          <div class="modal-success" id="modalSuccess" style="display:none"><div class="success-icon">${ic.checkCircle}</div><h3>¡Solicitud Enviada!</h3><p>Te contactaremos pronto para confirmar tu entrenamiento de prueba.</p><button type="button" class="btn-close-success" id="btnCloseSuccess">${ic.check} Cerrar</button></div>
+          <div class="modal-success" id="modalSuccess" style="display:none"><div class="success-icon">${ic.checkCircle}</div><h3>¡Práctica de prueba registrada correctamente!</h3><p id="trialConfirmation"></p><button type="button" class="btn-close-success" id="btnCloseSuccess">${ic.check} Cerrar</button></div>
         </div>
       </div>
 

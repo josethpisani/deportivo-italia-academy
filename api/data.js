@@ -55,11 +55,24 @@ async function getDb() {
     )
   `;
 
+  // Extend the original trial request schema without removing legacy columns.
+  for (const statement of [
+    sql`ALTER TABLE trial_requests ADD COLUMN IF NOT EXISTS athlete_age INTEGER`,
+    sql`ALTER TABLE trial_requests ADD COLUMN IF NOT EXISTS category TEXT`,
+    sql`ALTER TABLE trial_requests ADD COLUMN IF NOT EXISTS test_date DATE`,
+    sql`ALTER TABLE trial_requests ADD COLUMN IF NOT EXISTS test_time TEXT`,
+    sql`ALTER TABLE trial_requests ADD COLUMN IF NOT EXISTS registration_code TEXT`
+  ]) {
+    try { await statement; } catch (e) { console.warn("Trial schema extension skipped:", e.message); }
+  }
+
   // Create indexes for trial_requests
   try {
     await sql`CREATE INDEX IF NOT EXISTS idx_trial_requests_sede_id ON trial_requests(sede_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_trial_requests_date ON trial_requests(preferred_date)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_trial_requests_status ON trial_requests(status)`;
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS uq_trial_requests_registration_code ON trial_requests(registration_code) WHERE registration_code IS NOT NULL`;
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS uq_trial_requests_athlete_date_sede ON trial_requests (LOWER(TRIM(athlete_name)), sede_id, preferred_date)`;
   } catch (e) {
     // Index might already exist
   }
@@ -223,44 +236,53 @@ export default async function handler(req, res) {
 
       // For trial_requests
       if (key === "trial_requests") {
-        const { representative_name, athlete_name, email, phone, sede_id: bodySedeId, preferred_date, preferred_time_slot, age_category, notes } = value;
+        const { representative_name, athlete_name, athlete_age, category, email, phone, sede_id: bodySedeId, preferred_date, test_date, preferred_time_slot, test_time, age_category, notes } = value;
         const targetSedeId = bodySedeId || sede_id;
+        const requestedDate = test_date || preferred_date;
+        const normalizedCategory = String(category || "").toUpperCase();
+        const categoryTimes = { U4: "16:30", U6: "16:30", U8: "17:00", U10: "17:00", U12: "17:00" };
+        const requestedTime = test_time || preferred_time_slot || categoryTimes[normalizedCategory];
         
-        if (!representative_name || !athlete_name || !email || !phone || !targetSedeId || !preferred_date || !preferred_time_slot || !age_category) {
+        if (!representative_name || !athlete_name || !targetSedeId || !requestedDate || !normalizedCategory || !requestedTime || athlete_age === undefined || athlete_age === null || !email || !phone) {
           return res.status(400).json({ error: "Missing required fields for trial request" });
+        }
+
+        if (!Object.prototype.hasOwnProperty.call(categoryTimes, normalizedCategory)) {
+          return res.status(400).json({ error: "Categoría inválida. Use U4, U6, U8, U10 o U12" });
+        }
+        if (Number(athlete_age) < 3 || Number(athlete_age) > 12 || !Number.isInteger(Number(athlete_age))) {
+          return res.status(400).json({ error: "La edad debe ser un número entero entre 3 y 12" });
+        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(requestedDate) || !/^\d{2}:\d{2}$/.test(requestedTime)) {
+          return res.status(400).json({ error: "Fecha u horario inválido" });
+        }
+        if (!/^(?:\+?507[\s-]?)?[2-9]\d{3}[\s-]?\d{4}$/.test(String(phone).trim())) {
+          return res.status(400).json({ error: "Teléfono inválido para Panamá" });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
+          return res.status(400).json({ error: "Correo electrónico inválido" });
+        }
+        if (requestedTime !== categoryTimes[normalizedCategory]) {
+          return res.status(400).json({ error: `El horario de ${normalizedCategory} debe ser ${categoryTimes[normalizedCategory]}` });
         }
         
         // Validate date is Monday (1) or Wednesday (3)
-        const date = new Date(preferred_date);
+        const date = new Date(`${requestedDate}T12:00:00Z`);
         const dayOfWeek = date.getUTCDay(); // 0 = Sunday, 1 = Monday, 3 = Wednesday
         if (dayOfWeek !== 1 && dayOfWeek !== 3) {
           return res.status(400).json({ error: "Las pruebas solo están disponibles los lunes y miércoles" });
         }
         
-        // Validate time slot
-        if (!['16:30', '17:00'].includes(preferred_time_slot)) {
-          return res.status(400).json({ error: "Horario inválido. Use 16:30 o 17:00" });
-        }
-        
-        // Validate age category
-        if (!['U4_U6', 'U8_U12'].includes(age_category)) {
-          return res.status(400).json({ error: "Categoría de edad inválida" });
-        }
-        
-        // Check if time slot matches age category
-        if (preferred_time_slot === '16:30' && age_category !== 'U4_U6') {
-          return res.status(400).json({ error: "El horario de 16:30 es solo para categorías U4 y U6 (hasta 6 años)" });
-        }
-        if (preferred_time_slot === '17:00' && age_category !== 'U8_U12') {
-          return res.status(400).json({ error: "El horario de 17:00 es solo para categorías U8, U10 y U12 (7+ años)" });
-        }
+        const duplicate = await sql`SELECT registration_code FROM trial_requests WHERE LOWER(TRIM(athlete_name)) = LOWER(TRIM(${athlete_name})) AND sede_id = ${targetSedeId} AND preferred_date = ${requestedDate} LIMIT 1`;
+        if (duplicate.length) return res.status(409).json({ error: "Ya existe una práctica de prueba para este atleta en esa fecha y sede", registration_code: duplicate[0].registration_code });
+        const registrationCode = `PRUEBA-${requestedDate.slice(0, 4)}-${Date.now().toString(36).toUpperCase()}`;
         
         await sql`
-          INSERT INTO trial_requests (representative_name, athlete_name, email, phone, sede_id, preferred_date, preferred_time_slot, age_category, notes, created_at, updated_at)
-          VALUES (${representative_name}, ${athlete_name}, ${email}, ${phone}, ${targetSedeId}, ${preferred_date}, ${preferred_time_slot}, ${age_category}, ${notes || ''}, NOW(), NOW())
+          INSERT INTO trial_requests (representative_name, athlete_name, athlete_age, category, email, phone, sede_id, preferred_date, preferred_time_slot, test_date, test_time, age_category, registration_code, notes, created_at, updated_at)
+          VALUES (${representative_name}, ${athlete_name}, ${Number(athlete_age)}, ${normalizedCategory}, ${email}, ${phone}, ${targetSedeId}, ${requestedDate}, ${requestedTime}, ${requestedDate}, ${requestedTime}, ${normalizedCategory}, ${registrationCode}, ${notes || ''}, NOW(), NOW())
         `;
         
-        return res.status(200).json({ success: true });
+        return res.status(201).json({ success: true, registration_code: registrationCode, request: { ...value, athlete_age: Number(athlete_age), category: normalizedCategory, test_date: requestedDate, test_time: requestedTime, registration_code: registrationCode, status: "pendiente" } });
       }
 
       // Site content is global; operational data is isolated by sede.
@@ -320,7 +342,7 @@ export default async function handler(req, res) {
         if (!targetSedeId || !itemId || !updates || !Object.keys(updates).some(field => ["status", "notes"].includes(field))) {
           return res.status(400).json({ error: "Missing itemId or valid updates" });
         }
-        if (updates.status !== undefined && !["pendiente", "confirmada", "cancelada"].includes(updates.status)) {
+        if (updates.status !== undefined && !["pendiente", "confirmada", "realizada", "no_asistio", "cancelada"].includes(updates.status)) {
           return res.status(400).json({ error: "Invalid trial request status" });
         }
         if (updates.status !== undefined && updates.notes !== undefined) {

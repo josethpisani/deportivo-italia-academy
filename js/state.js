@@ -32,6 +32,8 @@ export const state = {
   statsTorneo: null,
   mensualMonth: new Date().toISOString().slice(0,7),
   adminAuth: false,
+  adminTrialRequests: [],
+  trialFilters: { search: "", category: "", status: "", date: "", date_from: "", date_to: "" },
   statsAthleteId: null,
   statsCategory: "Todos",
   evalAthleteId: null,

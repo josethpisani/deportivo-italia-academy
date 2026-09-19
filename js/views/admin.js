@@ -304,28 +304,45 @@ export function renderAdmin(){
     const requests = state.adminTrialRequests || [];
     const pendingCount = requests.filter(r => r.status === 'pendiente').length;
     const confirmedCount = requests.filter(r => r.status === 'confirmada').length;
+    const completedCount = requests.filter(r => r.status === 'realizada').length;
+    const noShowCount = requests.filter(r => r.status === 'no_asistio').length;
     const cancelledCount = requests.filter(r => r.status === 'cancelada').length;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+    const weekKey = weekStart.toISOString().slice(0, 10);
+    const todayCount = requests.filter(r => (r.test_date || r.preferred_date) === todayKey).length;
+    const weekCount = requests.filter(r => (r.test_date || r.preferred_date) >= weekKey && (r.test_date || r.preferred_date) <= todayKey).length;
+    const categoryCounts = ['U4','U6','U8','U10','U12'].map(category => `${category}: ${requests.filter(r => (r.category || '').toUpperCase() === category).length}`).join(' · ');
+    const calendarGroups = {};
+    requests.forEach(r => { const date = r.test_date || r.preferred_date; if (date) (calendarGroups[date] ||= []).push(r); });
+    const calendarHtml = Object.keys(calendarGroups).sort().map(date => `<div class="trial-calendar-day"><strong>${new Date(`${date}T12:00:00`).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>${calendarGroups[date].sort((a,b) => String(a.test_time || a.preferred_time_slot).localeCompare(String(b.test_time || b.preferred_time_slot))).map(r => `<span>${r.test_time || r.preferred_time_slot} — ${escapeHtml(r.athlete_name)} — ${escapeHtml(r.category || '')}</span>`).join('')}</div>`).join('') || '<p class="empty-msg">No hay pruebas programadas.</p>';
     
     const rows = requests.map(r => {
       const sede = state.sedes.find(s => s.id === r.sede_id);
       const sedeName = sede ? sede.nombre : 'Desconocida';
-      const date = new Date(r.preferred_date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-      const timeLabel = r.preferred_time_slot === '16:30' ? '16:30 (U4/U6)' : '17:00-18:30 (U8/U10/U12)';
-      const statusBadge = badge(r.status, r.status === 'confirmada' ? 'good' : r.status === 'cancelada' ? 'bad' : 'neutral');
+       const dateValue = r.test_date || r.preferred_date;
+       const date = new Date(`${dateValue}T12:00:00`).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+       const timeValue = r.test_time || r.preferred_time_slot;
+       const timeLabel = timeValue === '16:30' ? '4:30 PM' : '5:00 PM';
+       const category = r.category || (r.age_category === 'U4_U6' ? 'U4/U6' : 'U8/U10/U12');
+       const statusBadge = badge(r.status === 'no_asistio' ? 'No asistió' : r.status, r.status === 'realizada' ? 'good' : r.status === 'cancelada' || r.status === 'no_asistio' ? 'bad' : 'neutral');
       
       return `<tr>
-        <td>${escapeHtml(r.representative_name)}</td>
+         <td>${escapeHtml(r.registration_code || r.id || '')}</td>
+         <td>${escapeHtml(r.representative_name)}</td>
         <td>${escapeHtml(r.athlete_name)}</td>
         <td>${date}</td>
         <td>${timeLabel}</td>
-        <td>${escapeHtml(r.age_category === 'U4_U6' ? 'U4/U6 (≤6 años)' : 'U8/U10/U12 (7+ años)')}</td>
+         <td>${escapeHtml(category)}${r.athlete_age ? ` (${r.athlete_age} años)` : ''}</td>
         <td>${escapeHtml(sedeName)}</td>
         <td>${escapeHtml(r.email)}</td>
         <td>${escapeHtml(r.phone)}</td>
-        <td>${statusBadge}</td>
+         <td>${statusBadge}</td>
+         <td>${escapeHtml(r.notes || '')}</td>
         <td>
           <div class="btn-group">
-            ${r.status === 'pendiente' ? `<button class="bp" data-trial-status="${r.id}|confirmada">${ic.check} Confirmar</button>` : ''}
+             ${r.status === 'pendiente' ? `<button class="bp" data-trial-status="${r.id}|confirmada">${ic.check} Confirmar</button>` : ''}
+             ${r.status === 'confirmada' ? `<button class="bp" data-trial-status="${r.id}|realizada">${ic.checkCircle} Realizada</button><button class="bd" data-trial-status="${r.id}|no_asistio">No asistió</button>` : ''}
             ${r.status !== 'cancelada' ? `<button class="bd" data-trial-status="${r.id}|cancelada">${ic.x} Cancelar</button>` : ''}
           </div>
         </td>
@@ -338,28 +355,40 @@ export function renderAdmin(){
           <div class="stat-card total">${ic.clipboard} <span>${requests.length}</span> <span>Total</span></div>
           <div class="stat-card pending">${ic.clock} <span>${pendingCount}</span> <span>Pendientes</span></div>
           <div class="stat-card confirmed">${ic.checkCircle} <span>${confirmedCount}</span> <span>Confirmadas</span></div>
+          <div class="stat-card completed">${ic.checkCircle} <span>${completedCount}</span> <span>Realizadas</span></div>
           <div class="stat-card cancelled">${ic.xCircle} <span>${cancelledCount}</span> <span>Canceladas</span></div>
+          <div class="stat-card total">${ic.calendar} <span>${todayCount}</span> <span>Hoy</span></div>
+          <div class="stat-card total">${ic.calendar} <span>${weekCount}</span> <span>Esta semana</span></div>
         </div>
         <div class="pruebas-filters">
           <select id="filterStatus" class="filter-select">
             <option value="">Todos los estados</option>
             <option value="pendiente">Pendientes</option>
             <option value="confirmada">Confirmadas</option>
+            <option value="realizada">Realizadas</option>
+            <option value="no_asistio">No asistió</option>
             <option value="cancelada">Canceladas</option>
           </select>
           <select id="filterSede" class="filter-select">
             <option value="">Todas las sedes</option>
             ${state.sedes.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.nombre)}</option>`).join('')}
           </select>
-          <input type="date" id="filterDate" class="filter-input">
+          <input type="search" id="filterSearch" class="filter-input" placeholder="Buscar atleta, representante o teléfono">
+          <select id="filterCategory" class="filter-select"><option value="">Todas las categorías</option>${['U4','U6','U8','U10','U12'].map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+          <input type="date" id="filterDate" class="filter-input" title="Fecha exacta">
+          <input type="date" id="filterDateFrom" class="filter-input" title="Desde">
+          <input type="date" id="filterDateTo" class="filter-input" title="Hasta">
+          <button class="btn-secondary" id="btnSearchPruebas">${ic.search} Buscar</button>
+          <button class="btn-outline" id="btnClearPruebas">Limpiar</button>
           <button class="btn-secondary" id="btnExportPruebas">${ic.download} Exportar CSV</button>
         </div>
       </div>
+      <div class="trial-calendar"><h3 class="dia-title">Calendario de pruebas</h3>${calendarHtml}</div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Representante</th>
+              <th>ID</th><th>Representante</th>
               <th>Atleta</th>
               <th>Fecha</th>
               <th>Horario</th>
@@ -368,10 +397,11 @@ export function renderAdmin(){
               <th>Email</th>
               <th>Teléfono</th>
               <th>Estado</th>
-              <th>Acciones</th>
+              <th>Observaciones</th><th>Acciones</th>
             </tr>
           </thead>
-          <tbody>${rows || `<tr><td colspan="10" class="empty-msg">No hay solicitudes de prueba registradas</td></tr>`}</tbody>
+          <tfoot><tr><td colspan="12" class="trial-category-summary">${escapeHtml(categoryCounts)}</td></tr></tfoot>
+          <tbody>${rows || `<tr><td colspan="12" class="empty-msg">No hay solicitudes de prueba registradas</td></tr>`}</tbody>
         </table>
       </div>
     `;

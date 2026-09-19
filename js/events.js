@@ -322,6 +322,19 @@ export function attachEvents(){
   }
 
   // Calendar generation
+  const categoryTime = { U4: '16:30', U6: '16:30', U8: '17:00', U10: '17:00', U12: '17:00' };
+  const trialCategory = document.getElementById('trialCategory');
+  const trialSede = document.getElementById('trialSede');
+  const trialSchedule = document.getElementById('selectedSchedule');
+  function updateTrialSchedule() {
+    const category = trialCategory?.value;
+    const time = categoryTime[category];
+    if (trialSchedule) trialSchedule.textContent = category && time ? `Categoría ${category}: ${time === '16:30' ? '4:30 PM' : '5:00 PM'} · Selecciona lunes o miércoles` : 'Selecciona una categoría y un día';
+    const next = document.getElementById('btnNextToForm');
+    if (next) next.disabled = !(selectedDate && category && trialSede?.value);
+  }
+  if (trialCategory) trialCategory.onchange = updateTrialSchedule;
+  if (trialSede) trialSede.onchange = updateTrialSchedule;
   function generateCalendar() {
     const container = document.getElementById("calendarContainer");
     if (!container) return;
@@ -379,7 +392,7 @@ export function attachEvents(){
         // Remove previous selection
         container.querySelectorAll('.cal-day.selected').forEach(d => d.classList.remove('selected'));
         day.classList.add('selected');
-        showTimeSlots();
+        updateTrialSchedule();
       };
       // Keyboard support
       day.onkeydown = (e) => {
@@ -392,58 +405,23 @@ export function attachEvents(){
   }
 
   function showTimeSlots() {
-    const container = document.getElementById("timeSlots");
-    const slotOptions = document.getElementById("slotOptions");
-    if (!container || !slotOptions) return;
-    
-    if (!selectedDate) {
-      container.style.display = 'none';
-      return;
-    }
-    
-    const dayOfWeek = selectedDate.getDay();
-    const isMonday = selectedDate.getDay() === 1;
-    
-    let html = '';
-    // Both time slots available on Mon/Wed
-    html += `
-      <button type="button" class="slot-option" data-slot="16:30" data-category="U4_U6">
-        <span class="slot-time">${ic.clock} 16:30</span>
-        <span class="slot-category">U4 / U6 (hasta 6 años)</span>
-      </button>
-      <button type="button" class="slot-option" data-slot="17:00" data-category="U8_U12">
-        <span class="slot-time">${ic.clock} 17:00 - 18:30</span>
-        <span class="slot-category">U8 / U10 / U12 (7+ años)</span>
-      </button>
-    `;
-    
-    slotOptions.innerHTML = html;
-    container.style.display = 'block';
-    
-    // Add click handlers for time slots
-    slotOptions.querySelectorAll('.slot-option').forEach(btn => {
-      btn.onclick = () => {
-        selectedTimeSlot = btn.dataset.slot;
-        slotOptions.querySelectorAll('.slot-option').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        document.getElementById("btnNextToForm").disabled = false;
-      };
-    });
+    selectedTimeSlot = categoryTime[trialCategory?.value];
+    updateTrialSchedule();
   }
 
   const btnNextToForm = document.getElementById("btnNextToForm");
   if (btnNextToForm) {
     btnNextToForm.onclick = () => {
-      if (!selectedDate || !selectedTimeSlot) return;
+      if (!selectedDate || !trialCategory?.value || !trialSede?.value) return;
+      selectedTimeSlot = categoryTime[trialCategory.value];
       document.getElementById("stepCalendar").style.display = 'none';
       document.getElementById("stepForm").style.display = 'block';
-      // Auto-fill age category based on time slot
       const timeSlot = selectedTimeSlot;
-      const ageCategory = timeSlot === '16:30' ? 'U4_U6' : 'U8_U12';
-      // Store for form submission
-      document.getElementById("trialForm").dataset.ageCategory = ageCategory;
+      document.getElementById("trialForm").dataset.category = trialCategory.value;
       document.getElementById("trialForm").dataset.timeSlot = timeSlot;
       document.getElementById("trialForm").dataset.preferredDate = selectedDate.toISOString().split('T')[0];
+      const summary = document.getElementById('trialSummary');
+      if (summary) summary.textContent = `Sede: ${trialSede.options[trialSede.selectedIndex].text} · ${trialCategory.value} · ${selectedDate.toLocaleDateString('es-PA')} · ${timeSlot === '16:30' ? '4:30 PM' : '5:00 PM'}`;
     };
   }
 
@@ -455,13 +433,16 @@ export function attachEvents(){
       const data = {
         representative_name: formData.get("repName"),
         athlete_name: formData.get("athleteName"),
+        athlete_age: Number(formData.get("athlete_age")),
+        category: trialForm.dataset.category,
         email: formData.get("email"),
         phone: formData.get("phone"),
         sede_id: formData.get("sede_id"),
         preferred_date: trialForm.dataset.preferredDate,
         preferred_time_slot: trialForm.dataset.timeSlot,
-        age_category: trialForm.dataset.ageCategory,
-        notes: `Solicitud desde web - Horario: ${trialForm.dataset.timeSlot} - Categoría: ${trialForm.dataset.ageCategory === 'U4_U6' ? 'U4/U6 (hasta 6 años)' : 'U8/U10/U12 (7+ años)'}`
+        test_date: trialForm.dataset.preferredDate,
+        test_time: trialForm.dataset.timeSlot,
+        notes: formData.get('notes') || ''
       };
       
       const submitBtn = trialForm.querySelector('button[type="submit"]');
@@ -479,6 +460,8 @@ export function attachEvents(){
         
         const result = await res.json();
         if (result.success) {
+          const confirmation = document.getElementById('trialConfirmation');
+          if (confirmation) confirmation.textContent = `Código: ${result.registration_code} · Atleta: ${data.athlete_name} · ${data.category} · Sede: ${trialSede?.options[trialSede.selectedIndex]?.text || data.sede_id} · Fecha: ${data.test_date} · Hora: ${data.test_time === '16:30' ? '4:30 PM' : '5:00 PM'} · Representante: ${data.representative_name} · Teléfono: ${data.phone} · Correo: ${data.email}`;
           document.getElementById("stepForm").style.display = 'none';
           document.getElementById("modalSuccess").style.display = 'block';
         } else {
@@ -512,12 +495,14 @@ export function attachEvents(){
       document.getElementById("stepCalendar").style.display = 'block';
       document.getElementById("stepForm").style.display = 'none';
       document.getElementById("modalSuccess").style.display = 'none';
-      document.getElementById("timeSlots").style.display = 'none';
       document.getElementById("btnNextToForm").disabled = true;
+      if (trialCategory) trialCategory.value = '';
+      if (trialSede) trialSede.value = '';
       trialForm?.reset();
-      trialForm.dataset.ageCategory = '';
+      trialForm.dataset.category = '';
       trialForm.dataset.timeSlot = '';
       trialForm.dataset.preferredDate = '';
+      updateTrialSchedule();
       generateCalendar();
     }
   }
@@ -546,9 +531,20 @@ export function attachEvents(){
 async function loadAdminTrialRequests() {
   try {
     const sedeId = state.currentSede?.id;
-    const res = await fetch(`/api/data?key=trial_requests${sedeId ? `&sede_id=${encodeURIComponent(sedeId)}` : ''}`);
+    const filters = state.trialFilters || {};
+    const params = new URLSearchParams({ key: 'trial_requests' });
+    if (sedeId) params.set('sede_id', sedeId);
+    if (filters.status) params.set('status', filters.status);
+    if (filters.date) { params.set('date_from', filters.date); params.set('date_to', filters.date); }
+    if (filters.date_from) params.set('date_from', filters.date_from);
+    if (filters.date_to) params.set('date_to', filters.date_to);
+    const res = await fetch(`/api/data?${params}`);
     const requests = await res.json();
-    state.adminTrialRequests = requests || [];
+    const search = String(filters.search || '').trim().toLowerCase();
+    state.adminTrialRequests = (Array.isArray(requests) ? requests : []).filter(r => {
+      const haystack = [r.athlete_name, r.representative_name, r.phone].join(' ').toLowerCase();
+      return (!search || haystack.includes(search)) && (!filters.category || String(r.category || '').toUpperCase() === filters.category);
+    });
     if (window.__render) window.__render();
   } catch (err) {
     console.error('Error loading trial requests:', err);
@@ -567,7 +563,7 @@ document.addEventListener('click', async (e) => {
         const res = await fetch('/api/data', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: 'trial_requests', itemId, updates: { status: newStatus } })
+          body: JSON.stringify({ key: 'trial_requests', itemId, sede_id: state.currentSede?.id, updates: { status: newStatus } })
         });
         const result = await res.json();
         if (result.success) {
@@ -590,15 +586,15 @@ document.addEventListener('click', async (e) => {
       return;
     }
     
-    const headers = ['Representante', 'Atleta', 'Fecha', 'Horario', 'Categoría', 'Sede', 'Email', 'Teléfono', 'Estado', 'Fecha Solicitud'];
+    const headers = ['Código', 'Atleta', 'Edad', 'Categoría', 'Fecha', 'Hora', 'Representante', 'Teléfono', 'Email', 'Sede', 'Estado', 'Observaciones', 'Fecha Solicitud'];
     const rows = state.adminTrialRequests.map(r => {
       const sede = state.sedes.find(s => s.id === r.sede_id);
       const sedeName = sede ? sede.nombre : 'Desconocida';
-      const date = new Date(r.preferred_date).toLocaleDateString('es-ES');
-      const timeLabel = r.preferred_time_slot === '16:30' ? '16:30 (U4/U6)' : '17:00-18:30 (U8/U10/U12)';
-      const category = r.age_category === 'U4_U6' ? 'U4/U6 (≤6 años)' : 'U8/U10/U12 (7+ años)';
+      const date = new Date(`${r.test_date || r.preferred_date}T12:00:00`).toLocaleDateString('es-ES');
+      const timeLabel = r.test_time || r.preferred_time_slot;
+      const category = r.category || r.age_category;
       const createdDate = new Date(r.created_at).toLocaleDateString('es-ES');
-      return [r.representative_name, r.athlete_name, date, timeLabel, category, sedeName, r.email, r.phone, r.status, createdDate]
+      return [r.registration_code || r.id, r.athlete_name, r.athlete_age || '', category, date, timeLabel, r.representative_name, r.phone, r.email, sedeName, r.status, r.notes || '', createdDate]
         .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
     
@@ -612,18 +608,19 @@ document.addEventListener('click', async (e) => {
   }
 
   // Filter trial requests
-  const filterStatus = document.getElementById('filterStatus');
-  if (filterStatus && e.target === filterStatus) {
-    setTimeout(() => loadAdminTrialRequests(), 0);
+  if (e.target.closest('#btnSearchPruebas')) {
+    state.trialFilters = {
+      search: document.getElementById('filterSearch')?.value || '',
+      category: document.getElementById('filterCategory')?.value || '',
+      status: document.getElementById('filterStatus')?.value || '',
+      date: document.getElementById('filterDate')?.value || '',
+      date_from: document.getElementById('filterDateFrom')?.value || '',
+      date_to: document.getElementById('filterDateTo')?.value || ''
+    };
+    loadAdminTrialRequests();
   }
-  
-  const filterSede = document.getElementById('filterSede');
-  if (filterSede && e.target === filterSede) {
-    setTimeout(() => loadAdminTrialRequests(), 0);
-  }
-  
-  const filterDate = document.getElementById('filterDate');
-  if (filterDate && e.target === filterDate) {
-    setTimeout(() => loadAdminTrialRequests(), 0);
+  if (e.target.closest('#btnClearPruebas')) {
+    state.trialFilters = { search: '', category: '', status: '', date: '', date_from: '', date_to: '' };
+    loadAdminTrialRequests();
   }
 });
