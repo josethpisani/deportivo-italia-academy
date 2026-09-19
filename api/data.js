@@ -339,19 +339,37 @@ export default async function handler(req, res) {
       const targetSedeId = bodySedeId || sede_id;
 
       if (key === "trial_requests") {
-        if (!targetSedeId || !itemId || !updates || !Object.keys(updates).some(field => ["status", "notes"].includes(field))) {
+        const editableFields = ["status", "notes", "representative_name", "athlete_name", "athlete_age", "category", "email", "phone", "preferred_date", "preferred_time_slot", "test_date", "test_time"];
+        if (!targetSedeId || !itemId || !updates || !Object.keys(updates).some(field => editableFields.includes(field))) {
           return res.status(400).json({ error: "Missing itemId or valid updates" });
         }
         if (updates.status !== undefined && !["pendiente", "confirmada", "realizada", "no_asistio", "cancelada"].includes(updates.status)) {
           return res.status(400).json({ error: "Invalid trial request status" });
         }
-        if (updates.status !== undefined && updates.notes !== undefined) {
-          await sql`UPDATE trial_requests SET status = ${updates.status}, notes = ${updates.notes}, updated_at = NOW() WHERE id = ${itemId} AND sede_id = ${targetSedeId}`;
-        } else if (updates.status !== undefined) {
-          await sql`UPDATE trial_requests SET status = ${updates.status}, updated_at = NOW() WHERE id = ${itemId} AND sede_id = ${targetSedeId}`;
-        } else {
-          await sql`UPDATE trial_requests SET notes = ${updates.notes}, updated_at = NOW() WHERE id = ${itemId} AND sede_id = ${targetSedeId}`;
+        const current = await sql`SELECT * FROM trial_requests WHERE id = ${itemId} AND sede_id = ${targetSedeId} LIMIT 1`;
+        if (!current.length) return res.status(404).json({ error: "Trial request not found" });
+        const next = { ...current[0], ...updates };
+        const category = String(next.category || '').toUpperCase();
+        const testDate = next.test_date || next.preferred_date;
+        const testTime = next.test_time || next.preferred_time_slot;
+        if (updates.category !== undefined && !["U4", "U6", "U8", "U10", "U12"].includes(category)) {
+          return res.status(400).json({ error: "Categoría inválida" });
         }
+        if (updates.athlete_age !== undefined && (!Number.isInteger(Number(next.athlete_age)) || Number(next.athlete_age) < 3 || Number(next.athlete_age) > 12)) {
+          return res.status(400).json({ error: "La edad debe estar entre 3 y 12 años" });
+        }
+        if (updates.test_date !== undefined || updates.preferred_date !== undefined) {
+          const weekday = new Date(`${testDate}T12:00:00`).getDay();
+          if (![1, 3].includes(weekday)) return res.status(400).json({ error: "Las pruebas solo están disponibles los lunes y miércoles" });
+        }
+        if (updates.test_time !== undefined || updates.preferred_time_slot !== undefined) {
+          if (!["16:30", "17:00"].includes(testTime)) return res.status(400).json({ error: "Horario inválido" });
+        }
+        await sql`UPDATE trial_requests SET
+          representative_name = ${next.representative_name}, athlete_name = ${next.athlete_name}, athlete_age = ${next.athlete_age ? Number(next.athlete_age) : null},
+          category = ${category || null}, email = ${next.email}, phone = ${next.phone}, preferred_date = ${testDate}, preferred_time_slot = ${testTime},
+          test_date = ${testDate}, test_time = ${testTime}, age_category = ${category || next.age_category || null}, status = ${next.status}, notes = ${next.notes || ''}, updated_at = NOW()
+          WHERE id = ${itemId} AND sede_id = ${targetSedeId}`;
         return res.status(200).json({ success: true });
       }
 

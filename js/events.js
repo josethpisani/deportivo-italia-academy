@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { ic } from "./icons.js";
 import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo } from "./mutations.js";
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from "./modals.js";
-import { dayNameFromDate } from "./utils.js";
+import { dayNameFromDate, escapeHtml } from "./utils.js";
 import { saveSede, updateSede, saveSiteContent, createTrialRequest, getTrialRequests } from "./api.js";
 
 // Estado local del flujo público de práctica de prueba.
@@ -570,6 +570,31 @@ async function loadAdminTrialRequests() {
 
 // Admin Trial Requests Event Handlers
 document.addEventListener('click', async (e) => {
+  const editTrialBtn = e.target.closest('[data-trial-edit]');
+  if (editTrialBtn) {
+    e.preventDefault();
+    const request = (state.adminTrialRequests || []).find(item => String(item.id) === String(editTrialBtn.dataset.trialEdit));
+    if (request) openTrialEditModal(request);
+    return;
+  }
+
+  const deleteTrialBtn = e.target.closest('[data-trial-delete]');
+  if (deleteTrialBtn) {
+    e.preventDefault();
+    const request = (state.adminTrialRequests || []).find(item => String(item.id) === String(deleteTrialBtn.dataset.trialDelete));
+    if (!request || !confirm(`¿Eliminar el registro de ${request.athlete_name || 'este atleta'}? Esta acción no se puede deshacer.`)) return;
+    try {
+      const res = await fetch('/api/data', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'trial_requests', itemId: request.id, sede_id: state.currentSede?.id }) });
+      const result = await res.json();
+      if (!res.ok || !result.success) throw new Error(result.error || 'No se pudo eliminar');
+      await loadAdminTrialRequests();
+    } catch (err) {
+      console.error('Error deleting trial request:', err);
+      alert('No se pudo eliminar el registro. Intenta nuevamente.');
+    }
+    return;
+  }
+
   // Trial request status changes
   const statusBtn = e.target.closest('[data-trial-status]');
   if (statusBtn) {
@@ -641,3 +666,46 @@ document.addEventListener('click', async (e) => {
     loadAdminTrialRequests();
   }
 });
+
+function openTrialEditModal(request) {
+  document.getElementById('trialEditModal')?.remove();
+  const date = request.test_date || request.preferred_date || '';
+  const time = request.test_time || request.preferred_time_slot || '17:00';
+  const category = String(request.category || '').toUpperCase();
+  const modal = document.createElement('div');
+  modal.id = 'trialEditModal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="trialEditTitle">
+    <button type="button" class="modal-close" id="closeTrialEdit" aria-label="Cerrar">${ic.x}</button>
+    <div class="modal-header"><h2 id="trialEditTitle">${ic.pencil} Editar práctica de prueba</h2><p class="modal-subtitle">Código: ${escapeHtml(request.registration_code || request.id)}</p></div>
+    <form id="trialEditForm" class="modal-body">
+      <div class="form-row"><div class="form-group"><label>Atleta *</label><input name="athlete_name" required value="${escapeHtml(request.athlete_name || '')}"></div><div class="form-group"><label>Edad *</label><input name="athlete_age" type="number" min="3" max="12" required value="${escapeHtml(request.athlete_age || '')}"></div></div>
+      <div class="form-group"><label>Representante *</label><input name="representative_name" required value="${escapeHtml(request.representative_name || '')}"></div>
+      <div class="form-row"><div class="form-group"><label>Categoría *</label><select name="category" required>${['U4','U6','U8','U10','U12'].map(item => `<option value="${item}" ${item === category ? 'selected' : ''}>${item}</option>`).join('')}</select></div><div class="form-group"><label>Fecha *</label><input name="test_date" type="date" required value="${escapeHtml(String(date).slice(0,10))}"></div></div>
+      <div class="form-row"><div class="form-group"><label>Horario *</label><select name="test_time" required><option value="16:30" ${time === '16:30' ? 'selected' : ''}>4:30 PM</option><option value="17:00" ${time !== '16:30' ? 'selected' : ''}>5:00 PM</option></select></div><div class="form-group"><label>Teléfono *</label><input name="phone" required value="${escapeHtml(request.phone || '')}"></div></div>
+      <div class="form-group"><label>Correo *</label><input name="email" type="email" required value="${escapeHtml(request.email || '')}"></div>
+      <div class="form-group"><label>Observaciones</label><textarea name="notes" rows="3">${escapeHtml(request.notes || '')}</textarea></div>
+      <div class="modal-actions"><button type="button" class="btn-outline" id="cancelTrialEdit">Cancelar</button><button type="submit" class="btn-primary">${ic.check} Guardar cambios</button></div>
+    </form>
+  </div>`;
+  document.body.appendChild(modal);
+  const close = () => modal.remove();
+  modal.querySelector('#closeTrialEdit').onclick = close;
+  modal.querySelector('#cancelTrialEdit').onclick = close;
+  modal.onclick = event => { if (event.target === modal) close(); };
+  modal.querySelector('#trialEditForm').onsubmit = async event => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const updates = Object.fromEntries(formData.entries());
+    updates.athlete_age = Number(updates.athlete_age);
+    try {
+      const res = await fetch('/api/data', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'trial_requests', itemId: request.id, sede_id: state.currentSede?.id, updates }) });
+      const result = await res.json();
+      if (!res.ok || !result.success) throw new Error(result.error || 'No se pudo actualizar');
+      close();
+      await loadAdminTrialRequests();
+    } catch (err) {
+      alert(err.message || 'No se pudo actualizar el registro.');
+    }
+  };
+}

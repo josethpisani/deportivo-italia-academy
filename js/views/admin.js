@@ -341,6 +341,8 @@ export function renderAdmin(){
          <td>${escapeHtml(r.notes || '')}</td>
         <td>
           <div class="btn-group">
+             <button class="bp" data-trial-edit="${r.id}" title="Editar registro">${ic.pencil} Editar</button>
+             <button class="bd" data-trial-delete="${r.id}" title="Eliminar registro">${ic.x} Eliminar</button>
              ${r.status === 'pendiente' ? `<button class="bp" data-trial-status="${r.id}|confirmada">${ic.check} Confirmar</button>` : ''}
              ${r.status === 'confirmada' ? `<button class="bp" data-trial-status="${r.id}|realizada">${ic.checkCircle} Realizada</button><button class="bd" data-trial-status="${r.id}|no_asistio">No asistió</button>` : ''}
             ${r.status !== 'cancelada' ? `<button class="bd" data-trial-status="${r.id}|cancelada">${ic.x} Cancelar</button>` : ''}
