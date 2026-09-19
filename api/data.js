@@ -143,24 +143,14 @@ export default async function handler(req, res) {
       if (key === "trial_requests") {
         if (!sede_id) return res.status(400).json({ error: "sede_id is required" });
         const { status, date_from, date_to } = req.query;
-        let query = sql`SELECT * FROM trial_requests WHERE 1=1`;
-        const params = [];
-        
-        if (sede_id) {
-          query = sql`${query} AND sede_id = ${sede_id}`;
-        }
-        if (status) {
-          query = sql`${query} AND status = ${status}`;
-        }
-        if (date_from) {
-          query = sql`${query} AND preferred_date >= ${date_from}`;
-        }
-        if (date_to) {
-          query = sql`${query} AND preferred_date <= ${date_to}`;
-        }
-        
-        query = sql`${query} ORDER BY preferred_date ASC, preferred_time_slot ASC, created_at DESC`;
-        const rows = await query;
+        const rows = await sql`
+          SELECT * FROM trial_requests
+          WHERE sede_id = ${sede_id}
+            AND (CAST(${status || null} AS TEXT) IS NULL OR status = ${status || null})
+            AND (CAST(${date_from || null} AS DATE) IS NULL OR preferred_date >= CAST(${date_from || null} AS DATE))
+            AND (CAST(${date_to || null} AS DATE) IS NULL OR preferred_date <= CAST(${date_to || null} AS DATE))
+          ORDER BY preferred_date ASC, preferred_time_slot ASC, created_at DESC
+        `;
         return res.status(200).json(rows);
       }
 
