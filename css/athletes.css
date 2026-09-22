@@ -38,6 +38,12 @@
 .attend-cell .day{font-size:11px;color:var(--muted);font-weight:600;}
 .attend-cell .date{font-size:12.5px;font-weight:700;margin-bottom:6px;}
 .attend-cell .btns{display:flex;gap:5px;}
+.readonly-status{display:inline-flex;align-items:center;justify-content:center;border-radius:6px;padding:5px 8px;font-size:11px;font-weight:700;}
+.readonly-status.present{background:#DCEFE3;color:#1F6E45;}
+.readonly-status.absent{background:#F6DEDB;color:#A83232;}
+.readonly-status.unmarked{background:#F1F5F9;color:var(--muted);}
+.readonly-label{display:inline-flex;align-items:center;border:1px solid var(--chalk-dim);border-radius:7px;padding:6px 10px;font-size:11px;font-weight:700;color:var(--muted);background:#F8FAFC;}
+.readonly-notes{color:var(--text-secondary);white-space:pre-wrap;min-height:56px;}
 .attend-cell button{flex:1;border-radius:6px;padding:5px 0;font-size:12px;background:#fff;}
 .attend-cell button.ok{border:1px solid var(--pitch);color:var(--pitch);}
 .attend-cell button.ok.on{background:var(--pitch);color:#fff;}
