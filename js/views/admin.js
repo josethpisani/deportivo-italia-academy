@@ -74,7 +74,7 @@ export function renderAdmin(){
       <td style="font-weight:600;">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</td>
       <td>${a.categoria}</td><td>${a.edad}</td><td>${escapeHtml(a.representante)}</td><td>${escapeHtml(a.telefono)}</td>
       <td>${badge(a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}</td>
-      <td><button class="link-btn" data-open="${a.id}">Ver perfil</button></td>
+      <td><button class="link-btn" data-open="${a.id}" data-open-admin="true">Ver y editar perfil</button></td>
     </tr>`).join("");
     body = `<div class="table-wrap">
       <table><thead><tr><th>Atleta</th><th>Categoría</th><th>Edad</th><th>Representante</th><th>Teléfono</th><th>Matrícula</th><th></th></tr></thead>

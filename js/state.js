@@ -22,6 +22,7 @@ export const state = {
   view: "public-home", // New: public home page
   activeCategory: "Todos",
   selectedId: null,
+  athleteReadOnly: true,
   search: "",
   adminTab: "config",
   regTipo: "training",

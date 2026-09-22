@@ -5,12 +5,13 @@ import { escapeHtml, attendanceRate, lastNDates } from "../utils.js";
 import { statPill, badge, initials } from "../render-helpers.js";
 
 function attendGrid(sessions, record, athleteId, type){
+  const readOnly = state.athleteReadOnly;
   return `<div class="attend-grid">${sessions.map(s=>{
     const [date,day] = s.split("|");
     const status = record[s];
     return `<div class="attend-cell ${status||""}">
       <div class="day">${day}</div><div class="date">${date}</div>
-      <div class="readonly-status ${status === "presente" ? "present" : status === "ausente" ? "absent" : "unmarked"}">${status === "presente" ? "Presente" : status === "ausente" ? "Ausente" : "Sin marcar"}</div>
+      ${readOnly ? `<div class="readonly-status ${status === "presente" ? "present" : status === "ausente" ? "absent" : "unmarked"}">${status === "presente" ? "Presente" : status === "ausente" ? "Ausente" : "Sin marcar"}</div>` : `<div class="btns"><button class="ok ${status==="presente"?"on":""}" data-attend="${athleteId}|${type}|${s}|presente">${ic.check}</button><button class="no ${status==="ausente"?"on":""}" data-attend="${athleteId}|${type}|${s}|ausente">${ic.x}</button></div>`}
     </div>`;
   }).join("")}</div>`;
 }
@@ -157,7 +158,7 @@ export function renderAthleteDetail(){
         <div class="badges-row">
           ${badge(a.categoria,"neutral")}${badge(a.posicion,"neutral")}
           ${badge("Matrícula "+a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}
-          <span class="readonly-label">Solo visualización</span>
+          ${state.athleteReadOnly ? `<span class="readonly-label">Solo visualización</span>` : `<button class="btn-outline" id="btnEditAthlete">${ic.pencil} Editar</button><button class="btn-outline" id="btnDeleteAthlete" style="color:var(--red);border-color:var(--red);">${ic.x} Eliminar</button><button class="btn-outline" data-edit-costs="${a.id}">${ic.dollar} Costos</button>`}
         </div>
       </div>
     </div>
@@ -213,7 +214,7 @@ export function renderAthleteDetail(){
           meses.push(`<div class="attend-cell ${estado==="pagado"?"presente":"ausente"}">
             <div class="date">${label}</div>
             <div style="font-weight:700;font-size:12px;">$${monto}</div>
-            <div class="readonly-status ${estado === "pagado" ? "present" : "absent"}">${estado === "pagado" ? "Pagado" : "Pendiente"}</div>
+            ${state.athleteReadOnly ? `<div class="readonly-status ${estado === "pagado" ? "present" : "absent"}">${estado === "pagado" ? "Pagado" : "Pendiente"}</div>` : `<div class="btns"><button class="ok ${estado==="pagado"?"on":""}" data-mensualidad="${a.id}|${key}|1">${ic.check}</button><button class="no ${estado==="pendiente"?"on":""}" data-mensualidad="${a.id}|${key}|0">${ic.x}</button></div>`}
           </div>`);
         }
         return `<div class="attend-grid">${meses.join("")}</div>`;
@@ -221,7 +222,7 @@ export function renderAthleteDetail(){
     </div>
 
     <div class="section"><h3 class="dia-title">Observaciones / Notas</h3>
-      <div class="notes-box readonly-notes">${observaciones ? escapeHtml(observaciones) : "Sin observaciones registradas."}</div>
+      ${state.athleteReadOnly ? `<div class="notes-box readonly-notes">${observaciones ? escapeHtml(observaciones) : "Sin observaciones registradas."}</div>` : `<div class="notes-box"><textarea id="observacionesText" rows="5" placeholder="Escribe observaciones o notas sobre este atleta...">${escapeHtml(observaciones)}</textarea><div class="notes-actions"><button class="save-btn" id="btnSaveObs">Guardar notas</button></div></div>`}
     </div>
   `;
 }

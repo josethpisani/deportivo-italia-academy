@@ -37,10 +37,10 @@ export function attachEvents(){
     searchInput.oninput = (e)=>{ state.search = e.target.value; if(window.__render) window.__render(); document.getElementById("searchInput").focus(); document.getElementById("searchInput").selectionStart = document.getElementById("searchInput").selectionEnd = state.search.length; };
   }
   document.querySelectorAll("[data-open]").forEach(btn=>{
-    btn.onclick = ()=>{ state.selectedId = btn.dataset.open; state.view = "atleta-detail"; if(window.__render) window.__render(); };
+    btn.onclick = ()=>{ state.selectedId = btn.dataset.open; state.athleteReadOnly = btn.dataset.openAdmin !== "true"; state.view = "atleta-detail"; if(window.__render) window.__render(); };
   });
   const backBtn = document.getElementById("btnBack");
-  if(backBtn) backBtn.onclick = ()=>{ state.view="atleta-list"; if(window.__render) window.__render(); };
+  if(backBtn) backBtn.onclick = ()=>{ state.athleteReadOnly = true; state.view="atleta-list"; if(window.__render) window.__render(); };
   const addAthBtn = document.getElementById("btnAddAthlete");
   if(addAthBtn) addAthBtn.onclick = openAddAthleteModal;
   const editAthBtn = document.getElementById("btnEditAthlete");
