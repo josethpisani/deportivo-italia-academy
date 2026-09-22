@@ -279,9 +279,6 @@ export function renderPublicHome() {
                     <span>${ic.phone} ${escapeHtml(sede.telefono || "")}</span>
                     <span>${ic.mail} ${escapeHtml(sede.email || "")}</span>
                   </div>
-                  <a href="/acceso?sede=${sede.codigo}" class="btn-sede-access">
-                    ${ic.arrowRight} Acceder al sistema
-                  </a>
                 </div>
               </article>
             `).join("")}
