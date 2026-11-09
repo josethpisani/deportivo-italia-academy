@@ -294,11 +294,27 @@ setRenderCallbacks(render, renderSaveStatus);
 
 // Load sedes first, then determine initial view
 async function init() {
-  await loadSedes();
-  await loadSiteContent();
-  
   const route = parseRoute();
   state.view = route;
+
+  // Show public and parent-portal screens immediately; their private data is
+  // loaded only after the initial UI is visible.
+  if (['public-home', 'acceso', 'sede-login', 'portal-padres'].includes(route)) {
+    render();
+    setupGlobalEvents();
+    await loadSedes();
+    await loadSiteContent();
+    if (state.view === route) render();
+    window.addEventListener('popstate', () => {
+      const nextRoute = parseRoute();
+      state.view = nextRoute;
+      render();
+    });
+    return;
+  }
+
+  await loadSedes();
+  await loadSiteContent();
   
   // If admin view and no sede selected, redirect to acceso
   if (['home', 'atleta-list', 'asistencia', 'torneos', 'estadisticas', 'evaluaciones', 'admin'].includes(state.view)) {
