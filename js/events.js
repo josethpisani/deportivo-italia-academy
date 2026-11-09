@@ -1,6 +1,6 @@
 import { state } from "./state.js";
 import { ic } from "./icons.js";
-import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo } from "./mutations.js";
+import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo, updateAthleteCosts, setUniformePago } from "./mutations.js";
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from "./modals.js";
 import { dayNameFromDate, escapeHtml } from "./utils.js";
 import { saveSede, updateSede, saveSiteContent, createTrialRequest, getTrialRequests } from "./api.js";
@@ -113,6 +113,12 @@ export function attachEvents(){
     btn.onclick = ()=>{
       const [athleteId, mes, flag] = btn.dataset.mensualidad.split("|");
       setMensualidad(athleteId, mes, flag==="1");
+    };
+  });
+  document.querySelectorAll("[data-uniforme]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const [athleteId, estado] = btn.dataset.uniforme.split("|");
+      setUniformePago(athleteId, estado);
     };
   });
   const btnInitMes = document.getElementById("btnInitMensualidades");

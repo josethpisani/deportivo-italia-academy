@@ -240,7 +240,7 @@ export function markAllMensualidades(mes){
   if(window.__render) window.__render();
 }
 
-export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto){
+export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto, uniformeMonto = 0, uniformeEstado = "pendiente"){
   const a = state.athletes.find(x=>x.id===athleteId);
   if(!a) return;
   if(a.matricula.estado==="pendiente") a.matricula.monto = Number(matriculaMonto);
@@ -251,6 +251,16 @@ export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto){
     }
   });
   a._mensualidadMonto = Number(mensualidadMonto);
+  a.uniformes = { monto:Number(uniformeMonto)||0, estado:uniformeEstado === "pagado" ? "pagado" : "pendiente", fecha:todayISO() };
+  saveAthletes();
+  if(window.__render) window.__render();
+}
+
+export function setUniformePago(athleteId, estado){
+  const a = state.athletes.find(x=>x.id===athleteId);
+  if(!a) return;
+  const current = a.uniformes || {};
+  a.uniformes = { monto:Number(current.monto)||0, estado:estado === "pagado" ? "pagado" : "pendiente", fecha:todayISO() };
   saveAthletes();
   if(window.__render) window.__render();
 }

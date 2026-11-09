@@ -201,6 +201,10 @@ export function renderAthleteDetail(){
         <div class="row1"><div class="name">Matrícula</div>${badge(a.matricula.estado==="pagado"?"Pagado":"Pendiente", a.matricula.estado==="pagado"?"good":"bad")}</div>
         <div class="info">Monto: $${a.matricula.monto} · Última fecha: ${a.matricula.fecha}</div>
       </div>
+      <div class="mat-card" style="margin-bottom:10px;">
+        <div class="row1"><div class="name">Uniforme</div>${badge(a.uniformes?.estado === "pagado" ? "Pagado" : "Pendiente", a.uniformes?.estado === "pagado" ? "good" : "bad")}</div>
+        <div class="info">Monto: $${a.uniformes?.monto || 0} · Última fecha: ${a.uniformes?.fecha || "—"}</div>
+      </div>
       <h4 class="dia-title" style="font-size:13px;margin:12px 0 8px;">Mensualidades</h4>
       ${(() => {
         const meses = [];

@@ -36,6 +36,7 @@ export function renderAdmin(){
     {key:"atletas",label:"Todos los atletas"},
     {key:"matriculas",label:"Pagos de matrícula"},
     {key:"mensualidades",label:"Mensualidades"},
+    {key:"uniformes",label:"Pagos de uniformes"},
     {key:"torneos",label:"Torneos y pagos"},
     {key:"sedes",label:"Gestión de sedes"},
     {key:"site",label:"Configuración del sitio"},
@@ -136,6 +137,12 @@ export function renderAdmin(){
       </div>
       <div class="filters" style="margin-bottom:14px;">${monthBtns}</div>
       <div class="mat-grid">${cards}</div>`;
+  } else if(state.adminTab==="uniformes"){
+    const cards = state.athletes.map(a=>{
+      const uniforme = a.uniformes || { monto:0, estado:"pendiente" };
+      return `<div class="mat-card"><div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div><div class="info">Monto: $${uniforme.monto || 0} · Última fecha: ${uniforme.fecha || "—"}</div><div class="btns"><button class="bp ${uniforme.estado === "pagado" ? "on" : ""}" data-uniforme="${a.id}|pagado">Pagado</button><button class="bd ${uniforme.estado !== "pagado" ? "on" : ""}" data-uniforme="${a.id}|pendiente">Pendiente</button><button class="btn-outline" data-edit-costs="${a.id}">Editar monto</button></div></div>`;
+    }).join("");
+    body = `<div class="config-info"><p>${ic.alert} Configura el monto y el estado del uniforme por atleta. El representante solo podrá consultar esta información.</p></div><div class="mat-grid">${cards}</div>`;
   } else if(state.adminTab==="torneos"){
     let torneosHtml = state.torneos.map(t=>{
       const elegibles = state.athletes;
