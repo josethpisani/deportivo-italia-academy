@@ -629,12 +629,27 @@ export function attachEvents(){
   const activationView = document.getElementById('parentActivationView');
   const dashboardView = document.getElementById('parentDashboardView');
   const showPortalMessage = (id, message) => { const el = document.getElementById(id); if (el) el.textContent = message; };
+  let parentPortalPayload = null;
+  const formatPortalDate = (value) => value ? new Date(`${value}T12:00:00`).toLocaleDateString('es-PA', { day: '2-digit', month: 'long', year: 'numeric' }) : 'No registrada';
+  const renderParentAthlete = (athlete) => {
+    const fullName = `${athlete.nombre || ''} ${athlete.apellido || ''}`.trim() || 'Atleta';
+    const payments = athlete.mensualidades && typeof athlete.mensualidades === 'object' ? Object.values(athlete.mensualidades) : [];
+    const attendance = Object.values(athlete.asistenciaEntrenamiento || {});
+    const present = attendance.filter(value => ['presente', 'asistio', 'asistió'].includes(String(value).toLowerCase())).length;
+    const absences = attendance.filter(value => ['ausente', 'no_asistio', 'no asistió'].includes(String(value).toLowerCase())).length;
+    const tournaments = Array.isArray(athlete.torneos) ? athlete.torneos : [];
+    return `<div class="portal-athlete-hero"><div class="portal-athlete-avatar large">${escapeHtml(fullName.slice(0, 2).toUpperCase())}</div><div><span class="portal-eyebrow">Perfil del atleta · ${escapeHtml(athlete.sede_id === 'sed_brisas' ? 'Brisas' : 'Panamá Viejo')}</span><h2>${escapeHtml(fullName)}</h2><p>${escapeHtml(athlete.categoria || 'Categoría no registrada')} · ${escapeHtml(athlete.posicion || 'Posición no registrada')}</p></div><span class="portal-readonly">Solo consulta</span></div><div class="portal-metric-grid"><article><strong>${escapeHtml(athlete.categoria || '—')}</strong><span>Categoría</span></article><article><strong>${escapeHtml(String(athlete.edad || '—'))}</strong><span>Edad</span></article><article><strong>${escapeHtml(String(payments.length))}</strong><span>Registros de pagos</span></article><article><strong>${escapeHtml(String(tournaments.length))}</strong><span>Torneos</span></article></div><div class="portal-info-grid"><article class="portal-info-card"><h3>Datos personales</h3><dl><div><dt>Fecha de nacimiento</dt><dd>${escapeHtml(formatPortalDate(athlete.fechaNacimiento))}</dd></div><div><dt>Ingreso a la academia</dt><dd>${escapeHtml(formatPortalDate(athlete.fechaIngreso))}</dd></div><div><dt>Representante registrado</dt><dd>${escapeHtml(athlete.representante || 'No registrada')}</dd></div></dl></article><article class="portal-info-card"><h3>Asistencia</h3><dl><div><dt>Asistencias registradas</dt><dd>${present}</dd></div><div><dt>Ausencias registradas</dt><dd>${absences}</dd></div><div><dt>Estado</dt><dd><span class="portal-status">Información oficial</span></dd></div></dl></article></div><div class="portal-readonly-note">${ic.shield} Los pagos, la asistencia, la matrícula y la información deportiva son administrados por el personal del club. Para solicitar una corrección, comunícate con la academia.</div>`;
+  };
   const renderParentDashboard = (payload) => {
     if (!dashboardView) return;
+    parentPortalPayload = payload;
     loginView.style.display = 'none'; activationView.style.display = 'none'; dashboardView.style.display = 'block';
     document.getElementById('parentWelcome').textContent = `Hola, ${payload.parent.full_name}`;
-    const list = document.getElementById('parentAthletesList');
-    list.innerHTML = payload.athletes.length ? payload.athletes.map(a => `<article class="portal-athlete-card"><div class="portal-athlete-avatar">${escapeHtml(`${a.nombre || ''} ${a.apellido || ''}`.trim().slice(0, 2).toUpperCase())}</div><div><h2>${escapeHtml(`${a.nombre || ''} ${a.apellido || ''}`.trim())}</h2><p>${escapeHtml(a.categoria || 'Categoría no registrada')} · ${escapeHtml(a.posicion || 'Atleta')}</p><span>Información oficial de consulta</span></div></article>`).join('') : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>';
+    document.getElementById('parentRepresentativePanel').innerHTML = `<div><span class="portal-eyebrow">Panel del representante</span><h2>${escapeHtml(payload.parent.full_name || 'Representante')}</h2><p>${escapeHtml(payload.parent.email || '')}</p></div><div class="portal-representative-count"><strong>${payload.athletes.length}</strong><span>atleta${payload.athletes.length === 1 ? '' : 's'} vinculado${payload.athletes.length === 1 ? '' : 's'}</span></div>`;
+    const selector = document.getElementById('parentAthleteSelector');
+    selector.innerHTML = payload.athletes.map((a, index) => `<option value="${index}">${escapeHtml(`${a.nombre || ''} ${a.apellido || ''}`.trim())} · ${escapeHtml(a.categoria || 'Sin categoría')}</option>`).join('');
+    document.getElementById('parentAthletePanel').innerHTML = payload.athletes.length ? renderParentAthlete(payload.athletes[0]) : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>';
+    selector.onchange = () => { const athlete = parentPortalPayload.athletes[Number(selector.value)]; if (athlete) document.getElementById('parentAthletePanel').innerHTML = renderParentAthlete(athlete); };
   };
   if (parentLoginForm) parentLoginForm.onsubmit = async (e) => {
     e.preventDefault(); const data = Object.fromEntries(new FormData(parentLoginForm).entries());
