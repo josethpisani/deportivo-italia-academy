@@ -62,6 +62,7 @@ function evalFormHtml(a, existingEval){
   const isEdit = !!existingEval;
   const items = isEdit ? existingEval.items : {};
   const evId = isEdit ? existingEval.id : "";
+  const evPeriodo = isEdit ? (existingEval.periodo || existingEval.fecha || new Date().toISOString().slice(0,7)).slice(0,7) : new Date().toISOString().slice(0,7);
   const evDesc = isEdit ? (existingEval.descripcion||"") : "";
   const evObs = isEdit ? (existingEval.observaciones||"") : "";
   const inputRows = DEFAULT_ITEMS.map((name,idx)=>{
@@ -79,6 +80,8 @@ function evalFormHtml(a, existingEval){
   return `<div class="eval-form">
     <input type="hidden" id="evalEditId" value="${evId}">
     <div class="section"><h3 class="dia-title">${isEdit?"Editar evaluación":"Nueva evaluación"}</h3>
+      <label style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Mes de evaluación</label>
+      <input type="month" id="evalPeriodo" value="${evPeriodo}" required style="width:100%;padding:10px 12px;border:1px solid var(--chalk-dim);border-radius:8px;font-size:13px;margin-bottom:14px;">
       <label style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Descripción (opcional)</label>
       <input type="text" id="evalDescripcion" placeholder="Ej: Evaluación mensual Julio 2026" value="${escapeHtml(evDesc)}" style="width:100%;padding:10px 12px;border:1px solid var(--chalk-dim);border-radius:8px;font-size:13px;margin-bottom:14px;">
       <div class="stats-input-grid">${inputRows}</div>

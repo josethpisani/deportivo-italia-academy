@@ -291,6 +291,7 @@ export function saveEvaluacion(athleteId, evalData){
   } else {
     evalData.id = uid("eval");
     evalData.fecha = todayISO();
+    evalData.periodo = evalData.periodo || evalData.fecha.slice(0,7);
     a.evaluaciones.push(evalData);
   }
   saveAthletes();
