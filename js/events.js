@@ -611,6 +611,17 @@ export function attachEvents(){
   });
   document.querySelectorAll('[data-parent-status]').forEach(btn => btn.onclick = async () => { const [id, status] = btn.dataset.parentStatus.split('|'); const result = await parentAdminRequest({ action: 'status', id, status }); if (!result.success) alert(result.error || 'No se pudo cambiar el estado.'); else await loadParentAccounts(); });
   document.querySelectorAll('[data-parent-code]').forEach(btn => btn.onclick = async () => { const result = await parentAdminRequest({ action: 'regenerate_code', id: btn.dataset.parentCode }); if (result.success) alert(`Nuevo código de activación: ${result.activation_code}`); else alert(result.error || 'No se pudo generar el código.'); });
+  document.querySelectorAll('[data-registration-accept]').forEach(btn => btn.onclick = async () => {
+    if (!confirm('¿Aceptar la inscripción? Se creará el atleta y se vinculará al representante.')) return;
+    const result = await registrationAdminRequest({ action: 'accept', request_id: btn.dataset.registrationAccept });
+    if (!result.success) alert(result.error || 'No se pudo aceptar la inscripción.');
+    else { alert(result.activation_code ? `Inscripción aceptada. Código de activación del representante: ${result.activation_code}` : 'Inscripción aceptada y atleta creado.'); await loadAdminRegistrationRequests(); }
+  });
+  document.querySelectorAll('[data-registration-decline]').forEach(btn => btn.onclick = async () => {
+    if (!confirm('¿Declinar esta inscripción?')) return;
+    const result = await registrationAdminRequest({ action: 'decline', request_id: btn.dataset.registrationDecline, reason: 'Declinada por administración' });
+    if (!result.success) alert(result.error || 'No se pudo declinar la inscripción.'); else await loadAdminRegistrationRequests();
+  });
 
   const parentLoginForm = document.getElementById('parentLoginForm');
   const parentActivationForm = document.getElementById('parentActivationForm');
@@ -640,6 +651,11 @@ export function attachEvents(){
 
 async function parentAdminRequest(body) {
   try { const res = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'parent_admin', ...body }) }); return await res.json(); }
+  catch (err) { return { success: false, error: err.message }; }
+}
+
+async function registrationAdminRequest(body) {
+  try { const res = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ key: 'registration_admin', ...body }) }); return await res.json(); }
   catch (err) { return { success: false, error: err.message }; }
 }
 

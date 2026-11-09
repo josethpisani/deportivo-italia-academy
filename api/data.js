@@ -270,6 +270,49 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Acción STAFF inválida" });
     }
 
+    if (req.method === "POST" && req.body?.key === "registration_admin") {
+      const staffSession = await getStaffSession();
+      if (!staffSession) return res.status(401).json({ error: "Sesión STAFF requerida" });
+      const { action, request_id, reason } = req.body;
+      const stored = await sql`SELECT value FROM app_data WHERE key = 'registration_requests'`;
+      const requests = Array.isArray(stored[0]?.value) ? stored[0].value : [];
+      const requestIndex = requests.findIndex(item => String(item.id) === String(request_id) && item.sede_id === staffSession.sede_id);
+      if (requestIndex < 0) return res.status(404).json({ error: "Solicitud no encontrada" });
+      const request = requests[requestIndex];
+      if (action === "decline") {
+        requests[requestIndex] = { ...request, status: "declinada", decline_reason: String(reason || ""), updated_at: new Date().toISOString() };
+        await sql`UPDATE app_data SET value = ${JSON.stringify(requests)}, updated_at = NOW() WHERE key = 'registration_requests'`;
+        return res.status(200).json({ success: true, status: "declinada" });
+      }
+      if (action !== "accept") return res.status(400).json({ error: "Acción de inscripción inválida" });
+      if (!["pendiente", "declinada"].includes(request.status)) return res.status(409).json({ error: "La solicitud ya fue procesada" });
+      const athleteRows = await sql`SELECT value FROM app_data WHERE key = 'athletes'`;
+      const athletes = Array.isArray(athleteRows[0]?.value) ? athleteRows[0].value : [];
+      const existingAthlete = athletes.find(item => item.sede_id === staffSession.sede_id && String(item.registration_request_id || '') === String(request.id));
+      if (existingAthlete) return res.status(409).json({ error: "La solicitud ya tiene un atleta creado" });
+      const nameParts = String(request.athlete_name || "Jugador").trim().split(/\s+/);
+      const athlete = {
+        id: `ath_${randomBytes(8).toString('hex')}`, registration_request_id: request.id, sede_id: staffSession.sede_id,
+        nombre: nameParts.shift() || "Jugador", apellido: nameParts.join(" ") || "Sin apellido", categoria: String(request.category || "U8").toUpperCase(), edad: Number(request.athlete_age),
+        fechaNacimiento: "", posicion: "Por definir", representante: request.representative_name || "", telefono: request.phone || "", direccion: "", fechaIngreso: new Date().toISOString().slice(0, 10),
+        matricula: { estado: "pendiente", monto: 0, fecha: new Date().toISOString().slice(0, 10) }, mensualidades: {}, torneos: [], asistenciaEntrenamiento: {}, asistenciaJuegos: {}, observaciones: request.notes || "", estadisticas: {}, statsGenerales: { goles: 0, asistencias: 0, tarjetasAmarillas: 0, tarjetasRojas: 0, partidosJugados: 0, entrenamientosAsistidos: 0, entrenamientosTotales: 0 }, evaluaciones: []
+      };
+      const otherSedeAthletes = athletes.filter(item => item.sede_id && item.sede_id !== staffSession.sede_id);
+      const legacyAthletes = athletes.filter(item => !item.sede_id);
+      await sql`INSERT INTO app_data (key, value, sede_id, updated_at) VALUES ('athletes', ${JSON.stringify([...otherSedeAthletes, ...legacyAthletes, athlete])}, ${staffSession.sede_id}, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, sede_id = EXCLUDED.sede_id, updated_at = NOW()`;
+      const normalizedEmail = String(request.email || "").trim().toLowerCase();
+      let parent = (await sql`SELECT id, status FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} LIMIT 1`)[0];
+      let activationCode = null;
+      if (!parent) {
+        activationCode = String(Math.floor(100000 + Math.random() * 900000));
+        parent = (await sql`INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at) VALUES (${normalizedEmail}, ${request.representative_name || "Representante"}, 'pendiente', ${hashToken(activationCode)}, NOW() + INTERVAL '7 days') RETURNING id, status`)[0];
+      }
+      await sql`INSERT INTO parent_athletes (parent_id, athlete_id, sede_id) VALUES (${parent.id}, ${athlete.id}, ${staffSession.sede_id}) ON CONFLICT DO NOTHING`;
+      requests[requestIndex] = { ...request, status: "aceptada", athlete_id: athlete.id, parent_id: parent.id, updated_at: new Date().toISOString() };
+      await sql`UPDATE app_data SET value = ${JSON.stringify(requests)}, updated_at = NOW() WHERE key = 'registration_requests'`;
+      return res.status(200).json({ success: true, status: "aceptada", athlete_id: athlete.id, activation_code: activationCode });
+    }
+
     if (req.method === "POST" && req.body?.key === "parent_admin") {
       if (!(await getStaffSession())) return res.status(401).json({ error: "Sesión STAFF requerida" });
       const { action, id, email, full_name, athlete_id, sede_id: linkSedeId } = req.body;
