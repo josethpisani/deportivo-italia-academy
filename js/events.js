@@ -669,6 +669,8 @@ export function attachEvents(){
     loginView.style.display = 'none'; activationView.style.display = 'none'; dashboardView.style.display = 'block';
     document.getElementById('parentWelcome').textContent = `Hola, ${payload.parent.full_name}`;
     document.getElementById('parentRepresentativePanel').innerHTML = `<div><span class="portal-eyebrow">Panel del representante</span><h2>${escapeHtml(payload.parent.full_name || 'Representante')}</h2><p>${escapeHtml(payload.parent.email || '')}</p></div><div class="portal-representative-count"><strong>${payload.athletes.length}</strong><span>atleta${payload.athletes.length === 1 ? '' : 's'} vinculado${payload.athletes.length === 1 ? '' : 's'}</span></div>`;
+    const homeRepresentative = document.getElementById('parentHomeRepresentative');
+    if (homeRepresentative) homeRepresentative.innerHTML = `<div class="portal-home-rep-copy"><span class="portal-eyebrow">Datos del representante</span><h2>${escapeHtml(payload.parent.full_name || 'Representante')}</h2><p>${escapeHtml(payload.parent.email || '')}</p><span class="portal-home-rep-count">${payload.athletes.length} atleta${payload.athletes.length === 1 ? '' : 's'} vinculado${payload.athletes.length === 1 ? '' : 's'}</span></div>`;
     const selector = document.getElementById('parentAthleteSelector');
     selector.innerHTML = payload.athletes.map((a, index) => `<option value="${index}">${escapeHtml(`${a.nombre || ''} ${a.apellido || ''}`.trim())} · ${escapeHtml(a.categoria || 'Sin categoría')}</option>`).join('');
     const panel = document.getElementById('parentAthletePanel');
@@ -679,10 +681,11 @@ export function attachEvents(){
       const metrics = panel.querySelector('.portal-metric-grid');
       const targets = { ficha: findSection('información del atleta'), asistencia: findSection('asistencias'), pagos: sections.filter(section => ['mensualidades', 'pagos de torneos', 'pagos de uniformes'].some(label => section.querySelector('h3')?.textContent.toLowerCase().includes(label))), torneos: findSection('calendario de juegos'), evaluaciones: findSection('evaluación mensual'), galeria: findSection('galería') };
       const activateSection = sectionName => {
+        if (homeRepresentative) homeRepresentative.style.display = sectionName === 'resumen' ? '' : 'none';
         if (hero) hero.style.display = sectionName === 'resumen' ? '' : 'none';
         if (metrics) metrics.style.display = sectionName === 'resumen' ? '' : 'none';
         sections.forEach(section => { section.style.display = 'none'; });
-        const selected = sectionName === 'resumen' ? [] : (Array.isArray(targets[sectionName]) ? targets[sectionName] : [targets[sectionName]]);
+        const selected = sectionName === 'resumen' ? [findSection('información del atleta')] : (Array.isArray(targets[sectionName]) ? targets[sectionName] : [targets[sectionName]]);
         selected.filter(Boolean).forEach(section => { section.style.display = ''; });
         document.querySelectorAll('[data-portal-section]').forEach(item => item.classList.toggle('active', item.dataset.portalSection === sectionName));
       };
