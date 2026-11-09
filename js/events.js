@@ -671,8 +671,16 @@ export function attachEvents(){
     document.getElementById('parentRepresentativePanel').innerHTML = `<div><span class="portal-eyebrow">Panel del representante</span><h2>${escapeHtml(payload.parent.full_name || 'Representante')}</h2><p>${escapeHtml(payload.parent.email || '')}</p></div><div class="portal-representative-count"><strong>${payload.athletes.length}</strong><span>atleta${payload.athletes.length === 1 ? '' : 's'} vinculado${payload.athletes.length === 1 ? '' : 's'}</span></div>`;
     const selector = document.getElementById('parentAthleteSelector');
     selector.innerHTML = payload.athletes.map((a, index) => `<option value="${index}">${escapeHtml(`${a.nombre || ''} ${a.apellido || ''}`.trim())} · ${escapeHtml(a.categoria || 'Sin categoría')}</option>`).join('');
-    document.getElementById('parentAthletePanel').innerHTML = payload.athletes.length ? renderParentAthlete(payload.athletes[0]) : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>';
-    selector.onchange = () => { const athlete = parentPortalPayload.athletes[Number(selector.value)]; if (athlete) document.getElementById('parentAthletePanel').innerHTML = renderParentAthlete(athlete); };
+    const panel = document.getElementById('parentAthletePanel');
+    const wireParentMenu = () => {
+      const sections = [...panel.querySelectorAll('.portal-info-section')];
+      const findSection = (label) => sections.find(section => section.querySelector('h3')?.textContent.toLowerCase().includes(label));
+      const targets = { resumen: panel, ficha: findSection('información del atleta'), asistencia: findSection('asistencias'), pagos: findSection('mensualidades'), torneos: findSection('calendario de juegos'), evaluaciones: findSection('evaluación mensual'), galeria: findSection('galería') };
+      document.querySelectorAll('[data-portal-section]').forEach(button => { button.onclick = () => { const target = targets[button.dataset.portalSection]; document.querySelectorAll('[data-portal-section]').forEach(item => item.classList.toggle('active', item === button)); if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
+    };
+    const showAthlete = athlete => { panel.innerHTML = athlete ? renderParentAthlete(athlete) : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>'; wireParentMenu(); };
+    showAthlete(payload.athletes[0]);
+    selector.onchange = () => showAthlete(parentPortalPayload.athletes[Number(selector.value)]);
   };
   if (parentLoginForm) parentLoginForm.onsubmit = async (e) => {
     e.preventDefault(); const data = Object.fromEntries(new FormData(parentLoginForm).entries());
