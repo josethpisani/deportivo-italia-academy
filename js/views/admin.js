@@ -41,6 +41,7 @@ export function renderAdmin(){
     {key:"site",label:"Configuración del sitio"},
     {key:"pruebas",label:"Pruebas de Ingreso"},
     {key:"inscripciones",label:"Solicitudes de inscripción"},
+    {key:"portal",label:"Portal de padres"},
   ].map(t=>`<button class="admin-tab ${state.adminTab===t.key?"active":""}" data-admintab="${t.key}">${t.label}</button>`).join("");
 
   let body = "";
@@ -301,6 +302,13 @@ export function renderAdmin(){
         ${renderGaleriaAdmin()}
       </div>
     `;
+  } else if(state.adminTab==="portal"){
+    const accounts = state.parentAccounts || [];
+    const accountRows = accounts.map(account => {
+      const links = (account.links || []).map(link => { const athlete = state.athletes.find(a => String(a.id) === String(link.athlete_id)); return `<span class="badge neutral">${escapeHtml(athlete ? `${athlete.nombre} ${athlete.apellido}` : link.athlete_id)} <button type="button" data-parent-unlink="${account.id}|${link.athlete_id}|${link.sede_id}" title="Desvincular">×</button></span>`; }).join(' ') || '<span class="empty-msg">Sin atletas vinculados</span>';
+      return `<tr><td>${escapeHtml(account.full_name)}</td><td>${escapeHtml(account.email)}</td><td>${badge(account.status, account.status === 'activo' ? 'good' : account.status === 'desactivado' ? 'bad' : 'warn')}</td><td>${links}</td><td>${account.last_login_at ? new Date(account.last_login_at).toLocaleString('es-PA') : 'Nunca'}</td><td><select data-parent-athlete="${account.id}"><option value="">Vincular atleta…</option>${state.athletes.map(a => `<option value="${escapeHtml(a.id)}">${escapeHtml(`${a.nombre} ${a.apellido}`)}</option>`).join('')}</select><button class="btn-outline" data-parent-link="${account.id}">Vincular</button><button class="btn-outline" data-parent-status="${account.id}|${account.status === 'activo' ? 'desactivado' : 'activo'}">${account.status === 'activo' ? 'Desactivar' : 'Activar'}</button><button class="btn-outline" data-parent-code="${account.id}">Nuevo código</button></td></tr>`;
+    }).join('');
+    body = `<div class="config-section"><h3 class="dia-title">Crear representante</h3><form id="parentAccountForm" class="config-fields-grid"><div><label>Nombre completo</label><input name="full_name" required></div><div><label>Correo electrónico</label><input name="email" type="email" required></div><button class="btn-primary" type="submit">${ic.plus} Crear cuenta</button><p id="parentAccountMessage" class="config-info"></p></form></div><div class="table-wrap"><table><thead><tr><th>Representante</th><th>Correo</th><th>Estado</th><th>Atletas vinculados</th><th>Último acceso</th><th>Acciones</th></tr></thead><tbody>${accountRows || '<tr><td colspan="6" class="empty-msg">No hay representantes registrados.</td></tr>'}</tbody></table></div><div class="config-info"><p>${ic.alert} La cuenta se crea como pendiente. El código debe entregarse manualmente hasta configurar el correo.</p></div>`;
   } else if(state.adminTab==="inscripciones"){
     const requests = state.adminRegistrationRequests || [];
     const rows = requests.map(r => `<tr><td>${escapeHtml(r.id || '')}</td><td>${escapeHtml(r.athlete_name || '')}</td><td>${escapeHtml(r.athlete_age || '')}</td><td>${escapeHtml(r.category || '')}</td><td>${escapeHtml(r.representative_name || '')}</td><td>${escapeHtml(r.phone || '')}</td><td>${escapeHtml(r.email || '')}</td><td>${escapeHtml(r.status || 'pendiente')}</td><td>${escapeHtml(r.notes || '')}</td></tr>`).join('');

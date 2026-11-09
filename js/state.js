@@ -35,6 +35,7 @@ export const state = {
   adminAuth: false,
   adminTrialRequests: [],
   adminRegistrationRequests: [],
+  parentAccounts: [],
   trialFilters: { search: "", category: "", status: "", date: "", date_from: "", date_to: "" },
   statsAthleteId: null,
   statsCategory: "Todos",

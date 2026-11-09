@@ -585,6 +585,33 @@ export function attachEvents(){
     };
   }
 
+  const btnAdminTabPortal = document.querySelector('[data-admintab="portal"]');
+  if (btnAdminTabPortal) {
+    btnAdminTabPortal.onclick = async () => { state.adminTab = 'portal'; if (window.__render) window.__render(); await loadParentAccounts(); };
+  }
+  const parentAccountForm = document.getElementById('parentAccountForm');
+  if (parentAccountForm) parentAccountForm.onsubmit = async e => {
+    e.preventDefault(); const value = Object.fromEntries(new FormData(parentAccountForm).entries());
+    const result = await parentAdminRequest({ action: 'create', ...value });
+    const message = document.getElementById('parentAccountMessage');
+    if (result.success) { parentAccountForm.reset(); if (message) message.textContent = `Cuenta creada. Código de activación: ${result.activation_code}`; await loadParentAccounts(); }
+    else if (message) message.textContent = result.error || 'No se pudo crear la cuenta.';
+  };
+  document.querySelectorAll('[data-parent-link]').forEach(btn => btn.onclick = async () => {
+    const athleteId = document.querySelector(`[data-parent-athlete="${btn.dataset.parentLink}"]`)?.value;
+    if (!athleteId) return alert('Selecciona un atleta.');
+    const result = await parentAdminRequest({ action: 'link', id: btn.dataset.parentLink, athlete_id: athleteId, sede_id: state.currentSede?.id });
+    if (!result.success) alert(result.error || 'No se pudo vincular.'); else await loadParentAccounts();
+  });
+  document.querySelectorAll('[data-parent-unlink]').forEach(btn => btn.onclick = async () => {
+    const [id, athlete_id, sede_id] = btn.dataset.parentUnlink.split('|');
+    if (!confirm('¿Desvincular este atleta del representante?')) return;
+    const result = await parentAdminRequest({ action: 'unlink', id, athlete_id, sede_id });
+    if (!result.success) alert(result.error || 'No se pudo desvincular.'); else await loadParentAccounts();
+  });
+  document.querySelectorAll('[data-parent-status]').forEach(btn => btn.onclick = async () => { const [id, status] = btn.dataset.parentStatus.split('|'); const result = await parentAdminRequest({ action: 'status', id, status }); if (!result.success) alert(result.error || 'No se pudo cambiar el estado.'); else await loadParentAccounts(); });
+  document.querySelectorAll('[data-parent-code]').forEach(btn => btn.onclick = async () => { const result = await parentAdminRequest({ action: 'regenerate_code', id: btn.dataset.parentCode }); if (result.success) alert(`Nuevo código de activación: ${result.activation_code}`); else alert(result.error || 'No se pudo generar el código.'); });
+
   const parentLoginForm = document.getElementById('parentLoginForm');
   const parentActivationForm = document.getElementById('parentActivationForm');
   const loginView = document.getElementById('portalLoginView');
@@ -609,6 +636,16 @@ export function attachEvents(){
   document.getElementById('showParentActivation')?.addEventListener('click', () => { loginView.style.display = 'none'; activationView.style.display = 'block'; });
   document.getElementById('showParentLogin')?.addEventListener('click', () => { activationView.style.display = 'none'; loginView.style.display = 'block'; });
   document.getElementById('parentLogout')?.addEventListener('click', async () => { await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ key: 'portal', action: 'logout' }) }); window.location.reload(); });
+}
+
+async function parentAdminRequest(body) {
+  try { const res = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'parent_admin', ...body }) }); return await res.json(); }
+  catch (err) { return { success: false, error: err.message }; }
+}
+
+async function loadParentAccounts() {
+  try { const res = await fetch('/api/data?key=parent_admin'); state.parentAccounts = await res.json(); if (!Array.isArray(state.parentAccounts)) state.parentAccounts = []; if (window.__render) window.__render(); }
+  catch (err) { console.error('Error loading parent accounts:', err); }
 }
 
 async function loadAdminRegistrationRequests() {

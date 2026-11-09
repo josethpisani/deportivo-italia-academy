@@ -128,6 +128,7 @@ function setupGlobalEvents() {
     if (option) {
       const action = option.dataset.action;
       if (action === 'logout') {
+        fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ key: 'staff_auth', action: 'logout' }) }).catch(() => {});
         // Logout: clear auth, go back to sede selection
         state.adminAuth = false;
         state.currentSede = null;
@@ -242,6 +243,13 @@ async function handleLogin(form) {
   }
   
   if (valid) {
+    try {
+      const staffAuth = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ key: 'staff_auth', action: 'login', email, password, sede_id: sede.id }) });
+      if (!staffAuth.ok) throw new Error('No se pudo validar la sesión STAFF');
+    } catch (error) {
+      if (btn) { btn.disabled = false; btn.innerHTML = `${ic.logIn} Ingresar al sistema`; }
+      alert(error.message); return;
+    }
     // Set current sede and load data
     setCurrentSede(sede);
     await loadData();

@@ -73,6 +73,11 @@ async function getDb() {
       expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS staff_sessions (
+      token_hash TEXT PRIMARY KEY, sede_id TEXT NOT NULL, expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
 
   // Trial requests table
   await sql`
@@ -178,6 +183,12 @@ export default async function handler(req, res) {
       const rows = await sql`SELECT p.*, s.expires_at FROM parent_sessions s JOIN parent_accounts p ON p.id = s.parent_id WHERE s.token_hash = ${hashToken(rawToken)} AND s.expires_at > NOW() AND p.status = 'activo' LIMIT 1`;
       return rows[0] || null;
     }
+    async function getStaffSession() {
+      const rawToken = readCookie(req, "dia_staff_session");
+      if (!rawToken) return null;
+      const rows = await sql`SELECT * FROM staff_sessions WHERE token_hash = ${hashToken(rawToken)} AND expires_at > NOW() LIMIT 1`;
+      return rows[0] || null;
+    }
 
     async function getParentAthletes(parentId) {
       const links = await sql`SELECT athlete_id, sede_id FROM parent_athletes WHERE parent_id = ${parentId}`;
@@ -193,6 +204,13 @@ export default async function handler(req, res) {
       const parent = await getParentSession();
       if (!parent) return res.status(401).json({ error: "Sesión no válida" });
       return res.status(200).json({ parent: { id: parent.id, email: parent.email, full_name: parent.full_name }, athletes: await getParentAthletes(parent.id) });
+    }
+
+    if (req.method === "GET" && req.query.key === "parent_admin") {
+      if (!(await getStaffSession())) return res.status(401).json({ error: "Sesión STAFF requerida" });
+      const accounts = await sql`SELECT id, email, full_name, status, last_login_at, created_at FROM parent_accounts ORDER BY created_at DESC`;
+      const links = await sql`SELECT parent_id, athlete_id, sede_id FROM parent_athletes ORDER BY created_at`;
+      return res.status(200).json(accounts.map(account => ({ ...account, links: links.filter(link => String(link.parent_id) === String(account.id)) })));
     }
 
     if (req.method === "POST" && req.body?.key === "portal") {
@@ -231,6 +249,59 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
       return res.status(400).json({ error: "Acción de portal inválida" });
+    }
+
+    if (req.method === "POST" && req.body?.key === "staff_auth") {
+      const { action, email, password, sede_id: staffSedeId } = req.body;
+      if (action === "login") {
+        const valid = (staffSedeId === 'sed_brisas' && email === 'acceso br' && password === 'br12345') || (staffSedeId === 'sed_panama_viejo' && email === 'acceso pv' && password === 'pv12345');
+        if (!valid) return res.status(401).json({ error: "Credenciales STAFF incorrectas" });
+        const token = randomBytes(32).toString('hex');
+        await sql`INSERT INTO staff_sessions (token_hash, sede_id, expires_at) VALUES (${hashToken(token)}, ${staffSedeId}, NOW() + INTERVAL '8 hours')`;
+        res.setHeader("Set-Cookie", `dia_staff_session=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800`);
+        return res.status(200).json({ success: true });
+      }
+      if (action === "logout") {
+        const token = readCookie(req, 'dia_staff_session');
+        if (token) await sql`DELETE FROM staff_sessions WHERE token_hash = ${hashToken(token)}`;
+        res.setHeader("Set-Cookie", "dia_staff_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0");
+        return res.status(200).json({ success: true });
+      }
+      return res.status(400).json({ error: "Acción STAFF inválida" });
+    }
+
+    if (req.method === "POST" && req.body?.key === "parent_admin") {
+      if (!(await getStaffSession())) return res.status(401).json({ error: "Sesión STAFF requerida" });
+      const { action, id, email, full_name, athlete_id, sede_id: linkSedeId } = req.body;
+      if (action === "create") {
+        const normalizedEmail = String(email || "").trim().toLowerCase();
+        if (!normalizedEmail || !full_name) return res.status(400).json({ error: "Nombre y correo son obligatorios" });
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const existing = await sql`SELECT id FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} LIMIT 1`;
+        if (existing.length) return res.status(409).json({ error: "Ya existe una cuenta con ese correo" });
+        const created = await sql`INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at) VALUES (${normalizedEmail}, ${String(full_name).trim()}, 'pendiente', ${hashToken(code)}, NOW() + INTERVAL '7 days') RETURNING id, email, full_name, status, created_at`;
+        return res.status(201).json({ success: true, account: created[0], activation_code: code });
+      }
+      if (action === "link") {
+        if (!id || !athlete_id || !linkSedeId) return res.status(400).json({ error: "Representante, atleta y sede son obligatorios" });
+        await sql`INSERT INTO parent_athletes (parent_id, athlete_id, sede_id) VALUES (${id}, ${athlete_id}, ${linkSedeId}) ON CONFLICT DO NOTHING`;
+        return res.status(200).json({ success: true });
+      }
+      if (action === "unlink") {
+        await sql`DELETE FROM parent_athletes WHERE parent_id = ${id} AND athlete_id = ${athlete_id} AND sede_id = ${linkSedeId}`;
+        return res.status(200).json({ success: true });
+      }
+      if (action === "status") {
+        if (!["activo", "pendiente", "desactivado"].includes(req.body.status)) return res.status(400).json({ error: "Estado inválido" });
+        await sql`UPDATE parent_accounts SET status = ${req.body.status}, updated_at = NOW() WHERE id = ${id}`;
+        return res.status(200).json({ success: true });
+      }
+      if (action === "regenerate_code") {
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        await sql`UPDATE parent_accounts SET status = 'pendiente', activation_code_hash = ${hashToken(code)}, activation_expires_at = NOW() + INTERVAL '7 days', updated_at = NOW() WHERE id = ${id}`;
+        return res.status(200).json({ success: true, activation_code: code });
+      }
+      return res.status(400).json({ error: "Acción administrativa inválida" });
     }
 
     // ── GET ──
