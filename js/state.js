@@ -49,7 +49,7 @@ export const state = {
       title: "DEPORTIVO ITALIA ACADEMY",
       subtitle: "Formando futbolistas, desarrollando talentos y construyendo valores.",
       ctaPrimary: "Conoce nuestra academia",
-      ctaSecondary: "Acceder al sistema"
+      ctaSecondary: "Sistema Staff"
     },
     nosotros: {
       historia: "",

@@ -21,7 +21,7 @@ export function renderPublicHome() {
           <p class="hero-subtitle">${escapeHtml(c.subtitle || "Formando futbolistas, desarrollando talentos y construyendo valores.")}</p>
           <div class="hero-ctas">
             <a href="#nosotros" class="btn-hero btn-hero-primary">${ic.users} ${escapeHtml(c.ctaPrimary || "Conoce nuestra academia")}</a>
-            <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary || "Acceder al sistema STAFF")}</a>
+            <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary === "Acceder al sistema" ? "Sistema Staff" : (c.ctaSecondary || "Sistema Staff"))}</a>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Práctica de prueba</button>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu entrenamiento de prueba</button>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu entrenamiento de prueba</button>
@@ -115,7 +115,7 @@ export function renderPublicHome() {
           <p class="hero-subtitle">${escapeHtml(c.subtitle || "Formando futbolistas, desarrollando talentos y construyendo valores.")}</p>
           <div class="hero-ctas">
             <a href="#nosotros" class="btn-hero btn-hero-primary">${ic.users} ${escapeHtml(c.ctaPrimary || "Conoce nuestra academia")}</a>
-            <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary || "Acceder al sistema STAFF")}</a>
+            <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary === "Acceder al sistema" ? "Sistema Staff" : (c.ctaSecondary || "Sistema Staff"))}</a>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Práctica de prueba</button>
             <button type="button" class="btn-hero btn-hero-trial" id="btnEnrollmentRequest">${ic.users} Inscribir jugador</button>
           </div>
@@ -374,7 +374,7 @@ export function renderPublicHome() {
                 <li><a href="#nosotros">Nosotros</a></li>
                 <li><a href="#galeria">Galería</a></li>
                 <li><a href="#sedes">Sedes</a></li>
-                <li><a href="/acceso">Acceso al Sistema</a></li>
+                <li><a href="/acceso">Sistema Staff</a></li>
               </ul>
             </div>
             <div class="footer-links">

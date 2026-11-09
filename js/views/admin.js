@@ -240,7 +240,7 @@ export function renderAdmin(){
           </div>
           <div class="config-field-half">
             <label>Botón Secundario</label>
-            <input type="text" id="siteHeroCtaSecondary" value="${escapeHtml(sc.hero?.ctaSecondary || "")}" placeholder="Acceder al sistema">
+            <input type="text" id="siteHeroCtaSecondary" value="${escapeHtml(sc.hero?.ctaSecondary || "")}" placeholder="Sistema Staff">
           </div>
         </div>
 
