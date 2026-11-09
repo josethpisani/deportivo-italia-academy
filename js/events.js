@@ -675,8 +675,19 @@ export function attachEvents(){
     const wireParentMenu = () => {
       const sections = [...panel.querySelectorAll('.portal-info-section')];
       const findSection = (label) => sections.find(section => section.querySelector('h3')?.textContent.toLowerCase().includes(label));
-      const targets = { resumen: panel, ficha: findSection('información del atleta'), asistencia: findSection('asistencias'), pagos: findSection('mensualidades'), torneos: findSection('calendario de juegos'), evaluaciones: findSection('evaluación mensual'), galeria: findSection('galería') };
-      document.querySelectorAll('[data-portal-section]').forEach(button => { button.onclick = () => { const target = targets[button.dataset.portalSection]; document.querySelectorAll('[data-portal-section]').forEach(item => item.classList.toggle('active', item === button)); if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
+      const hero = panel.querySelector('.portal-athlete-hero');
+      const metrics = panel.querySelector('.portal-metric-grid');
+      const targets = { ficha: findSection('información del atleta'), asistencia: findSection('asistencias'), pagos: sections.filter(section => ['mensualidades', 'pagos de torneos', 'pagos de uniformes'].some(label => section.querySelector('h3')?.textContent.toLowerCase().includes(label))), torneos: findSection('calendario de juegos'), evaluaciones: findSection('evaluación mensual'), galeria: findSection('galería') };
+      const activateSection = sectionName => {
+        if (hero) hero.style.display = sectionName === 'resumen' ? '' : 'none';
+        if (metrics) metrics.style.display = sectionName === 'resumen' ? '' : 'none';
+        sections.forEach(section => { section.style.display = 'none'; });
+        const selected = sectionName === 'resumen' ? [] : (Array.isArray(targets[sectionName]) ? targets[sectionName] : [targets[sectionName]]);
+        selected.filter(Boolean).forEach(section => { section.style.display = ''; });
+        document.querySelectorAll('[data-portal-section]').forEach(item => item.classList.toggle('active', item.dataset.portalSection === sectionName));
+      };
+      document.querySelectorAll('[data-portal-section]').forEach(button => { button.onclick = () => activateSection(button.dataset.portalSection); });
+      activateSection('resumen');
     };
     const showAthlete = athlete => { panel.innerHTML = athlete ? renderParentAthlete(athlete) : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>'; wireParentMenu(); };
     showAthlete(payload.athletes[0]);
