@@ -205,10 +205,24 @@ export default async function handler(req, res) {
       }).filter(Boolean).map(({ password_hash, ...safe }) => safe);
     }
 
+    async function getParentPortalData(parentId) {
+      const athletes = await getParentAthletes(parentId);
+      const tournamentRows = await sql`SELECT value FROM app_data WHERE key = 'torneos'`;
+      const allTorneos = Array.isArray(tournamentRows[0]?.value) ? tournamentRows[0].value : [];
+      const torneoIds = new Set(athletes.flatMap(athlete => (Array.isArray(athlete.torneos) ? athlete.torneos : []).map(item => String(item.torneoId || item.id || ''))));
+      const torneos = allTorneos.filter(torneo => torneoIds.has(String(torneo.id)));
+      const siteRows = await sql`SELECT value FROM app_data WHERE key = 'siteContent'`;
+      const siteContent = siteRows[0]?.value || {};
+      const galeria = Array.isArray(siteContent.galeria)
+        ? siteContent.galeria.filter(image => image && image.portal_visible !== false).map(({ url, descripcion, categoria, fecha }) => ({ url, descripcion: descripcion || '', categoria: categoria || 'General', fecha: fecha || '' }))
+        : [];
+      return { athletes, torneos, galeria };
+    }
+
     if (req.method === "GET" && req.query.key === "portal_me") {
       const parent = await getParentSession();
       if (!parent) return res.status(401).json({ error: "Sesión no válida" });
-      return res.status(200).json({ parent: { id: parent.id, email: parent.email, full_name: parent.full_name }, athletes: await getParentAthletes(parent.id) });
+      return res.status(200).json({ parent: { id: parent.id, email: parent.email, full_name: parent.full_name }, ...(await getParentPortalData(parent.id)) });
     }
 
     if (req.method === "GET" && req.query.key === "parent_admin") {
@@ -237,7 +251,7 @@ export default async function handler(req, res) {
         await sql`INSERT INTO parent_sessions (token_hash, parent_id, expires_at) VALUES (${hashToken(token)}, ${parent.id}, NOW() + INTERVAL '7 days')`;
         await sql`UPDATE parent_accounts SET failed_attempts = 0, locked_until = NULL, last_login_at = NOW(), updated_at = NOW() WHERE id = ${parent.id}`;
         setSessionCookie(res, token);
-        return res.status(200).json({ success: true, parent: { id: parent.id, email: parent.email, full_name: parent.full_name }, athletes: await getParentAthletes(parent.id) });
+        return res.status(200).json({ success: true, parent: { id: parent.id, email: parent.email, full_name: parent.full_name }, ...(await getParentPortalData(parent.id)) });
       }
       if (action === "activate") {
         if (!normalizedEmail || !activation_code || !password || !full_name) return res.status(400).json({ error: "Datos de activación incompletos" });

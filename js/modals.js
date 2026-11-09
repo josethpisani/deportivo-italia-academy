@@ -544,7 +544,8 @@ export function openAddGaleriaModal(){
       url: document.getElementById("g_url").value.trim(),
       descripcion: document.getElementById("g_desc").value.trim(),
       categoria: document.getElementById("g_categoria").value,
-      fecha: new Date().toISOString().slice(0,10)
+      fecha: new Date().toISOString().slice(0,10),
+      portal_visible: true
     };
     if (!state.siteContent.galeria) state.siteContent.galeria = [];
     state.siteContent.galeria.unshift(newImage);
