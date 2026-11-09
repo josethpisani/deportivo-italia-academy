@@ -6,6 +6,11 @@ import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypt
 
 function hashToken(token) { return createHash("sha256").update(token).digest("hex"); }
 function hashPassword(password, salt = randomBytes(16).toString("hex")) { return `scrypt$${salt}$${scryptSync(password, salt, 64).toString("hex")}`; }
+function createActivationCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = randomBytes(8);
+  return `DIA-${Array.from(bytes, byte => alphabet[byte % alphabet.length]).join("")}`;
+}
 function verifyPassword(password, stored) {
   const [, salt, expected] = String(stored || "").split("$");
   if (!salt || !expected) return false;
@@ -238,7 +243,7 @@ export default async function handler(req, res) {
         if (!normalizedEmail || !activation_code || !password || !full_name) return res.status(400).json({ error: "Datos de activación incompletos" });
         const rows = await sql`SELECT * FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} AND status = 'pendiente' LIMIT 1`;
         const parent = rows[0];
-        if (!parent || !parent.activation_code_hash || !parent.activation_expires_at || new Date(parent.activation_expires_at) < new Date() || hashToken(String(activation_code).trim()) !== parent.activation_code_hash) return res.status(401).json({ error: "Código de activación inválido o vencido" });
+        if (!parent || !parent.activation_code_hash || hashToken(String(activation_code).trim().toUpperCase()) !== parent.activation_code_hash) return res.status(401).json({ error: "Código de activación inválido o ya utilizado" });
         await sql`UPDATE parent_accounts SET full_name = ${String(full_name).trim()}, password_hash = ${hashPassword(password)}, status = 'activo', activation_code_hash = NULL, activation_expires_at = NULL, updated_at = NOW() WHERE id = ${parent.id}`;
         return res.status(200).json({ success: true, message: "Cuenta activada. Ya puedes iniciar sesión." });
       }
@@ -304,8 +309,8 @@ export default async function handler(req, res) {
       let parent = (await sql`SELECT id, status FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} LIMIT 1`)[0];
       let activationCode = null;
       if (!parent) {
-        activationCode = String(Math.floor(100000 + Math.random() * 900000));
-        parent = (await sql`INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at) VALUES (${normalizedEmail}, ${request.representative_name || "Representante"}, 'pendiente', ${hashToken(activationCode)}, NOW() + INTERVAL '7 days') RETURNING id, status`)[0];
+        activationCode = createActivationCode();
+        parent = (await sql`INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at) VALUES (${normalizedEmail}, ${request.representative_name || "Representante"}, 'pendiente', ${hashToken(activationCode)}, NULL) RETURNING id, status`)[0];
       }
       await sql`INSERT INTO parent_athletes (parent_id, athlete_id, sede_id) VALUES (${parent.id}, ${athlete.id}, ${staffSession.sede_id}) ON CONFLICT DO NOTHING`;
       requests[requestIndex] = { ...request, status: "aceptada", athlete_id: athlete.id, parent_id: parent.id, updated_at: new Date().toISOString() };
@@ -319,10 +324,10 @@ export default async function handler(req, res) {
       if (action === "create") {
         const normalizedEmail = String(email || "").trim().toLowerCase();
         if (!normalizedEmail || !full_name) return res.status(400).json({ error: "Nombre y correo son obligatorios" });
-        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const code = createActivationCode();
         const existing = await sql`SELECT id FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} LIMIT 1`;
         if (existing.length) return res.status(409).json({ error: "Ya existe una cuenta con ese correo" });
-        const created = await sql`INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at) VALUES (${normalizedEmail}, ${String(full_name).trim()}, 'pendiente', ${hashToken(code)}, NOW() + INTERVAL '7 days') RETURNING id, email, full_name, status, created_at`;
+        const created = await sql`INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at) VALUES (${normalizedEmail}, ${String(full_name).trim()}, 'pendiente', ${hashToken(code)}, NULL) RETURNING id, email, full_name, status, created_at`;
         return res.status(201).json({ success: true, account: created[0], activation_code: code });
       }
       if (action === "link") {
@@ -340,8 +345,8 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
       if (action === "regenerate_code") {
-        const code = String(Math.floor(100000 + Math.random() * 900000));
-        await sql`UPDATE parent_accounts SET status = 'pendiente', activation_code_hash = ${hashToken(code)}, activation_expires_at = NOW() + INTERVAL '7 days', updated_at = NOW() WHERE id = ${id}`;
+        const code = createActivationCode();
+        await sql`UPDATE parent_accounts SET status = 'pendiente', activation_code_hash = ${hashToken(code)}, activation_expires_at = NULL, updated_at = NOW() WHERE id = ${id}`;
         return res.status(200).json({ success: true, activation_code: code });
       }
       return res.status(400).json({ error: "Acción administrativa inválida" });
