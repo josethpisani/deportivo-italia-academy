@@ -326,6 +326,38 @@ export function attachEvents(){
     };
   }
 
+  const btnEnrollmentRequest = document.getElementById("btnEnrollmentRequest");
+  const enrollmentModal = document.getElementById("enrollmentModal");
+  const enrollmentForm = document.getElementById("enrollmentForm");
+  const closeEnrollment = () => { if (enrollmentModal) enrollmentModal.style.display = 'none'; document.body.style.overflow = ''; };
+  if (btnEnrollmentRequest && enrollmentModal) btnEnrollmentRequest.onclick = () => { enrollmentModal.style.display = 'flex'; document.body.style.overflow = 'hidden'; };
+  document.getElementById('closeEnrollmentModal')?.addEventListener('click', closeEnrollment);
+  document.getElementById('btnCloseEnrollment')?.addEventListener('click', closeEnrollment);
+  enrollmentModal?.addEventListener('click', e => { if (e.target === enrollmentModal) closeEnrollment(); });
+  if (enrollmentForm) enrollmentForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(enrollmentForm);
+    const data = Object.fromEntries(formData.entries());
+    data.id = `INS-${Date.now().toString(36).toUpperCase()}`;
+    data.status = 'pendiente';
+    data.created_at = new Date().toISOString();
+    data.athlete_age = Number(data.athlete_age);
+    const button = enrollmentForm.querySelector('button[type="submit"]');
+    if (button) { button.disabled = true; button.textContent = 'Enviando...'; }
+    try {
+      const res = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'registration_requests', value: data, sede_id: data.sede_id }) });
+      const result = await res.json();
+      if (!res.ok || !result.success) throw new Error(result.error || 'No se pudo enviar la solicitud');
+      enrollmentForm.style.display = 'none';
+      document.getElementById('enrollmentSuccess').style.display = 'block';
+      document.getElementById('enrollmentConfirmation').textContent = `Solicitud ${data.id} recibida para ${data.athlete_name}. Te contactaremos pronto.`;
+    } catch (err) {
+      alert(err.message || 'No se pudo enviar la solicitud. Intenta nuevamente.');
+    } finally {
+      if (button) { button.disabled = false; button.textContent = 'Enviar solicitud de inscripción'; }
+    }
+  };
+
   const closeTrialModalBtn = document.getElementById("closeTrialModal");
   if (closeTrialModalBtn) {
     closeTrialModalBtn.onclick = closeTrialModal;
@@ -542,6 +574,27 @@ export function attachEvents(){
       // Load trial requests for admin view
       loadAdminTrialRequests();
     };
+  }
+
+  const btnAdminTabInscripciones = document.querySelector('[data-admintab="inscripciones"]');
+  if (btnAdminTabInscripciones) {
+    btnAdminTabInscripciones.onclick = async () => {
+      state.adminTab = 'inscripciones';
+      if (window.__render) window.__render();
+      await loadAdminRegistrationRequests();
+    };
+  }
+}
+
+async function loadAdminRegistrationRequests() {
+  try {
+    const sedeId = state.currentSede?.id;
+    const res = await fetch(`/api/data?key=registration_requests&sede_id=${encodeURIComponent(sedeId || '')}`);
+    const requests = await res.json();
+    state.adminRegistrationRequests = Array.isArray(requests) ? requests : [];
+    if (window.__render) window.__render();
+  } catch (err) {
+    console.error('Error loading registration requests:', err);
   }
 }
 

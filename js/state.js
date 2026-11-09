@@ -34,6 +34,7 @@ export const state = {
   mensualMonth: new Date().toISOString().slice(0,7),
   adminAuth: false,
   adminTrialRequests: [],
+  adminRegistrationRequests: [],
   trialFilters: { search: "", category: "", status: "", date: "", date_from: "", date_to: "" },
   statsAthleteId: null,
   statsCategory: "Todos",

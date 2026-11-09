@@ -40,6 +40,7 @@ export function renderAdmin(){
     {key:"sedes",label:"Gestión de sedes"},
     {key:"site",label:"Configuración del sitio"},
     {key:"pruebas",label:"Pruebas de Ingreso"},
+    {key:"inscripciones",label:"Solicitudes de inscripción"},
   ].map(t=>`<button class="admin-tab ${state.adminTab===t.key?"active":""}" data-admintab="${t.key}">${t.label}</button>`).join("");
 
   let body = "";
@@ -300,6 +301,10 @@ export function renderAdmin(){
         ${renderGaleriaAdmin()}
       </div>
     `;
+  } else if(state.adminTab==="inscripciones"){
+    const requests = state.adminRegistrationRequests || [];
+    const rows = requests.map(r => `<tr><td>${escapeHtml(r.id || '')}</td><td>${escapeHtml(r.athlete_name || '')}</td><td>${escapeHtml(r.athlete_age || '')}</td><td>${escapeHtml(r.category || '')}</td><td>${escapeHtml(r.representative_name || '')}</td><td>${escapeHtml(r.phone || '')}</td><td>${escapeHtml(r.email || '')}</td><td>${escapeHtml(r.status || 'pendiente')}</td><td>${escapeHtml(r.notes || '')}</td></tr>`).join('');
+    body = `<div class="table-wrap"><table><thead><tr><th>Solicitud</th><th>Jugador</th><th>Edad</th><th>Categoría</th><th>Representante</th><th>Teléfono</th><th>Correo</th><th>Estado</th><th>Comentarios</th></tr></thead><tbody>${rows || '<tr><td colspan="9" class="empty-msg">No hay solicitudes de inscripción.</td></tr>'}</tbody></table></div>`;
   } else if(state.adminTab==="pruebas"){
     const requests = state.adminTrialRequests || [];
     const pendingCount = requests.filter(r => r.status === 'pendiente').length;
