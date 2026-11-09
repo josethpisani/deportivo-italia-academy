@@ -22,9 +22,9 @@ export function renderPublicHome() {
           <div class="hero-ctas">
             <a href="#nosotros" class="btn-hero btn-hero-primary">${ic.users} ${escapeHtml(c.ctaPrimary || "Conoce nuestra academia")}</a>
             <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary || "Acceder al sistema STAFF")}</a>
-            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} PRÁCTICA DE PRUEBA</button>
-            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu Entrenamiento de Prueba</button>
-            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu Entrenamiento de Prueba</button>
+            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Práctica de prueba</button>
+            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu entrenamiento de prueba</button>
+            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu entrenamiento de prueba</button>
           </div>
         </div>
         <div class="hero-scroll">${ic.chevronDown}</div>
@@ -116,8 +116,8 @@ export function renderPublicHome() {
           <div class="hero-ctas">
             <a href="#nosotros" class="btn-hero btn-hero-primary">${ic.users} ${escapeHtml(c.ctaPrimary || "Conoce nuestra academia")}</a>
             <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary || "Acceder al sistema STAFF")}</a>
-            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} PRÁCTICA DE PRUEBA</button>
-            <button type="button" class="btn-hero btn-hero-trial" id="btnEnrollmentRequest">${ic.users} INSCRIBIR JUGADOR</button>
+            <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Práctica de prueba</button>
+            <button type="button" class="btn-hero btn-hero-trial" id="btnEnrollmentRequest">${ic.users} Inscribir jugador</button>
           </div>
         </div>
         <div class="hero-scroll">${ic.chevronDown}</div>
