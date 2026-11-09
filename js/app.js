@@ -11,6 +11,7 @@ import { renderEvaluacion } from "./views/evaluacion.js";
 import { renderTorneos, renderTorneoDetail } from "./views/torneos.js";
 import { renderPublicHome } from "./views/public-home.js";
 import { renderAcceso } from "./views/acceso.js";
+import { renderParentPortal } from "./views/portal.js";
 import { drawHomeCharts, drawAthListChart, drawAthDetailChart, drawRegChart, drawAdminCharts, drawStatsCharts, drawEvalCharts, drawTorneoCharts } from "./charts.js";
 import { attachEvents } from "./events.js";
 import { ic } from "./icons.js";
@@ -23,6 +24,7 @@ function parseRoute() {
   // Public routes
   if (path === '/' || path === '/index.html') return 'public-home';
   if (path === '/acceso' || path === '/acceso/') return 'acceso';
+  if (path === '/portal-padres' || path === '/portal-padres/') return 'portal-padres';
   
   // Admin routes (require sede)
   return hash || 'home';
@@ -54,6 +56,7 @@ function render(){
   // Public views (no branch required)
   if(state.view === "public-home") mainContent = renderPublicHome();
   else if(state.view === "acceso") mainContent = renderAcceso();
+  else if(state.view === "portal-padres") mainContent = renderParentPortal();
   else if(state.view === "sede-login") mainContent = renderAcceso();
   
   // Admin views (require branch)
@@ -68,7 +71,7 @@ function render(){
   else if(state.view==="torneo-detail") mainContent = renderTorneoDetail();
 
   // Render layout based on view type
-  const isPublicView = ['public-home', 'acceso', 'sede-login'].includes(state.view);
+  const isPublicView = ['public-home', 'acceso', 'sede-login', 'portal-padres'].includes(state.view);
   const appEl = document.getElementById("app");
   
   if (isPublicView) {
@@ -206,6 +209,9 @@ function navigateTo(href) {
   } else if (href === '/acceso' || href === '/acceso/') {
     state.view = 'acceso';
     setRoute('acceso');
+  } else if (href === '/portal-padres' || href === '/portal-padres/') {
+    state.view = 'portal-padres';
+    window.history.pushState({}, '', '/portal-padres');
   } else {
     // Hash-based admin routes
     const hash = href.startsWith('#') ? href.slice(1) : href;

@@ -2,6 +2,22 @@
 // Multi-branch support for Deportivo Italia Academy
 
 import { neon } from "@neondatabase/serverless";
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+
+function hashToken(token) { return createHash("sha256").update(token).digest("hex"); }
+function hashPassword(password, salt = randomBytes(16).toString("hex")) { return `scrypt$${salt}$${scryptSync(password, salt, 64).toString("hex")}`; }
+function verifyPassword(password, stored) {
+  const [, salt, expected] = String(stored || "").split("$");
+  if (!salt || !expected) return false;
+  const actual = scryptSync(password, salt, 64);
+  return timingSafeEqual(actual, Buffer.from(expected, "hex"));
+}
+function readCookie(req, name) {
+  const cookies = String(req.headers.cookie || "").split(";").map(v => v.trim());
+  const found = cookies.find(v => v.startsWith(`${name}=`));
+  return found ? decodeURIComponent(found.slice(name.length + 1)) : null;
+}
+function setSessionCookie(res, token) { res.setHeader("Set-Cookie", `dia_parent_session=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`); }
 
 async function getDb() {
   if (!process.env.DATABASE_URL) {
@@ -33,6 +49,28 @@ async function getDb() {
       value JSONB NOT NULL,
       sede_id TEXT,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS parent_accounts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(), email TEXT NOT NULL UNIQUE, full_name TEXT NOT NULL,
+      password_hash TEXT, status TEXT NOT NULL DEFAULT 'pendiente', activation_code_hash TEXT,
+      activation_expires_at TIMESTAMPTZ, failed_attempts INTEGER NOT NULL DEFAULT 0,
+      locked_until TIMESTAMPTZ, last_login_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS parent_athletes (
+      parent_id UUID NOT NULL REFERENCES parent_accounts(id) ON DELETE CASCADE,
+      athlete_id TEXT NOT NULL, sede_id TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (parent_id, athlete_id, sede_id)
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS parent_sessions (
+      token_hash TEXT PRIMARY KEY, parent_id UUID NOT NULL REFERENCES parent_accounts(id) ON DELETE CASCADE,
+      expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
 
@@ -133,6 +171,67 @@ export default async function handler(req, res) {
   try {
     const sql = await getDb();
     const { sede_id } = req.query; // Optional: filter by branch
+
+    async function getParentSession() {
+      const rawToken = readCookie(req, "dia_parent_session");
+      if (!rawToken) return null;
+      const rows = await sql`SELECT p.*, s.expires_at FROM parent_sessions s JOIN parent_accounts p ON p.id = s.parent_id WHERE s.token_hash = ${hashToken(rawToken)} AND s.expires_at > NOW() AND p.status = 'activo' LIMIT 1`;
+      return rows[0] || null;
+    }
+
+    async function getParentAthletes(parentId) {
+      const links = await sql`SELECT athlete_id, sede_id FROM parent_athletes WHERE parent_id = ${parentId}`;
+      const rows = await sql`SELECT value FROM app_data WHERE key = 'athletes'`;
+      const allAthletes = Array.isArray(rows[0]?.value) ? rows[0].value : [];
+      return links.map(link => {
+        const athlete = allAthletes.find(item => String(item.id) === String(link.athlete_id) && (!item.sede_id || item.sede_id === link.sede_id));
+        return athlete ? { ...athlete, sede_id: link.sede_id } : null;
+      }).filter(Boolean).map(({ password_hash, ...safe }) => safe);
+    }
+
+    if (req.method === "GET" && req.query.key === "portal_me") {
+      const parent = await getParentSession();
+      if (!parent) return res.status(401).json({ error: "Sesión no válida" });
+      return res.status(200).json({ parent: { id: parent.id, email: parent.email, full_name: parent.full_name }, athletes: await getParentAthletes(parent.id) });
+    }
+
+    if (req.method === "POST" && req.body?.key === "portal") {
+      const { action, email, password, activation_code, full_name } = req.body;
+      const normalizedEmail = String(email || "").trim().toLowerCase();
+      if (action === "login") {
+        if (!normalizedEmail || !password) return res.status(400).json({ error: "Correo y contraseña son obligatorios" });
+        const rows = await sql`SELECT * FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} LIMIT 1`;
+        const parent = rows[0];
+        if (!parent || parent.status !== "activo") return res.status(401).json({ error: "La cuenta no está activa o no existe" });
+        if (parent.locked_until && new Date(parent.locked_until) > new Date()) return res.status(429).json({ error: "Cuenta bloqueada temporalmente" });
+        if (!verifyPassword(password, parent.password_hash)) {
+          const attempts = Number(parent.failed_attempts || 0) + 1;
+          if (attempts >= 5) await sql`UPDATE parent_accounts SET failed_attempts = ${attempts}, locked_until = NOW() + INTERVAL '15 minutes', updated_at = NOW() WHERE id = ${parent.id}`;
+          else await sql`UPDATE parent_accounts SET failed_attempts = ${attempts}, updated_at = NOW() WHERE id = ${parent.id}`;
+          return res.status(401).json({ error: "Correo o contraseña incorrectos" });
+        }
+        const token = randomBytes(32).toString("hex");
+        await sql`INSERT INTO parent_sessions (token_hash, parent_id, expires_at) VALUES (${hashToken(token)}, ${parent.id}, NOW() + INTERVAL '7 days')`;
+        await sql`UPDATE parent_accounts SET failed_attempts = 0, locked_until = NULL, last_login_at = NOW(), updated_at = NOW() WHERE id = ${parent.id}`;
+        setSessionCookie(res, token);
+        return res.status(200).json({ success: true, parent: { id: parent.id, email: parent.email, full_name: parent.full_name }, athletes: await getParentAthletes(parent.id) });
+      }
+      if (action === "activate") {
+        if (!normalizedEmail || !activation_code || !password || !full_name) return res.status(400).json({ error: "Datos de activación incompletos" });
+        const rows = await sql`SELECT * FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} AND status = 'pendiente' LIMIT 1`;
+        const parent = rows[0];
+        if (!parent || !parent.activation_code_hash || !parent.activation_expires_at || new Date(parent.activation_expires_at) < new Date() || hashToken(String(activation_code).trim()) !== parent.activation_code_hash) return res.status(401).json({ error: "Código de activación inválido o vencido" });
+        await sql`UPDATE parent_accounts SET full_name = ${String(full_name).trim()}, password_hash = ${hashPassword(password)}, status = 'activo', activation_code_hash = NULL, activation_expires_at = NULL, updated_at = NOW() WHERE id = ${parent.id}`;
+        return res.status(200).json({ success: true, message: "Cuenta activada. Ya puedes iniciar sesión." });
+      }
+      if (action === "logout") {
+        const rawToken = readCookie(req, "dia_parent_session");
+        if (rawToken) await sql`DELETE FROM parent_sessions WHERE token_hash = ${hashToken(rawToken)}`;
+        res.setHeader("Set-Cookie", "dia_parent_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0");
+        return res.status(200).json({ success: true });
+      }
+      return res.status(400).json({ error: "Acción de portal inválida" });
+    }
 
     // ── GET ──
     if (req.method === "GET") {

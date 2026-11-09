@@ -584,6 +584,31 @@ export function attachEvents(){
       await loadAdminRegistrationRequests();
     };
   }
+
+  const parentLoginForm = document.getElementById('parentLoginForm');
+  const parentActivationForm = document.getElementById('parentActivationForm');
+  const loginView = document.getElementById('portalLoginView');
+  const activationView = document.getElementById('parentActivationView');
+  const dashboardView = document.getElementById('parentDashboardView');
+  const showPortalMessage = (id, message) => { const el = document.getElementById(id); if (el) el.textContent = message; };
+  const renderParentDashboard = (payload) => {
+    if (!dashboardView) return;
+    loginView.style.display = 'none'; activationView.style.display = 'none'; dashboardView.style.display = 'block';
+    document.getElementById('parentWelcome').textContent = `Hola, ${payload.parent.full_name}`;
+    const list = document.getElementById('parentAthletesList');
+    list.innerHTML = payload.athletes.length ? payload.athletes.map(a => `<article class="portal-athlete-card"><div class="portal-athlete-avatar">${escapeHtml(`${a.nombre || ''} ${a.apellido || ''}`.trim().slice(0, 2).toUpperCase())}</div><div><h2>${escapeHtml(`${a.nombre || ''} ${a.apellido || ''}`.trim())}</h2><p>${escapeHtml(a.categoria || 'Categoría no registrada')} · ${escapeHtml(a.posicion || 'Atleta')}</p><span>Información oficial de consulta</span></div></article>`).join('') : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>';
+  };
+  if (parentLoginForm) parentLoginForm.onsubmit = async (e) => {
+    e.preventDefault(); const data = Object.fromEntries(new FormData(parentLoginForm).entries());
+    try { const res = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ key: 'portal', action: 'login', ...data }) }); const result = await res.json(); if (!res.ok) throw new Error(result.error); renderParentDashboard(result); } catch (err) { showPortalMessage('parentLoginMessage', err.message || 'No se pudo iniciar sesión.'); }
+  };
+  if (parentActivationForm) parentActivationForm.onsubmit = async (e) => {
+    e.preventDefault(); const data = Object.fromEntries(new FormData(parentActivationForm).entries());
+    try { const res = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'portal', action: 'activate', ...data }) }); const result = await res.json(); if (!res.ok) throw new Error(result.error); showPortalMessage('parentActivationMessage', result.message); parentActivationForm.reset(); } catch (err) { showPortalMessage('parentActivationMessage', err.message || 'No se pudo activar la cuenta.'); }
+  };
+  document.getElementById('showParentActivation')?.addEventListener('click', () => { loginView.style.display = 'none'; activationView.style.display = 'block'; });
+  document.getElementById('showParentLogin')?.addEventListener('click', () => { activationView.style.display = 'none'; loginView.style.display = 'block'; });
+  document.getElementById('parentLogout')?.addEventListener('click', async () => { await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ key: 'portal', action: 'logout' }) }); window.location.reload(); });
 }
 
 async function loadAdminRegistrationRequests() {
