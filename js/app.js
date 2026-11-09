@@ -211,8 +211,10 @@ function navigateTo(href) {
     state.view = 'acceso';
     setRoute('acceso');
   } else if (href === '/portal-padres' || href === '/portal-padres/') {
-    state.view = 'portal-padres';
-    window.history.pushState({}, '', '/portal-padres');
+    // Use a real navigation for the parent portal so the route works even
+    // when the public SPA has not finished loading its initial data.
+    window.location.assign('/portal-padres');
+    return;
   } else {
     // Hash-based admin routes
     const hash = href.startsWith('#') ? href.slice(1) : href;
