@@ -43,7 +43,7 @@ function setRoute(view, params = {}) {
 }
 
 function render(){
-  if(!state.loaded && state.view !== 'public-home' && state.view !== 'acceso' && state.view !== 'sede-login'){
+  if(!state.loaded && !['public-home', 'acceso', 'sede-login', 'portal-padres'].includes(state.view)){
     document.getElementById("app").innerHTML = `<div class="loading-screen"><div style="font-size:28px;">&#x1f6e1;&#xfe0f;</div><div style="font-size:13px;opacity:.8;">Cargando datos de la academia&#8230;</div></div>`;
     return;
   }
