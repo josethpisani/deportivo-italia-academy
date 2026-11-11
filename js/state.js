@@ -25,6 +25,7 @@ export const state = {
   athleteReadOnly: true,
   search: "",
   adminTab: "config",
+  adminCategory: "Todos",
   regTipo: "training",
   regDate: new Date().toISOString().slice(0,10),
   regCategory: "Todos",

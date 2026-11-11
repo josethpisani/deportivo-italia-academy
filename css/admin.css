@@ -6,6 +6,8 @@
 .admin-sidebar .admin-tab{width:100%;border:0;border-radius:8px;padding:10px 11px;background:transparent;color:rgba(255,255,255,.78);font-size:12px;text-align:left;cursor:pointer}
 .admin-sidebar .admin-tab:hover,.admin-sidebar .admin-tab.active{background:#168b59;color:#fff}
 .admin-content{min-width:0}
+.admin-category-filter{align-items:center;padding:10px 12px;border:1px solid var(--chalk-dim);border-radius:10px;background:#fff}
+.admin-filter-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-right:4px}
 .admin-menu-toggle{display:none}
 .admin-tabs{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;padding-bottom:2px;}
 .admin-tab{border:1px solid var(--chalk-dim);border-radius:8px;padding:8px 14px;font-weight:700;font-size:12.5px;background:#fff;color:var(--ink);white-space:nowrap;}

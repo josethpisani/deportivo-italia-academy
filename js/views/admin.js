@@ -22,6 +22,9 @@ export function renderAdmin(){
   }
   const yearAthletes = staffYearAthletes(state.athletes, state.staffYear);
   const yearTorneos = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear));
+  const categoryFilteredTabs = ["atletas", "matriculas", "mensualidades", "uniformes", "torneos"];
+  const adminAthletes = state.adminCategory === "Todos" ? yearAthletes : yearAthletes.filter(a => a.categoria === state.adminCategory);
+  const adminCategoryFilter = categoryFilteredTabs.includes(state.adminTab) ? `<div class="filters admin-category-filter"><span class="admin-filter-label">Categoría</span>${["Todos", ...CATEGORIES].map(category => `<button class="chip ${state.adminCategory === category ? "active" : ""}" data-admincat="${category}">${category}</button>`).join("")}</div>` : "";
   const totalMensualidadesMes = yearAthletes.filter(a=>!a.becado).filter(a=>{
     const m = a.mensualidades && a.mensualidades[state.mensualMonth];
     return m && m.estado==="pagado";
@@ -51,7 +54,7 @@ export function renderAdmin(){
   if(state.adminTab==="config"){
     const configRows = CATEGORIES.map(c=>{
       const cfg = state.config[c] || {matricula:35, mensualidad:20};
-      const count = yearAthletes.filter(a=>a.categoria===c).length;
+      const count = adminAthletes.filter(a=>a.categoria===c).length;
       return `<tr>
         <td style="font-weight:700;font-size:15px;">${c}</td>
         <td style="text-align:center;">${count}</td>
@@ -75,7 +78,7 @@ export function renderAdmin(){
         </div>
       </div>`;
   } else if(state.adminTab==="atletas"){
-    const rows = yearAthletes.map(a=>`<tr>
+    const rows = adminAthletes.map(a=>`<tr>
       <td style="font-weight:600;">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</td>
       <td>${a.categoria}</td><td>${a.edad}</td><td>${escapeHtml(a.representante)}</td><td>${escapeHtml(a.telefono)}</td>
       <td>${a.becado ? badge("Becado","good") : badge(a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}</td>
@@ -85,7 +88,7 @@ export function renderAdmin(){
       <table><thead><tr><th>Atleta</th><th>Categoría</th><th>Edad</th><th>Representante</th><th>Teléfono</th><th>Matrícula</th><th></th></tr></thead>
       <tbody>${rows}</tbody></table></div>`;
   } else if(state.adminTab==="matriculas"){
-    const cards = yearAthletes.map(a=>`<div class="mat-card">
+    const cards = adminAthletes.map(a=>`<div class="mat-card">
       <div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div>
       <div class="info">${a.becado ? "Becado" : `Monto: $${a.matricula.monto} · Última fecha: ${a.matricula.fecha}`}</div>
       <div class="btns">
@@ -104,18 +107,18 @@ export function renderAdmin(){
     const monthBtns = meses.map(m=>
       `<button class="chip ${state.mensualMonth===m.key?"active":""}" data-mensualmonth="${m.key}">${m.label}</button>`
     ).join("");
-    const totalMensualidades = yearAthletes.filter(a=>{
+    const totalMensualidades = adminAthletes.filter(a=>{
       const m = a.mensualidades && a.mensualidades[mesActual];
       return m && m.estado==="pagado";
     }).reduce((s,a)=>{
       const m = a.mensualidades[mesActual];
       return s + (m ? m.monto : 0);
     },0);
-    const pendientesMes = yearAthletes.filter(a=>{
+    const pendientesMes = adminAthletes.filter(a=>{
       const m = a.mensualidades && a.mensualidades[mesActual];
       return !m || m.estado!=="pagado";
     }).length;
-    const cards = yearAthletes.map(a=>{
+    const cards = adminAthletes.map(a=>{
       if(!a.mensualidades) a.mensualidades = {};
       const m = a.mensualidades[mesActual];
       const estado = m ? m.estado : "pendiente";
@@ -140,14 +143,14 @@ export function renderAdmin(){
       <div class="filters" style="margin-bottom:14px;">${monthBtns}</div>
       <div class="mat-grid">${cards}</div>`;
   } else if(state.adminTab==="uniformes"){
-    const cards = yearAthletes.map(a=>{
+    const cards = adminAthletes.map(a=>{
       const uniforme = a.uniformes || { monto:0, estado:"pendiente" };
       return `<div class="mat-card"><div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${a.becado ? badge("Becado","good") : badge(a.categoria,"neutral")}</div><div class="info">${a.becado ? "Becado" : `Monto: $${uniforme.monto || 0} · Última fecha: ${uniforme.fecha || "—"}`}</div><div class="btns"><button class="bp ${uniforme.estado === "pagado" ? "on" : ""}" data-uniforme="${a.id}|pagado">Pagado</button><button class="bd ${uniforme.estado !== "pagado" ? "on" : ""}" data-uniforme="${a.id}|pendiente">Pendiente</button><button class="btn-outline" data-edit-costs="${a.id}">Editar monto</button></div></div>`;
     }).join("");
     body = `<div class="config-info"><p>${ic.alert} Configura el monto y el estado del uniforme por atleta. El representante solo podrá consultar esta información.</p></div><div class="mat-grid">${cards}</div>`;
   } else if(state.adminTab==="torneos"){
     let torneosHtml = yearTorneos.map(t=>{
-      const elegibles = yearAthletes;
+      const elegibles = adminAthletes;
       const inscritos = elegibles.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
 
       const chips = elegibles.map(a=>{
@@ -440,6 +443,7 @@ export function renderAdmin(){
       ${statPill(ic.trophy,"Ingresos torneos", "$"+torneoIngresos,"var(--red)")}
       ${statPill(ic.alert,"Matrículas pendientes", pendientes,"var(--red)")}
     </div>
+    ${adminCategoryFilter}
     ${state.adminTab==="matriculas" ? `<div class="charts-row"><div class="chart-card"><h4>Matrículas: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMatricula"></canvas></div></div></div>` : state.adminTab==="mensualidades" ? `<div class="charts-row"><div class="chart-card"><h4>Mensualidades: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMensualidades"></canvas></div></div></div>` : state.adminTab==="uniformes" ? `<div class="charts-row"><div class="chart-card"><h4>Uniformes: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminUniformes"></canvas></div></div></div>` : state.adminTab==="torneos" ? `<div class="charts-row"><div class="chart-card"><h4>Recaudación por torneo ($)</h4><div class="chart-wrap short"><canvas id="chartAdminTorneos"></canvas></div></div><div class="chart-card"><h4>Inscritos a torneos por categoría</h4><div class="chart-wrap short"><canvas id="chartAdminCatTorneos"></canvas></div></div></div>` : ""}
     ${body}</main></div>
   `;
