@@ -94,6 +94,9 @@ export function attachEvents(){
   if(btnViewGrid) btnViewGrid.onclick = ()=>{ state.athViewMode="grid"; if(window.__render) window.__render(); };
   const btnViewList = document.getElementById("btnViewList");
   if(btnViewList) btnViewList.onclick = ()=>{ state.athViewMode="list"; if(window.__render) window.__render(); };
+  document.querySelectorAll('[data-staff-view]').forEach(btn=>{
+    btn.onclick = () => { state.athViewMode = btn.dataset.staffView; if(window.__render) window.__render(); };
+  });
 
   const btnSaveObs = document.getElementById("btnSaveObs");
   if(btnSaveObs) btnSaveObs.onclick = ()=>{

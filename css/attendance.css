@@ -5,7 +5,12 @@
 .reg-field select,.reg-field input{padding:8px 10px;border-radius:7px;border:1px solid var(--chalk-dim);font-size:13px;}
 .reg-hint{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;}
 .reg-table{background:#fff;border:1px solid var(--chalk-dim);border-radius:10px;overflow:hidden;}
+.reg-table.athlete-grid-mode{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:12px;background:transparent;border:0;overflow:visible}
 .reg-row{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-top:1px solid var(--chalk-dim);}
+.reg-table.athlete-grid-mode .reg-row{display:block;padding:16px;border:1px solid var(--chalk-dim);border-radius:10px;background:#fff}
+.reg-table.athlete-grid-mode .reg-row .who{margin-bottom:14px}
+.reg-table.athlete-grid-mode .reg-row .opts{justify-content:stretch}
+.reg-table.athlete-grid-mode .reg-row .opts button{flex:1}
 .reg-row:first-child{border-top:none;}
 .reg-row .who{display:flex;align-items:center;gap:10px;}
 .reg-row .who .name{font-weight:700;font-size:13.5px;}

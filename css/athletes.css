@@ -11,6 +11,10 @@
 
 /* ATHLETE GRID & CARDS */
 .ath-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+.ath-grid.list-mode{display:flex;flex-direction:column;gap:8px}
+.ath-grid.list-mode .ath-card{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;padding:11px 14px}
+.ath-grid.list-mode .ath-card .top{grid-row:1 / span 2}
+.ath-grid.list-mode .ath-card .attend{grid-column:3;grid-row:1 / span 2}
 .ath-card{text-align:left;background:#fff;border:1px solid var(--chalk-dim);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;width:100%;}
 .ath-card .top{display:flex;justify-content:space-between;align-items:flex-start;}
 .avatar{width:40px;height:40px;border-radius:50%;background:var(--pitch);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}

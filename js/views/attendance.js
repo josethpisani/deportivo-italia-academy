@@ -34,7 +34,7 @@ export function renderAttendanceTab(){
   }).join("") || `<p class="empty-msg" style="padding:16px;">No hay atletas en esta categoría.</p>`;
 
   return `
-    <h1 class="page-title dia-title">Registrar Asistencia</h1>
+    <div class="toolbar"><h1 class="page-title dia-title" style="margin:0;">Registrar Asistencia</h1><div class="view-toggle"><button class="${state.athViewMode==="grid"?"active":""}" data-staff-view="grid" title="Cuadrícula">${ic.grid}</button><button class="${state.athViewMode==="list"?"active":""}" data-staff-view="list" title="Lista">${ic.list}</button></div></div>
     <p class="page-sub">Marca presente o ausente por fecha, para entrenamientos o juegos</p>
 
     <div class="reg-controls">
@@ -63,6 +63,6 @@ export function renderAttendanceTab(){
       <div class="chart-wrap short"><canvas id="chartRegDay"></canvas></div>
     </div>
 
-    <div class="reg-table">${rows}</div>
+    <div class="reg-table ${state.athViewMode==="grid"?"athlete-grid-mode":""}">${rows}</div>
   `;
 }

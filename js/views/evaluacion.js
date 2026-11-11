@@ -123,10 +123,10 @@ export function renderEvaluacion(){
     }).join("");
 
     return `
-      <h1 class="page-title dia-title">Evaluaciones</h1>
+      <div class="toolbar"><h1 class="page-title dia-title" style="margin:0;">Evaluaciones</h1><div class="view-toggle"><button class="${state.athViewMode==="grid"?"active":""}" data-staff-view="grid" title="Cuadrícula">${ic.grid}</button><button class="${state.athViewMode==="list"?"active":""}" data-staff-view="list" title="Lista">${ic.list}</button></div></div>
       <p class="page-sub">Selecciona un atleta para crear o ver evaluaciones de rendimiento</p>
       <div class="filters">${chips}</div>
-      <div class="ath-grid">${playerGrid || '<p class="empty-msg">No hay atletas.</p>'}</div>
+      <div class="ath-grid ${state.athViewMode==="list"?"list-mode":""}">${playerGrid || '<p class="empty-msg">No hay atletas.</p>'}</div>
     `;
   }
 
