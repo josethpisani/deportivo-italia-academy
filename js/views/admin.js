@@ -119,7 +119,7 @@ export function renderAdmin(){
       if(!a.mensualidades) a.mensualidades = {};
       const m = a.mensualidades[mesActual];
       const estado = m ? m.estado : "pendiente";
-      const monto = m ? m.monto : ((state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20);
+      const monto = m ? m.monto : (a._mensualidadMonto || ((state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20));
       const fecha = m ? m.fecha : "—";
       return `<div class="mat-card">
         <div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div>

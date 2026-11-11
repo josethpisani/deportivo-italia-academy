@@ -270,6 +270,8 @@ export function openEditAthleteCostsModal(athleteId){
   const a = state.athletes.find(x=>x.id===athleteId);
   if(!a) return;
   const catCfg = state.config[a.categoria] || {matricula:35, mensualidad:20};
+  const athleteTournaments = (a.torneos || []).map(link => ({ link, torneo: state.torneos.find(t => String(t.id) === String(link.torneoId)) })).filter(item => item.torneo);
+  const tournamentCostFields = athleteTournaments.map(({ link, torneo }) => `<div><label>${escapeHtml(torneo.nombre)} ($)</label><input type="number" min="0" data-ac-torneo="${escapeHtml(torneo.id)}" value="${a.pagosTorneos?.[torneo.id]?.monto ?? torneo.monto ?? 0}"></div>`).join('');
   const html = `
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal">
@@ -282,6 +284,7 @@ export function openEditAthleteCostsModal(athleteId){
             <div><label>Mensualidad ($)</label><input type="number" min="0" id="ac_mensualidad" value="${a._mensualidadMonto || catCfg.mensualidad}"></div>
             <div><label>Uniforme ($)</label><input type="number" min="0" id="ac_uniforme" value="${a.uniformes?.monto || 0}"></div>
             <div><label>Estado uniforme</label><select id="ac_uniforme_estado"><option value="pendiente" ${a.uniformes?.estado !== "pagado" ? "selected" : ""}>Pendiente</option><option value="pagado" ${a.uniformes?.estado === "pagado" ? "selected" : ""}>Pagado</option></select></div>
+            ${tournamentCostFields}
           </div>
         </div>
         <div class="config-info">
@@ -294,7 +297,8 @@ export function openEditAthleteCostsModal(athleteId){
   document.getElementById("modalClose").onclick = closeModal;
   document.getElementById("modalOverlay").addEventListener("click", e=>{ if(e.target.id==="modalOverlay") closeModal(); });
   document.getElementById("ac_save").onclick = ()=>{
-    updateAthleteCosts(athleteId, document.getElementById("ac_matricula").value, document.getElementById("ac_mensualidad").value, document.getElementById("ac_uniforme").value, document.getElementById("ac_uniforme_estado").value);
+    const tournamentCosts = Object.fromEntries([...document.querySelectorAll('[data-ac-torneo]')].map(input => [input.dataset.acTorneo, input.value]));
+    updateAthleteCosts(athleteId, document.getElementById("ac_matricula").value, document.getElementById("ac_mensualidad").value, document.getElementById("ac_uniforme").value, document.getElementById("ac_uniforme_estado").value, tournamentCosts);
   };
 }
 

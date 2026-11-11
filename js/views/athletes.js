@@ -214,7 +214,7 @@ export function renderAthleteDetail(){
           if(!a.mensualidades) a.mensualidades = {};
           const mp = a.mensualidades[key];
           const estado = mp ? mp.estado : "pendiente";
-          const monto = mp ? mp.monto : ((state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20);
+          const monto = mp ? mp.monto : (a._mensualidadMonto || ((state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20));
           meses.push(`<div class="attend-cell ${estado==="pagado"?"presente":"ausente"}">
             <div class="date">${label}</div>
             <div style="font-weight:700;font-size:12px;">$${monto}</div>

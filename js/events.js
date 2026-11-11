@@ -663,7 +663,7 @@ export function attachEvents(){
     const present = attendance.filter(([, value]) => ['presente', 'asistio', 'asistió'].includes(String(value?.estado || value).toLowerCase())).length;
     const absences = attendance.filter(([, value]) => ['ausente', 'no_asistio', 'no asistió'].includes(String(value?.estado || value).toLowerCase())).length;
     const tournaments = Array.isArray(athlete.torneos) ? athlete.torneos : [];
-    const torneos = parentPortalPayload?.torneos || [];
+    const torneos = (parentPortalPayload?.torneos || []).map(torneo => ({ ...torneo, monto: athlete.pagosTorneos?.[torneo.id]?.monto ?? torneo.monto }));
     const legacyStats = athlete.statsGenerales || {};
     const tournamentTotals = tournaments.reduce((total, entry) => { const item = athlete.estadisticas?.[entry.torneoId] || {}; total.partidosJugados += Number(item.partidosJugados || 0); total.goles += Number(item.goles || 0); total.asistencias += Number(item.asistencias || 0); total.tarjetasAmarillas += Number(item.tarjetasAmarillas || 0); total.tarjetasRojas += Number(item.tarjetasRojas || 0); return total; }, { partidosJugados: 0, goles: 0, asistencias: 0, tarjetasAmarillas: 0, tarjetasRojas: 0 });
     const hasTournamentStats = tournaments.some(entry => athlete.estadisticas?.[entry.torneoId]);

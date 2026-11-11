@@ -218,7 +218,7 @@ export function setMensualidad(athleteId, mes, estado){
   const a = state.athletes.find(x=>x.id===athleteId);
   if(!a) return;
   if(!a.mensualidades) a.mensualidades = {};
-  const costo = (state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20;
+  const costo = a._mensualidadMonto || ((state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20);
   if(estado){
     a.mensualidades[mes] = { estado:"pagado", monto: a.mensualidades[mes]?.monto || costo, fecha: todayISO() };
   } else {
@@ -232,7 +232,7 @@ export function markAllMensualidades(mes){
   state.athletes.forEach(a=>{
     if(!a.mensualidades) a.mensualidades = {};
     if(!a.mensualidades[mes]){
-      const costo = (state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20;
+      const costo = a._mensualidadMonto || ((state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20);
       a.mensualidades[mes] = { estado:"pendiente", monto:costo, fecha:todayISO() };
     }
   });
@@ -240,10 +240,10 @@ export function markAllMensualidades(mes){
   if(window.__render) window.__render();
 }
 
-export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto, uniformeMonto = 0, uniformeEstado = "pendiente"){
+export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto, uniformeMonto = 0, uniformeEstado = "pendiente", tournamentCosts = {}){
   const a = state.athletes.find(x=>x.id===athleteId);
   if(!a) return;
-  if(a.matricula.estado==="pendiente") a.matricula.monto = Number(matriculaMonto);
+  a.matricula.monto = Number(matriculaMonto);
   if(!a.mensualidades) a.mensualidades = {};
   Object.keys(a.mensualidades).forEach(mes=>{
     if(a.mensualidades[mes].estado==="pendiente"){
@@ -252,6 +252,10 @@ export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto, 
   });
   a._mensualidadMonto = Number(mensualidadMonto);
   a.uniformes = { monto:Number(uniformeMonto)||0, estado:uniformeEstado === "pagado" ? "pagado" : "pendiente", fecha:todayISO() };
+  a.pagosTorneos = { ...(a.pagosTorneos || {}) };
+  Object.entries(tournamentCosts).forEach(([torneoId, monto]) => {
+    a.pagosTorneos[torneoId] = { ...(a.pagosTorneos[torneoId] || {}), monto: Number(monto) || 0 };
+  });
   saveAthletes();
   if(window.__render) window.__render();
 }
