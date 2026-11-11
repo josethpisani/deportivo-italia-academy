@@ -283,6 +283,7 @@ export function openEditAthleteCostsModal(athleteId){
             <div><label>Matrícula ($)</label><input type="number" min="0" id="ac_matricula" value="${a.matricula.monto}"></div>
             <div><label>Mensualidad ($)</label><input type="number" min="0" id="ac_mensualidad" value="${a._mensualidadMonto || catCfg.mensualidad}"></div>
             <div><label>Uniforme ($)</label><input type="number" min="0" id="ac_uniforme" value="${a.uniformes?.monto || 0}"></div>
+            <label style="display:flex;align-items:center;gap:8px;grid-column:1/-1;"><input type="checkbox" id="ac_becado" ${a.becado ? "checked" : ""}> Atleta becado (no paga los costos)</label>
             ${tournamentCostFields}
           </div>
         </div>
@@ -297,7 +298,7 @@ export function openEditAthleteCostsModal(athleteId){
   document.getElementById("modalOverlay").addEventListener("click", e=>{ if(e.target.id==="modalOverlay") closeModal(); });
   document.getElementById("ac_save").onclick = ()=>{
     const tournamentCosts = Object.fromEntries([...document.querySelectorAll('[data-ac-torneo]')].map(input => [input.dataset.acTorneo, input.value]));
-    updateAthleteCosts(athleteId, document.getElementById("ac_matricula").value, document.getElementById("ac_mensualidad").value, document.getElementById("ac_uniforme").value, undefined, tournamentCosts);
+    updateAthleteCosts(athleteId, document.getElementById("ac_matricula").value, document.getElementById("ac_mensualidad").value, document.getElementById("ac_uniforme").value, undefined, tournamentCosts, document.getElementById("ac_becado").checked);
   };
 }
 

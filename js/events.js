@@ -655,8 +655,9 @@ export function attachEvents(){
   const formatPortalDate = (value) => value ? new Date(`${value}T12:00:00`).toLocaleDateString('es-PA', { day: '2-digit', month: 'long', year: 'numeric' }) : 'No registrada';
   const renderParentAthlete = (athlete) => {
     const fullName = `${athlete.nombre || ''} ${athlete.apellido || ''}`.trim() || 'Atleta';
+    if (athlete.becado) athlete = { ...athlete, matricula: { ...(athlete.matricula || {}), estado: 'Becado', monto: 0 } };
     const esc = value => escapeHtml(value === null || value === undefined ? '' : String(value));
-    const payments = athlete.mensualidades && typeof athlete.mensualidades === 'object' ? Object.entries(athlete.mensualidades) : [];
+    const payments = athlete.becado ? [['Becado', { estado: 'Becado', monto: 0 }]] : (athlete.mensualidades && typeof athlete.mensualidades === 'object' ? Object.entries(athlete.mensualidades) : []);
     const training = Object.entries(athlete.asistenciaEntrenamiento || {});
     const games = Object.entries(athlete.asistenciaJuegos || {});
     const attendance = [...training, ...games];
@@ -668,7 +669,7 @@ export function attachEvents(){
     const tournamentTotals = tournaments.reduce((total, entry) => { const item = athlete.estadisticas?.[entry.torneoId] || {}; total.partidosJugados += Number(item.partidosJugados || 0); total.goles += Number(item.goles || 0); total.asistencias += Number(item.asistencias || 0); total.tarjetasAmarillas += Number(item.tarjetasAmarillas || 0); total.tarjetasRojas += Number(item.tarjetasRojas || 0); return total; }, { partidosJugados: 0, goles: 0, asistencias: 0, tarjetasAmarillas: 0, tarjetasRojas: 0 });
     const hasTournamentStats = tournaments.some(entry => athlete.estadisticas?.[entry.torneoId]);
     const stats = hasTournamentStats ? { ...tournamentTotals, entrenamientosAsistidos: legacyStats.entrenamientosAsistidos || 0, entrenamientosTotales: legacyStats.entrenamientosTotales || 0 } : legacyStats;
-    const uniformsSource = athlete.uniformes || athlete.pagosUniformes || athlete.pagoUniforme || {};
+    const uniformsSource = athlete.becado ? { Becado: { estado: 'Becado', monto: 0 } } : (athlete.uniformes || athlete.pagosUniformes || athlete.pagoUniforme || {});
     const uniforms = Array.isArray(uniformsSource) ? uniformsSource.map((item, index) => [item.concepto || item.nombre || `Uniforme ${index + 1}`, item]) : Object.entries(uniformsSource || {});
     const attendanceRows = attendance.map(([date, value]) => `<tr><td>${esc(date)}</td><td>${esc(value?.tipo || (training.some(([key]) => key === date) ? 'Entrenamiento' : 'Partido'))}</td><td><span class="portal-status ${String(value?.estado || value).toLowerCase().includes('aus') ? 'negative' : ''}">${esc(value?.estado || value || 'Sin registro')}</span></td></tr>`).join('') || '<tr><td colspan="3">No hay asistencias registradas.</td></tr>';
     const tournamentRows = tournaments.map(entry => { const torneo = torneos.find(item => String(item.id) === String(entry.torneoId)); const tournamentStats = athlete.estadisticas?.[entry.torneoId] || {}; return `<tr><td>${esc(torneo?.nombre || entry.torneoId || 'Torneo')}</td><td>${esc(torneo?.fecha || entry.fecha || '—')}</td><td>${esc(torneo?.monto ? `$${torneo.monto}` : '—')}</td><td>${esc(`${tournamentStats.goles || 0} goles · ${tournamentStats.asistencias || 0} asistencias`)}</td></tr>`; }).join('') || '<tr><td colspan="4">No participa en torneos registrados.</td></tr>';

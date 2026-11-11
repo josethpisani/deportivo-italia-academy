@@ -22,16 +22,16 @@ export function renderAdmin(){
   }
   const yearAthletes = staffYearAthletes(state.athletes, state.staffYear);
   const yearTorneos = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear));
-  const totalMensualidadesMes = yearAthletes.filter(a=>{
+  const totalMensualidadesMes = yearAthletes.filter(a=>!a.becado).filter(a=>{
     const m = a.mensualidades && a.mensualidades[state.mensualMonth];
     return m && m.estado==="pagado";
   }).reduce((s,a)=>s+((a.mensualidades[state.mensualMonth]||{}).monto||0),0);
-  const totalIngresos = yearAthletes.filter(a=>a.matricula.estado==="pagado").reduce((s,a)=>s+a.matricula.monto,0) + totalMensualidadesMes;
+  const totalIngresos = yearAthletes.filter(a=>!a.becado && a.matricula.estado==="pagado").reduce((s,a)=>s+a.matricula.monto,0) + totalMensualidadesMes;
   const torneoIngresos = yearTorneos.reduce((sum,t)=>{
-    const pagantes = yearAthletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
+    const pagantes = yearAthletes.filter(a=>!a.becado && a.torneos.some(at=>at.torneoId===t.id)).length;
     return sum + pagantes*t.monto;
   },0);
-  const pendientes = yearAthletes.filter(a=>a.matricula.estado==="pendiente").length;
+  const pendientes = yearAthletes.filter(a=>!a.becado && a.matricula.estado==="pendiente").length;
 
   const tabs = [
     {key:"config",label:"Configuración"},
@@ -78,7 +78,7 @@ export function renderAdmin(){
     const rows = yearAthletes.map(a=>`<tr>
       <td style="font-weight:600;">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</td>
       <td>${a.categoria}</td><td>${a.edad}</td><td>${escapeHtml(a.representante)}</td><td>${escapeHtml(a.telefono)}</td>
-      <td>${badge(a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}</td>
+      <td>${a.becado ? badge("Becado","good") : badge(a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}</td>
       <td><button class="link-btn" data-open="${a.id}" data-open-admin="true">Ver y editar perfil</button></td>
     </tr>`).join("");
     body = `<div class="table-wrap">
@@ -87,7 +87,7 @@ export function renderAdmin(){
   } else if(state.adminTab==="matriculas"){
     const cards = yearAthletes.map(a=>`<div class="mat-card">
       <div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div>
-      <div class="info">Monto: $${a.matricula.monto} · Última fecha: ${a.matricula.fecha}</div>
+      <div class="info">${a.becado ? "Becado" : `Monto: $${a.matricula.monto} · Última fecha: ${a.matricula.fecha}`}</div>
       <div class="btns">
         <button class="bp ${a.matricula.estado==="pagado"?"on":""}" data-matricula="${a.id}|pagado">Pagado</button>
         <button class="bd ${a.matricula.estado==="pendiente"?"on":""}" data-matricula="${a.id}|pendiente">Pendiente</button>
@@ -123,7 +123,7 @@ export function renderAdmin(){
       const fecha = m ? m.fecha : "—";
       return `<div class="mat-card">
         <div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div>
-        <div class="info">Monto: $${monto} · Última fecha: ${fecha}</div>
+        <div class="info">${a.becado ? "Becado" : `Monto: $${monto} · Última fecha: ${fecha}`}</div>
         <div class="btns">
           <button class="bp ${estado==="pagado"?"on":""}" data-mensualidad="${a.id}|${mesActual}|1">Pagado</button>
           <button class="bd ${estado==="pendiente"?"on":""}" data-mensualidad="${a.id}|${mesActual}|0">Pendiente</button>
@@ -142,7 +142,7 @@ export function renderAdmin(){
   } else if(state.adminTab==="uniformes"){
     const cards = yearAthletes.map(a=>{
       const uniforme = a.uniformes || { monto:0, estado:"pendiente" };
-      return `<div class="mat-card"><div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div><div class="info">Monto: $${uniforme.monto || 0} · Última fecha: ${uniforme.fecha || "—"}</div><div class="btns"><button class="bp ${uniforme.estado === "pagado" ? "on" : ""}" data-uniforme="${a.id}|pagado">Pagado</button><button class="bd ${uniforme.estado !== "pagado" ? "on" : ""}" data-uniforme="${a.id}|pendiente">Pendiente</button><button class="btn-outline" data-edit-costs="${a.id}">Editar monto</button></div></div>`;
+      return `<div class="mat-card"><div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${a.becado ? badge("Becado","good") : badge(a.categoria,"neutral")}</div><div class="info">${a.becado ? "Becado" : `Monto: $${uniforme.monto || 0} · Última fecha: ${uniforme.fecha || "—"}`}</div><div class="btns"><button class="bp ${uniforme.estado === "pagado" ? "on" : ""}" data-uniforme="${a.id}|pagado">Pagado</button><button class="bd ${uniforme.estado !== "pagado" ? "on" : ""}" data-uniforme="${a.id}|pendiente">Pendiente</button><button class="btn-outline" data-edit-costs="${a.id}">Editar monto</button></div></div>`;
     }).join("");
     body = `<div class="config-info"><p>${ic.alert} Configura el monto y el estado del uniforme por atleta. El representante solo podrá consultar esta información.</p></div><div class="mat-grid">${cards}</div>`;
   } else if(state.adminTab==="torneos"){

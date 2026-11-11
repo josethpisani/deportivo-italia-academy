@@ -198,12 +198,12 @@ export function renderAthleteDetail(){
 
     <div class="section"><h3 class="dia-title">Pagos</h3>
       <div class="mat-card" style="margin-bottom:10px;">
-        <div class="row1"><div class="name">Matrícula</div>${badge(a.matricula.estado==="pagado"?"Pagado":"Pendiente", a.matricula.estado==="pagado"?"good":"bad")}</div>
-        <div class="info">Monto: $${a.matricula.monto} · Última fecha: ${a.matricula.fecha}</div>
+        <div class="row1"><div class="name">Matrícula</div>${a.becado ? badge("Becado","good") : badge(a.matricula.estado==="pagado"?"Pagado":"Pendiente", a.matricula.estado==="pagado"?"good":"bad")}</div>
+        <div class="info">${a.becado ? "Becado" : `Monto: $${a.matricula.monto} · Última fecha: ${a.matricula.fecha}`}</div>
       </div>
       <div class="mat-card" style="margin-bottom:10px;">
-        <div class="row1"><div class="name">Uniforme</div>${badge(a.uniformes?.estado === "pagado" ? "Pagado" : "Pendiente", a.uniformes?.estado === "pagado" ? "good" : "bad")}</div>
-        <div class="info">Monto: $${a.uniformes?.monto || 0} · Última fecha: ${a.uniformes?.fecha || "—"}</div>
+        <div class="row1"><div class="name">Uniforme</div>${a.becado ? badge("Becado","good") : badge(a.uniformes?.estado === "pagado" ? "Pagado" : "Pendiente", a.uniformes?.estado === "pagado" ? "good" : "bad")}</div>
+        <div class="info">${a.becado ? "Becado" : `Monto: $${a.uniformes?.monto || 0} · Última fecha: ${a.uniformes?.fecha || "—"}`}</div>
       </div>
       <h4 class="dia-title" style="font-size:13px;margin:12px 0 8px;">Mensualidades</h4>
       ${(() => {
@@ -217,7 +217,7 @@ export function renderAthleteDetail(){
           const monto = mp ? mp.monto : (a._mensualidadMonto || ((state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20));
           meses.push(`<div class="attend-cell ${estado==="pagado"?"presente":"ausente"}">
             <div class="date">${label}</div>
-            <div style="font-weight:700;font-size:12px;">$${monto}</div>
+            <div style="font-weight:700;font-size:12px;">${a.becado ? "Becado" : `$${monto}`}</div>
             ${state.athleteReadOnly ? `<div class="readonly-status ${estado === "pagado" ? "present" : "absent"}">${estado === "pagado" ? "Pagado" : "Pendiente"}</div>` : `<div class="btns"><button class="ok ${estado==="pagado"?"on":""}" data-mensualidad="${a.id}|${key}|1">${ic.check}</button><button class="no ${estado==="pendiente"?"on":""}" data-mensualidad="${a.id}|${key}|0">${ic.x}</button></div>`}
           </div>`);
         }
