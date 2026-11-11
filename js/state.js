@@ -32,6 +32,7 @@ export const state = {
   editingTorneo: null,
   statsTorneo: null,
   mensualMonth: new Date().toISOString().slice(0,7),
+  staffYear: new Date().getFullYear(),
   adminAuth: false,
   adminTrialRequests: [],
   adminRegistrationRequests: [],

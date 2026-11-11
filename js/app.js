@@ -79,7 +79,10 @@ function render(){
     appEl.innerHTML = mainContent;
   } else {
     appEl.className = '';
-    appEl.innerHTML = `${renderSidebar()}<div id="main">${mainContent}</div>`;
+    const yearViews = ['home','atleta-list','atleta-detail','asistencia','estadisticas','evaluaciones','torneos','torneo-detail','admin'];
+    const yearOptions = Array.from({length: Math.max(5, new Date().getFullYear() - 2026 + 1)}, (_, index) => 2026 + index).map(year => `<option value="${year}" ${state.staffYear === year ? 'selected' : ''}>${year}</option>`).join('');
+    const yearSelector = yearViews.includes(state.view) ? `<div class="staff-year-floating"><label for="staffYearSelect">Año</label><select id="staffYearSelect">${yearOptions}</select></div>` : '';
+    appEl.innerHTML = `${renderSidebar()}<div id="main">${yearSelector}${mainContent}</div>`;
   }
   
   attachEvents();

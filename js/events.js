@@ -24,7 +24,7 @@ function formatDateInput(date) {
 
 export function attachEvents(){
   document.querySelectorAll("[data-nav]").forEach(btn=>{
-    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(state.view!=="evaluaciones"){ state.evalAthleteId=null; state.evalEditingId=null; } if(state.view!=="torneos" && state.view!=="torneo-detail") state.torneoId=null; if(window.__render) window.__render(); };
+    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view === "admin") state.staffYear = new Date().getFullYear(); if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(state.view!=="evaluaciones"){ state.evalAthleteId=null; state.evalEditingId=null; } if(state.view!=="torneos" && state.view!=="torneo-detail") state.torneoId=null; if(window.__render) window.__render(); };
   });
   document.querySelectorAll("[data-goto-cat]").forEach(btn=>{
     btn.onclick = ()=>{ state.activeCategory = btn.dataset.gotoCat; state.view="atleta-list"; if(window.__render) window.__render(); };
@@ -66,6 +66,8 @@ export function attachEvents(){
   document.querySelectorAll("[data-admintab]").forEach(btn=>{
     btn.onclick = ()=>{ state.adminTab = btn.dataset.admintab; if(window.__render) window.__render(); };
   });
+  const staffYearSelect = document.getElementById('staffYearSelect');
+  if (staffYearSelect) staffYearSelect.onchange = () => { state.staffYear = Number(staffYearSelect.value); if (state.view === 'asistencia') state.regDate = `${state.staffYear}-01-05`; if (window.__render) window.__render(); };
   const adminSidebar = document.querySelector('.admin-sidebar');
   const adminTabs = document.querySelector('.admin-sidebar .admin-tabs');
   if (adminSidebar && adminTabs && !document.getElementById('adminMenuToggle')) {

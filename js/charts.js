@@ -1,6 +1,6 @@
 import { state } from "./state.js";
 import { CATEGORIES } from "./constants.js";
-import { attendanceRate, dayNameFromDate, computeTorneoTeamStats } from "./utils.js";
+import { attendanceRate, dayNameFromDate, computeTorneoTeamStats, staffYearAthletes, matchesStaffYear, staffYearRecord } from "./utils.js";
 
 const C = { pitch:"#0E4C86", green:"#1FA855", red:"#C23B33", grayBg:"#E1E8EF", ink:"#162233", orange:"#E8922D", purple:"#7B4FD4", teal:"#2BA5AD" };
 const CAT_COLORS = ["#0E4C86","#1FA855","#E8922D","#C23B33","#7B4FD4"];
@@ -37,14 +37,16 @@ function doughnutData(labels, values, colors, emptyLabel){
 }
 
 export function drawHomeCharts(){
+  const yearAthletes = staffYearAthletes(state.athletes, state.staffYear);
+  const yearTorneos = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear));
   makeChart("chartHomeCat", {
     type:"doughnut",
-    data:{ labels:CATEGORIES, datasets:[{ data:CATEGORIES.map(c=>state.athletes.filter(a=>a.categoria===c).length), backgroundColor:CAT_COLORS }] },
+    data:{ labels:CATEGORIES, datasets:[{ data:CATEGORIES.map(c=>yearAthletes.filter(a=>a.categoria===c).length), backgroundColor:CAT_COLORS }] },
     options: doughnutOpts("Atletas por categoría")
   });
 
-  const pagado = state.athletes.filter(a=>a.matricula.estado==="pagado").length;
-  const pendiente = state.athletes.length - pagado;
+  const pagado = yearAthletes.filter(a=>a.matricula.estado==="pagado").length;
+  const pendiente = yearAthletes.length - pagado;
   makeChart("chartHomeMatricula", {
     type:"doughnut",
     data:{ labels:["Pagado","Pendiente"], datasets:[{ data:[pagado,pendiente], backgroundColor:[C.green, C.red] }] },
@@ -52,7 +54,7 @@ export function drawHomeCharts(){
   });
 
   const catAttend = CATEGORIES.map(c=>{
-    const list = state.athletes.filter(a=>a.categoria===c);
+    const list = yearAthletes.filter(a=>a.categoria===c);
     if(!list.length) return 0;
     return Math.round(list.reduce((s,a)=>s+attendanceRate(a.asistenciaEntrenamiento),0)/list.length);
   });
@@ -62,10 +64,10 @@ export function drawHomeCharts(){
     options: doughnutOpts("Asistencia entrenamientos (%)")
   });
 
-  if(state.torneos.length){
+  if(yearTorneos.length){
     const torAgg = { ganados:0, empatados:0, perdidos:0, gf:0, gc:0 };
-    state.torneos.forEach(t=>{
-      const team = computeTorneoTeamStats(t);
+    yearTorneos.forEach(t=>{
+      const team = computeTorneoTeamStats(t, state.staffYear);
       torAgg.ganados += team.ganados;
       torAgg.empatados += team.empatados;
       torAgg.perdidos += team.perdidos;
@@ -86,8 +88,9 @@ export function drawHomeCharts(){
 }
 
 export function drawAthListChart(){
+  const yearAthletes = staffYearAthletes(state.athletes, state.staffYear);
   const catAttend = CATEGORIES.map(c=>{
-    const list = state.athletes.filter(a=>a.categoria===c);
+    const list = yearAthletes.filter(a=>a.categoria===c);
     if(!list.length) return 0;
     return Math.round(list.reduce((s,a)=>s+attendanceRate(a.asistenciaEntrenamiento),0)/list.length);
   });

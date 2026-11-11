@@ -1,7 +1,7 @@
 import { state } from "../state.js";
 import { CATEGORIES } from "../constants.js";
 import { ic } from "../icons.js";
-import { escapeHtml } from "../utils.js";
+import { escapeHtml, staffYearAthletes, matchesStaffYear } from "../utils.js";
 import { statPill, badge, initials } from "../render-helpers.js";
 import { todayISO } from "../utils.js";
 
@@ -62,7 +62,7 @@ function evalFormHtml(a, existingEval){
   const isEdit = !!existingEval;
   const items = isEdit ? existingEval.items : {};
   const evId = isEdit ? existingEval.id : "";
-  const evPeriodo = isEdit ? (existingEval.periodo || existingEval.fecha || new Date().toISOString().slice(0,7)).slice(0,7) : new Date().toISOString().slice(0,7);
+  const evPeriodo = isEdit ? (existingEval.periodo || existingEval.fecha || `${state.staffYear}-01`).slice(0,7) : `${state.staffYear}-01`;
   const evDesc = isEdit ? (existingEval.descripcion||"") : "";
   const evObs = isEdit ? (existingEval.observaciones||"") : "";
   const inputRows = DEFAULT_ITEMS.map((name,idx)=>{
@@ -96,7 +96,7 @@ function evalFormHtml(a, existingEval){
 }
 
 export function renderEvaluacion(){
-  const filtered = state.athletes.filter(a=>{
+  const filtered = staffYearAthletes(state.athletes, state.staffYear).filter(a=>{
     return state.evalCategory==="Todos" || a.categoria===state.evalCategory;
   });
 
@@ -108,7 +108,7 @@ export function renderEvaluacion(){
 
   if(!selectedAthlete){
     const playerGrid = filtered.map(a=>{
-      const evals = a.evaluaciones || [];
+      const evals = (a.evaluaciones || []).filter(ev => matchesStaffYear(ev.periodo || ev.fecha, state.staffYear));
       const lastEval = evals.length ? evals[evals.length-1] : null;
       const avg = lastEval ? avgScore(lastEval.items) : "—";
       return `<button class="ath-card" data-evalplayer="${a.id}">
@@ -132,7 +132,7 @@ export function renderEvaluacion(){
 
   const a = selectedAthlete;
   if(!a.evaluaciones) a.evaluaciones = [];
-  const evalsSorted = [...a.evaluaciones].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const evalsSorted = a.evaluaciones.filter(ev => matchesStaffYear(ev.periodo || ev.fecha, state.staffYear)).sort((a,b)=>(b.periodo || b.fecha || '').localeCompare(a.periodo || a.fecha || ''));
 
   const promedioGeneral = evalsSorted.length ? (evalsSorted.reduce((s,ev)=>s+Number(avgScore(ev.items)),0)/evalsSorted.length).toFixed(1) : "—";
   const ultimaEval = evalsSorted.length ? evalsSorted[0] : null;

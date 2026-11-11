@@ -1,13 +1,13 @@
 import { state } from "../state.js";
 import { ic } from "../icons.js";
-import { escapeHtml, computeTorneoTeamStats } from "../utils.js";
+import { escapeHtml, computeTorneoTeamStats, matchesStaffYear } from "../utils.js";
 import { statPill, badge } from "../render-helpers.js";
 import { CATEGORIES } from "../constants.js";
 
 export function renderTorneos(){
-  const cards = state.torneos.map(t=>{
+  const cards = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear)).map(t=>{
     const inscritos = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
-    const team = computeTorneoTeamStats(t);
+    const team = computeTorneoTeamStats(t, state.staffYear);
     const totalJuegos = (t.juegos||[]).length;
     return `<button class="torneo-card tor-btn" data-torcard="${t.id}">
       <div class="head">
@@ -42,7 +42,7 @@ export function renderTorneoDetail(){
   if(!t) return `<p>Torneo no encontrado.</p>`;
   const inscritos = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
   const elegibles = state.athletes;
-  const team = computeTorneoTeamStats(t);
+  const team = computeTorneoTeamStats(t, state.staffYear);
 
   window.__torneoDetailData = { ganados: team.ganados, empatados: team.empatados, perdidos: team.perdidos, gf: team.gf, gc: team.gc };
 

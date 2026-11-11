@@ -1,7 +1,7 @@
 import { state } from "../state.js";
 import { CATEGORIES, TRAINING_DAYS } from "../constants.js";
 import { ic } from "../icons.js";
-import { escapeHtml, attendanceRate, lastNDates } from "../utils.js";
+import { escapeHtml, attendanceRate, lastNDates, staffYearAthletes, matchesStaffYear, staffYearRecord } from "../utils.js";
 import { statPill, badge, initials } from "../render-helpers.js";
 
 function attendGrid(sessions, record, athleteId, type){
@@ -17,7 +17,7 @@ function attendGrid(sessions, record, athleteId, type){
 }
 
 export function renderAthleteList(){
-  const filtered = state.athletes.filter(a=>{
+  const filtered = staffYearAthletes(state.athletes, state.staffYear).filter(a=>{
     const matchCat = state.activeCategory==="Todos" || a.categoria===state.activeCategory;
     const matchSearch = (a.nombre+" "+a.apellido).toLowerCase().includes(state.search.toLowerCase());
     return matchCat && matchSearch;
@@ -106,23 +106,25 @@ export function renderAthleteDetail(){
   trainingSessions.sort();
   const gameSessions = lastNDates(6, "weekend");
 
-  const trainRate = attendanceRate(a.asistenciaEntrenamiento);
-  const gameRate = attendanceRate(a.asistenciaJuegos);
-  const trainPresent = Object.values(a.asistenciaEntrenamiento).filter(v=>v==="presente").length;
-  const trainTotal = Object.keys(a.asistenciaEntrenamiento).length;
-  const gamePresent = Object.values(a.asistenciaJuegos).filter(v=>v==="presente").length;
-  const gameTotal = Object.keys(a.asistenciaJuegos).length;
+  const yearTraining = staffYearRecord(a.asistenciaEntrenamiento, state.staffYear);
+  const yearGames = staffYearRecord(a.asistenciaJuegos, state.staffYear);
+  const trainRate = attendanceRate(yearTraining);
+  const gameRate = attendanceRate(yearGames);
+  const trainPresent = Object.values(yearTraining).filter(v=>v==="presente").length;
+  const trainTotal = Object.keys(yearTraining).length;
+  const gamePresent = Object.values(yearGames).filter(v=>v==="presente").length;
+  const gameTotal = Object.keys(yearGames).length;
   window.__athDetailData = {
     trainPresent, trainAusente: trainTotal - trainPresent,
     gamePresent, gameAusente: gameTotal - gamePresent,
   };
 
-  const torneosInscrito = state.torneos.filter(t=> a.torneos.some(at=>at.torneoId===t.id));
+  const torneosInscrito = state.torneos.filter(t=> matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear) && a.torneos.some(at=>at.torneoId===t.id));
   const torneosHtml = torneosInscrito.length ? torneosInscrito.map(t=>{
     return `<div class="tor-row"><div><div class="tname">${escapeHtml(t.nombre)}</div><div class="tmeta">${t.fecha} · $${t.monto} · Categoría ${t.categoria}</div></div>${badge("Inscrito","good")}</div>`;
   }).join("") : `<p class="empty-msg">Este atleta no está inscrito en ningún torneo.</p>`;
 
-  const torneosInscritos = state.torneos.filter(t=> a.torneos.some(at=>at.torneoId===t.id));
+  const torneosInscritos = state.torneos.filter(t=> matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear) && a.torneos.some(at=>at.torneoId===t.id));
   let statsHtml = "";
   if(torneosInscritos.length){
     const statsRows = torneosInscritos.map(t=>{

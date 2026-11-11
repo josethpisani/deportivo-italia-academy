@@ -1,7 +1,7 @@
 import { state } from "../state.js";
 import { CATEGORIES } from "../constants.js";
 import { ic } from "../icons.js";
-import { escapeHtml } from "../utils.js";
+import { escapeHtml, staffYearAthletes, matchesStaffYear } from "../utils.js";
 import { statPill, badge } from "../render-helpers.js";
 
 export function renderAdmin(){
@@ -20,16 +20,18 @@ export function renderAdmin(){
         </div>
       </div>`;
   }
-  const totalMensualidadesMes = state.athletes.filter(a=>{
+  const yearAthletes = staffYearAthletes(state.athletes, state.staffYear);
+  const yearTorneos = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear));
+  const totalMensualidadesMes = yearAthletes.filter(a=>{
     const m = a.mensualidades && a.mensualidades[state.mensualMonth];
     return m && m.estado==="pagado";
   }).reduce((s,a)=>s+((a.mensualidades[state.mensualMonth]||{}).monto||0),0);
-  const totalIngresos = state.athletes.filter(a=>a.matricula.estado==="pagado").reduce((s,a)=>s+a.matricula.monto,0) + totalMensualidadesMes;
-  const torneoIngresos = state.torneos.reduce((sum,t)=>{
-    const pagantes = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
+  const totalIngresos = yearAthletes.filter(a=>a.matricula.estado==="pagado").reduce((s,a)=>s+a.matricula.monto,0) + totalMensualidadesMes;
+  const torneoIngresos = yearTorneos.reduce((sum,t)=>{
+    const pagantes = yearAthletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
     return sum + pagantes*t.monto;
   },0);
-  const pendientes = state.athletes.filter(a=>a.matricula.estado==="pendiente").length;
+  const pendientes = yearAthletes.filter(a=>a.matricula.estado==="pendiente").length;
 
   const tabs = [
     {key:"config",label:"Configuración"},
@@ -49,7 +51,7 @@ export function renderAdmin(){
   if(state.adminTab==="config"){
     const configRows = CATEGORIES.map(c=>{
       const cfg = state.config[c] || {matricula:35, mensualidad:20};
-      const count = state.athletes.filter(a=>a.categoria===c).length;
+      const count = yearAthletes.filter(a=>a.categoria===c).length;
       return `<tr>
         <td style="font-weight:700;font-size:15px;">${c}</td>
         <td style="text-align:center;">${count}</td>
@@ -73,7 +75,7 @@ export function renderAdmin(){
         </div>
       </div>`;
   } else if(state.adminTab==="atletas"){
-    const rows = state.athletes.map(a=>`<tr>
+    const rows = yearAthletes.map(a=>`<tr>
       <td style="font-weight:600;">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</td>
       <td>${a.categoria}</td><td>${a.edad}</td><td>${escapeHtml(a.representante)}</td><td>${escapeHtml(a.telefono)}</td>
       <td>${badge(a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}</td>
@@ -83,7 +85,7 @@ export function renderAdmin(){
       <table><thead><tr><th>Atleta</th><th>Categoría</th><th>Edad</th><th>Representante</th><th>Teléfono</th><th>Matrícula</th><th></th></tr></thead>
       <tbody>${rows}</tbody></table></div>`;
   } else if(state.adminTab==="matriculas"){
-    const cards = state.athletes.map(a=>`<div class="mat-card">
+    const cards = yearAthletes.map(a=>`<div class="mat-card">
       <div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div>
       <div class="info">Monto: $${a.matricula.monto} · Última fecha: ${a.matricula.fecha}</div>
       <div class="btns">
@@ -102,18 +104,18 @@ export function renderAdmin(){
     const monthBtns = meses.map(m=>
       `<button class="chip ${state.mensualMonth===m.key?"active":""}" data-mensualmonth="${m.key}">${m.label}</button>`
     ).join("");
-    const totalMensualidades = state.athletes.filter(a=>{
+    const totalMensualidades = yearAthletes.filter(a=>{
       const m = a.mensualidades && a.mensualidades[mesActual];
       return m && m.estado==="pagado";
     }).reduce((s,a)=>{
       const m = a.mensualidades[mesActual];
       return s + (m ? m.monto : 0);
     },0);
-    const pendientesMes = state.athletes.filter(a=>{
+    const pendientesMes = yearAthletes.filter(a=>{
       const m = a.mensualidades && a.mensualidades[mesActual];
       return !m || m.estado!=="pagado";
     }).length;
-    const cards = state.athletes.map(a=>{
+    const cards = yearAthletes.map(a=>{
       if(!a.mensualidades) a.mensualidades = {};
       const m = a.mensualidades[mesActual];
       const estado = m ? m.estado : "pendiente";
@@ -138,14 +140,14 @@ export function renderAdmin(){
       <div class="filters" style="margin-bottom:14px;">${monthBtns}</div>
       <div class="mat-grid">${cards}</div>`;
   } else if(state.adminTab==="uniformes"){
-    const cards = state.athletes.map(a=>{
+    const cards = yearAthletes.map(a=>{
       const uniforme = a.uniformes || { monto:0, estado:"pendiente" };
       return `<div class="mat-card"><div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div><div class="info">Monto: $${uniforme.monto || 0} · Última fecha: ${uniforme.fecha || "—"}</div><div class="btns"><button class="bp ${uniforme.estado === "pagado" ? "on" : ""}" data-uniforme="${a.id}|pagado">Pagado</button><button class="bd ${uniforme.estado !== "pagado" ? "on" : ""}" data-uniforme="${a.id}|pendiente">Pendiente</button><button class="btn-outline" data-edit-costs="${a.id}">Editar monto</button></div></div>`;
     }).join("");
     body = `<div class="config-info"><p>${ic.alert} Configura el monto y el estado del uniforme por atleta. El representante solo podrá consultar esta información.</p></div><div class="mat-grid">${cards}</div>`;
   } else if(state.adminTab==="torneos"){
-    let torneosHtml = state.torneos.map(t=>{
-      const elegibles = state.athletes;
+    let torneosHtml = yearTorneos.map(t=>{
+      const elegibles = yearAthletes;
       const inscritos = elegibles.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
 
       const chips = elegibles.map(a=>{
@@ -181,7 +183,7 @@ export function renderAdmin(){
         <div class="pay-chips">${chips}</div>
       </div>`;
     }).join("");
-    if(!state.torneos.length){
+    if(!yearTorneos.length){
       torneosHtml = `<p class="empty-msg">No hay torneos creados. Crea uno para comenzar.</p>`;
     }
     body = `<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
@@ -189,8 +191,8 @@ export function renderAdmin(){
     </div>${torneosHtml}`;
   } else if(state.adminTab==="sedes"){
     const sedeCards = state.sedes.map(s=>{
-      const atletasCount = state.athletes.filter(a=>a.sede_id===s.id).length;
-      const torneosCount = state.torneos.filter(t=>t.sede_id===s.id).length;
+      const atletasCount = yearAthletes.filter(a=>a.sede_id===s.id).length;
+      const torneosCount = yearTorneos.filter(t=>t.sede_id===s.id).length;
       return `
         <div class="sede-admin-card">
           <div class="sede-admin-header">
@@ -433,7 +435,7 @@ export function renderAdmin(){
     <h1 class="page-title dia-title">Panel Administrativo</h1>
     <p class="page-sub">Control de atletas, matrículas y torneos</p>
     <div class="admin-layout"><aside class="admin-sidebar"><div class="admin-sidebar-title">Secciones</div><div class="admin-tabs">${tabs}</div></aside><main class="admin-content"><div class="stats-row">
-      ${statPill(ic.users,"Total atletas", state.athletes.length,"var(--pitch)")}
+      ${statPill(ic.users,"Total atletas", yearAthletes.length,"var(--pitch)")}
       ${statPill(ic.card,"Ingresos matrícula", "$"+totalIngresos,"var(--green)")}
       ${statPill(ic.trophy,"Ingresos torneos", "$"+torneoIngresos,"var(--red)")}
       ${statPill(ic.alert,"Matrículas pendientes", pendientes,"var(--red)")}

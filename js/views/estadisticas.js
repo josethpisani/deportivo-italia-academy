@@ -1,11 +1,11 @@
 import { state } from "../state.js";
 import { CATEGORIES } from "../constants.js";
 import { ic } from "../icons.js";
-import { escapeHtml, attendanceRate, sumTorneoStats } from "../utils.js";
+import { escapeHtml, attendanceRate, sumTorneoStats, staffYearAthletes, matchesStaffYear, staffYearRecord } from "../utils.js";
 import { statPill, badge, initials } from "../render-helpers.js";
 
 export function renderEstadisticas(){
-  const filtered = state.athletes.filter(a=>{
+  const filtered = staffYearAthletes(state.athletes, state.staffYear).filter(a=>{
     const matchCat = state.statsCategory==="Todos" || a.categoria===state.statsCategory;
     return matchCat;
   });
@@ -14,7 +14,7 @@ export function renderEstadisticas(){
     `<button class="chip ${state.statsCategory===cat?"active":""}" data-statscat="${cat}">${cat}</button>`
   ).join("");
 
-  const selectedAthlete = state.statsAthleteId ? state.athletes.find(a=>a.id===state.statsAthleteId) : null;
+  const selectedAthlete = state.statsAthleteId ? filtered.find(a=>a.id===state.statsAthleteId) : null;
 
   let playerGrid = filtered.map(a=>{
     const sg = a.statsGenerales || {};
@@ -41,21 +41,26 @@ export function renderEstadisticas(){
 
   const a = selectedAthlete;
   if(!a.statsGenerales) a.statsGenerales = { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0, entrenamientosAsistidos:0, entrenamientosTotales:0 };
-  const anio = sumTorneoStats(a);
+  const yearTorneoIds = new Set(state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear)).map(t => t.id));
+  const anio = Object.entries(a.estadisticas || {}).filter(([torneoId]) => yearTorneoIds.has(torneoId)).reduce((acc,[,st]) => ({
+    goles: acc.goles + (st.goles||0), asistencias: acc.asistencias + (st.asistencias||0), tarjetasAmarillas: acc.tarjetasAmarillas + (st.tarjetasAmarillas||0), tarjetasRojas: acc.tarjetasRojas + (st.tarjetasRojas||0), partidosJugados: acc.partidosJugados + (st.partidosJugados||0)
+  }), {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0});
+  const yearTraining = staffYearRecord(a.asistenciaEntrenamiento, state.staffYear);
+  const yearGames = staffYearRecord(a.asistenciaJuegos, state.staffYear);
   const sg = {
     goles: anio.goles,
     asistencias: anio.asistencias,
     tarjetasAmarillas: anio.tarjetasAmarillas,
     tarjetasRojas: anio.tarjetasRojas,
     partidosJugados: anio.partidosJugados,
-    entrenamientosAsistidos: Object.values(a.asistenciaEntrenamiento).filter(v=>v==="presente").length,
-    entrenamientosTotales: Object.keys(a.asistenciaEntrenamiento).length,
+    entrenamientosAsistidos: Object.values(yearTraining).filter(v=>v==="presente").length,
+    entrenamientosTotales: Object.keys(yearTraining).length,
   };
 
-  const trainTotal = Object.keys(a.asistenciaEntrenamiento).length || 1;
-  const trainPresent = Object.values(a.asistenciaEntrenamiento).filter(v=>v==="presente").length;
-  const gameTotal = Object.keys(a.asistenciaJuegos).length || 1;
-  const gamePresent = Object.values(a.asistenciaJuegos).filter(v=>v==="presente").length;
+  const trainTotal = Object.keys(yearTraining).length || 1;
+  const trainPresent = Object.values(yearTraining).filter(v=>v==="presente").length;
+  const gameTotal = Object.keys(yearGames).length || 1;
+  const gamePresent = Object.values(yearGames).filter(v=>v==="presente").length;
 
   const statsFields = [
     {key:"goles",label:"Goles",icon:ic.trophy,color:"var(--pitch)"},
@@ -77,7 +82,7 @@ export function renderEstadisticas(){
     </div>`
   ).join("");
 
-  const torneosInscritos = state.torneos.filter(t=> a.torneos.some(at=>at.torneoId===t.id));
+  const torneosInscritos = state.torneos.filter(t=> matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear) && a.torneos.some(at=>at.torneoId===t.id));
   let torneosStatsHtml = "";
   if(torneosInscritos.length){
     const rows = torneosInscritos.map(t=>{

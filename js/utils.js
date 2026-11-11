@@ -1,5 +1,19 @@
 export function uid(prefix){ return prefix + "_" + Math.random().toString(36).slice(2,9); }
 export function todayISO(){ return new Date().toISOString().slice(0,10); }
+export function staffYearOf(value){
+  const match = String(value || "").match(/(?:^|\D)(20\d{2})(?:\D|$)/);
+  return match ? Number(match[1]) : null;
+}
+export function matchesStaffYear(value, year){
+  const recordYear = staffYearOf(value);
+  return recordYear == null || recordYear === Number(year);
+}
+export function staffYearAthletes(athletes, year){
+  return athletes.filter(a => matchesStaffYear(a.anio || a.year || a.fechaIngreso, year));
+}
+export function staffYearRecord(record, year){
+  return Object.fromEntries(Object.entries(record || {}).filter(([key]) => matchesStaffYear(key, year)));
+}
 export function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
 export function attendanceRate(obj){
   const vals = Object.values(obj);
@@ -30,8 +44,8 @@ export function dayNameFromDate(iso){
   const d = new Date(iso + "T12:00:00");
   return names[d.getDay()];
 }
-export function computeTorneoTeamStats(t){
-  const juegos = (t.juegos||[]).filter(j=>j.estado==="jugado");
+export function computeTorneoTeamStats(t, year=null){
+  const juegos = (t.juegos||[]).filter(j=>j.estado==="jugado" && (year == null || matchesStaffYear(j.fecha, year)));
   let ganados=0, empatados=0, perdidos=0, gf=0, gc=0;
   juegos.forEach(j=>{
     const f=Number(j.marcadorF||0), c=Number(j.marcadorC||0);

@@ -1,7 +1,7 @@
 import { state } from "../state.js";
 import { CATEGORIES, TRAINING_DAYS } from "../constants.js";
 import { ic } from "../icons.js";
-import { escapeHtml, dayNameFromDate } from "../utils.js";
+import { escapeHtml, dayNameFromDate, staffYearAthletes } from "../utils.js";
 import { statPill } from "../render-helpers.js";
 
 export function renderAttendanceTab(){
@@ -11,7 +11,7 @@ export function renderAttendanceTab(){
   const field = isTraining ? "asistenciaEntrenamiento" : "asistenciaJuegos";
   const validDay = isTraining ? TRAINING_DAYS.includes(dayName) : (dayName==="Sábado" || dayName==="Domingo");
 
-  const filtered = state.athletes.filter(a => state.regCategory==="Todos" || a.categoria===state.regCategory);
+  const filtered = staffYearAthletes(state.athletes, state.staffYear).filter(a => state.regCategory==="Todos" || a.categoria===state.regCategory);
   const presentes = filtered.filter(a => a[field][dateKey]==="presente").length;
   const ausentes = filtered.filter(a => a[field][dateKey]==="ausente").length;
   const sinMarcar = filtered.length - presentes - ausentes;
