@@ -240,7 +240,7 @@ export function markAllMensualidades(mes){
   if(window.__render) window.__render();
 }
 
-export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto, uniformeMonto = 0, uniformeEstado = "pendiente", tournamentCosts = {}){
+export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto, uniformeMonto = 0, uniformeEstado = null, tournamentCosts = {}){
   const a = state.athletes.find(x=>x.id===athleteId);
   if(!a) return;
   a.matricula.monto = Number(matriculaMonto);
@@ -251,7 +251,8 @@ export function updateAthleteCosts(athleteId, matriculaMonto, mensualidadMonto, 
     }
   });
   a._mensualidadMonto = Number(mensualidadMonto);
-  a.uniformes = { monto:Number(uniformeMonto)||0, estado:uniformeEstado === "pagado" ? "pagado" : "pendiente", fecha:todayISO() };
+  const uniformStatus = uniformeEstado ? (uniformeEstado === "pagado" ? "pagado" : "pendiente") : (a.uniformes?.estado || "pendiente");
+  a.uniformes = { monto:Number(uniformeMonto)||0, estado:uniformStatus, fecha:a.uniformes?.fecha || todayISO() };
   a.pagosTorneos = { ...(a.pagosTorneos || {}) };
   Object.entries(tournamentCosts).forEach(([torneoId, monto]) => {
     a.pagosTorneos[torneoId] = { ...(a.pagosTorneos[torneoId] || {}), monto: Number(monto) || 0 };
