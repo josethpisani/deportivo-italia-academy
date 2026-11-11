@@ -274,7 +274,7 @@ export function openEditAthleteCostsModal(athleteId){
   const tournamentCostFields = athleteTournaments.map(({ link, torneo }) => `<div><label>${escapeHtml(torneo.nombre)} ($)</label><input type="number" min="0" data-ac-torneo="${escapeHtml(torneo.id)}" value="${a.pagosTorneos?.[torneo.id]?.monto ?? torneo.monto ?? 0}"></div>`).join('');
   const html = `
     <div class="modal-overlay" id="modalOverlay">
-      <div class="modal">
+      <div class="modal cost-modal">
         <div class="mh"><h3 class="dia-title">Costos — ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</h3><button id="modalClose">${ic.x}</button></div>
         <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Edita los costos individuales de este atleta (solo aplica a montos pendientes).</p>
         <div class="config-row">
