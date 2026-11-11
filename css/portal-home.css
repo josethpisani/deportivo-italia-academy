@@ -3,3 +3,12 @@
 .portal-home-representative p{margin:0;color:#64748b}
 .portal-home-rep-count{display:block;margin-top:8px;color:#168b59;font-size:12px;font-weight:800}
 @media(max-width:700px){.portal-home-representative{align-items:flex-start;flex-direction:column}}
+
+.portal-menu-toggle{display:none}
+@media(max-width:760px){
+  .portal-nav{display:none}
+  .portal-menu-toggle{display:flex;position:fixed;top:14px;right:16px;z-index:30;align-items:center;gap:7px;padding:9px 13px;border:1px solid rgba(255,255,255,.2);border-radius:10px;background:#168b59;color:#fff;font:inherit;font-size:12px;font-weight:800;box-shadow:0 8px 20px rgba(11,32,73,.22);cursor:pointer}
+  .portal-sidebar.menu-open .portal-nav{display:grid;position:fixed;top:58px;right:16px;z-index:29;width:min(270px,calc(100vw - 32px));padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#0b2049;box-shadow:0 16px 34px rgba(11,32,73,.3)}
+  .portal-sidebar.menu-open .portal-nav button{width:100%;min-width:0}
+  .portal-sidebar-logout{right:112px!important}
+}

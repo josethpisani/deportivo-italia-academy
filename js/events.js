@@ -667,6 +667,12 @@ export function attachEvents(){
     if (!dashboardView) return;
     parentPortalPayload = payload;
     loginView.style.display = 'none'; activationView.style.display = 'none'; dashboardView.style.display = 'block';
+    const parentSidebar = dashboardView.querySelector('.portal-sidebar');
+    const parentNav = dashboardView.querySelector('.portal-nav');
+    if (parentSidebar && parentNav && !document.getElementById('parentMenuToggle')) {
+      parentNav.id = 'parentPortalNav';
+      parentSidebar.insertAdjacentHTML('afterbegin', '<button type="button" id="parentMenuToggle" class="portal-menu-toggle" aria-expanded="false" aria-controls="parentPortalNav">☰ <span>Menú</span></button>');
+    }
     document.getElementById('parentWelcome').textContent = `Hola, ${payload.parent.full_name}`;
     document.getElementById('parentRepresentativePanel').innerHTML = `<div><span class="portal-eyebrow">Panel del representante</span><h2>${escapeHtml(payload.parent.full_name || 'Representante')}</h2><p>${escapeHtml(payload.parent.email || '')}</p></div><div class="portal-representative-count"><strong>${payload.athletes.length}</strong><span>atleta${payload.athletes.length === 1 ? '' : 's'} vinculado${payload.athletes.length === 1 ? '' : 's'}</span></div>`;
     const homeRepresentative = document.getElementById('parentHomeRepresentative');
@@ -675,6 +681,8 @@ export function attachEvents(){
     selector.innerHTML = payload.athletes.map((a, index) => `<option value="${index}">${escapeHtml(`${a.nombre || ''} ${a.apellido || ''}`.trim())} · ${escapeHtml(a.categoria || 'Sin categoría')}</option>`).join('');
     const panel = document.getElementById('parentAthletePanel');
     const wireParentMenu = () => {
+      const menuToggle = document.getElementById('parentMenuToggle');
+      const parentNav = document.getElementById('parentPortalNav');
       const sections = [...panel.querySelectorAll('.portal-info-section')];
       const findSection = (label) => sections.find(section => section.querySelector('h3')?.textContent.toLowerCase().includes(label));
       const hero = panel.querySelector('.portal-athlete-hero');
@@ -688,8 +696,11 @@ export function attachEvents(){
         const selected = sectionName === 'resumen' ? [findSection('información del atleta')] : (Array.isArray(targets[sectionName]) ? targets[sectionName] : [targets[sectionName]]);
         selected.filter(Boolean).forEach(section => { section.style.display = ''; });
         document.querySelectorAll('[data-portal-section]').forEach(item => item.classList.toggle('active', item.dataset.portalSection === sectionName));
+        if (parentSidebar) parentSidebar.classList.remove('menu-open');
+        if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
       };
       document.querySelectorAll('[data-portal-section]').forEach(button => { button.onclick = () => activateSection(button.dataset.portalSection); });
+      if (menuToggle && parentNav) menuToggle.onclick = () => { const open = parentSidebar.classList.toggle('menu-open'); menuToggle.setAttribute('aria-expanded', String(open)); };
       activateSection('resumen');
     };
     const showAthlete = athlete => { panel.innerHTML = athlete ? renderParentAthlete(athlete) : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>'; wireParentMenu(); };
