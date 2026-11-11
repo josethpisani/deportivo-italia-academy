@@ -12,9 +12,11 @@
 /* ATHLETE GRID & CARDS */
 .ath-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
 .ath-grid.list-mode{display:flex;flex-direction:column;gap:8px}
-.ath-grid.list-mode .ath-card{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;padding:11px 14px}
-.ath-grid.list-mode .ath-card .top{grid-row:1 / span 2}
-.ath-grid.list-mode .ath-card .attend{grid-column:3;grid-row:1 / span 2}
+.ath-grid.list-mode .ath-card{display:flex;flex-direction:row;align-items:center;gap:12px;min-width:0;padding:11px 14px;line-height:1.35}
+.ath-grid.list-mode .ath-card .top{display:flex;flex:0 0 42px;flex-direction:column;align-items:center;gap:5px}
+.ath-grid.list-mode .ath-card .name,.ath-grid.list-mode .ath-card .meta{min-width:0;overflow-wrap:anywhere}
+.ath-grid.list-mode .ath-card .attend{margin-left:auto;flex:0 0 auto;white-space:normal;text-align:right}
+@media(max-width:600px){.ath-grid.list-mode .ath-card{align-items:flex-start;flex-wrap:wrap}.ath-grid.list-mode .ath-card .attend{width:100%;margin-left:54px;text-align:left}}
 .ath-card{text-align:left;background:#fff;border:1px solid var(--chalk-dim);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;width:100%;}
 .ath-card .top{display:flex;justify-content:space-between;align-items:flex-start;}
 .avatar{width:40px;height:40px;border-radius:50%;background:var(--pitch);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}

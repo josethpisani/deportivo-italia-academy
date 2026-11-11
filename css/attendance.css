@@ -10,7 +10,7 @@
 .reg-table.athlete-grid-mode .reg-row{display:block;padding:16px;border:1px solid var(--chalk-dim);border-radius:10px;background:#fff}
 .reg-table.athlete-grid-mode .reg-row .who{margin-bottom:14px}
 .reg-table.athlete-grid-mode .reg-row .opts{justify-content:stretch}
-.reg-table.athlete-grid-mode .reg-row .opts button{flex:1}
+.reg-table.athlete-grid-mode .reg-row .opts button{flex:1;min-width:0;white-space:normal;line-height:1.25}
 .reg-row:first-child{border-top:none;}
 .reg-row .who{display:flex;align-items:center;gap:10px;}
 .reg-row .who .name{font-weight:700;font-size:13.5px;}
