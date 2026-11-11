@@ -66,6 +66,16 @@ export function attachEvents(){
   document.querySelectorAll("[data-admintab]").forEach(btn=>{
     btn.onclick = ()=>{ state.adminTab = btn.dataset.admintab; if(window.__render) window.__render(); };
   });
+  const adminSidebar = document.querySelector('.admin-sidebar');
+  const adminTabs = document.querySelector('.admin-sidebar .admin-tabs');
+  if (adminSidebar && adminTabs && !document.getElementById('adminMenuToggle')) {
+    adminSidebar.insertAdjacentHTML('afterbegin', '<button type="button" id="adminMenuToggle" class="admin-menu-toggle" aria-expanded="false" aria-controls="adminSectionTabs">☰ <span>Menú de administración</span></button>');
+    adminTabs.id = 'adminSectionTabs';
+    document.getElementById('adminMenuToggle').onclick = () => {
+      const open = adminSidebar.classList.toggle('menu-open');
+      document.getElementById('adminMenuToggle').setAttribute('aria-expanded', String(open));
+    };
+  }
   document.querySelectorAll("[data-matricula]").forEach(btn=>{
     btn.onclick = ()=>{
       const [id, estado] = btn.dataset.matricula.split("|");
