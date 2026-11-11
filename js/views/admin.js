@@ -432,20 +432,19 @@ export function renderAdmin(){
   return `
     <h1 class="page-title dia-title">Panel Administrativo</h1>
     <p class="page-sub">Control de atletas, matrículas y torneos</p>
-    <div class="stats-row">
+    <div class="admin-layout"><aside class="admin-sidebar"><div class="admin-sidebar-title">Secciones</div><div class="admin-tabs">${tabs}</div></aside><main class="admin-content"><div class="stats-row">
       ${statPill(ic.users,"Total atletas", state.athletes.length,"var(--pitch)")}
       ${statPill(ic.card,"Ingresos matrícula", "$"+totalIngresos,"var(--green)")}
       ${statPill(ic.trophy,"Ingresos torneos", "$"+torneoIngresos,"var(--red)")}
       ${statPill(ic.alert,"Matrículas pendientes", pendientes,"var(--red)")}
     </div>
-    <div class="admin-tabs">${tabs}</div>
-    ${state.adminTab!=="config" && state.adminTab!=="sedes" && state.adminTab!=="site" ? `<div class="charts-row">
+    ${!['config','sedes','site','pruebas','inscripciones','portal'].includes(state.adminTab) ? `<div class="charts-row">
       <div class="chart-card"><h4>Matrículas: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMatricula"></canvas></div></div>
       <div class="chart-card"><h4>Mensualidades: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMensualidades"></canvas></div></div>
       <div class="chart-card"><h4>Recaudación por torneo ($)</h4><div class="chart-wrap short"><canvas id="chartAdminTorneos"></canvas></div></div>
       <div class="chart-card"><h4>Inscritos a torneos por categoría</h4><div class="chart-wrap short"><canvas id="chartAdminCatTorneos"></canvas></div></div>
     </div>` : ""}
-    ${body}
+    ${body}</main></div>
   `;
 }
 

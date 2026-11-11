@@ -1,4 +1,11 @@
 /* ADMIN */
+.admin-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}
+.admin-sidebar{position:sticky;top:18px;padding:16px 12px;border-radius:12px;background:#0b2049;color:#fff;box-shadow:0 8px 20px rgba(11,32,73,.12)}
+.admin-sidebar-title{padding:0 10px 12px;color:#8df0be;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.admin-sidebar .admin-tabs{display:grid;gap:5px;margin:0;overflow:visible;padding:0}
+.admin-sidebar .admin-tab{width:100%;border:0;border-radius:8px;padding:10px 11px;background:transparent;color:rgba(255,255,255,.78);font-size:12px;text-align:left;cursor:pointer}
+.admin-sidebar .admin-tab:hover,.admin-sidebar .admin-tab.active{background:#168b59;color:#fff}
+.admin-content{min-width:0}
 .admin-tabs{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;padding-bottom:2px;}
 .admin-tab{border:1px solid var(--chalk-dim);border-radius:8px;padding:8px 14px;font-weight:700;font-size:12.5px;background:#fff;color:var(--ink);white-space:nowrap;}
 .admin-tab.active{background:var(--pitch);color:#fff;border-color:var(--pitch);}
@@ -8,6 +15,8 @@ table thead tr{background:var(--chalk-dim);text-align:left;}
 table th{padding:10px 12px;font-weight:700;font-size:11.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
 table td{padding:10px 12px;border-top:1px solid var(--chalk-dim);white-space:nowrap;}
 .link-btn{border:none;background:none;color:var(--pitch);font-weight:700;font-size:12.5px;}
+@media(max-width:900px){.admin-layout{display:block}.admin-sidebar{position:static;margin-bottom:18px}.admin-sidebar .admin-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.admin-sidebar .admin-tabs{grid-template-columns:1fr}}
 
 /* MATRICULA CARDS */
 .mat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
