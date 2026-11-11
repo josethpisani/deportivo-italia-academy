@@ -25,7 +25,7 @@ export function renderEstadisticas(){
         ${badge(a.categoria,"neutral")}
       </div>
       <div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>
-      <div class="meta">${a.posicion} · ${a.edad} años</div>
+      <div class="meta">${a.edad} años</div>
       <div class="attend">${ic.activity} ${totalGoles} goles · ${sg.asistencias||0} asist.</div>
     </button>`;
   }).join("");
@@ -124,7 +124,7 @@ export function renderEstadisticas(){
       <div>
         <h1 class="dia-title" style="font-size:20px;">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</h1>
         <div class="badges-row">
-          ${badge(a.categoria,"neutral")}${badge(a.posicion,"neutral")}
+          ${badge(a.categoria,"neutral")}
         </div>
       </div>
     </div>

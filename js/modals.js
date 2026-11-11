@@ -1,5 +1,5 @@
 import { state } from "./state.js";
-import { CATEGORIES, POSITIONS } from "./constants.js";
+import { CATEGORIES } from "./constants.js";
 import { ic } from "./icons.js";
 import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadisticas, saveConfigData, updateAthleteCosts, addJuego, updateJuego, saveJuegoStats } from "./mutations.js";
 import { escapeHtml } from "./utils.js";
@@ -22,8 +22,6 @@ export function openAddAthleteModal(){
           <div><label>Categoría</label><select id="f_categoria">${CATEGORIES.map(c=>`<option>${c}</option>`).join("")}</select></div>
           <div><label>Edad</label><input id="f_edad" type="number" value="6"></div>
         </div>
-        <label>Posición</label>
-        <select id="f_posicion">${POSITIONS.map(p=>`<option>${p}</option>`).join("")}</select>
         <label>Fecha de nacimiento</label><input id="f_fnac" type="date">
         <label>Representante</label><input id="f_rep">
         <label>Teléfono</label><input id="f_tel">
@@ -45,7 +43,6 @@ export function openAddAthleteModal(){
       apellido: document.getElementById("f_apellido").value.trim(),
       categoria: document.getElementById("f_categoria").value,
       edad: document.getElementById("f_edad").value,
-      posicion: document.getElementById("f_posicion").value,
       fechaNacimiento: document.getElementById("f_fnac").value,
       representante: document.getElementById("f_rep").value.trim(),
       telefono: document.getElementById("f_tel").value.trim(),
@@ -68,8 +65,6 @@ export function openEditAthleteModal(athleteId){
           <div><label>Categoría</label><select id="e_categoria">${CATEGORIES.map(c=>`<option ${c===a.categoria?"selected":""}>${c}</option>`).join("")}</select></div>
           <div><label>Edad</label><input id="e_edad" type="number" value="${a.edad}"></div>
         </div>
-        <label>Posición</label>
-        <select id="e_posicion">${POSITIONS.map(p=>`<option ${p===a.posicion?"selected":""}>${p}</option>`).join("")}</select>
         <label>Fecha de nacimiento</label><input id="e_fnac" type="date" value="${a.fechaNacimiento||""}">
         <label>Representante</label><input id="e_rep" value="${escapeHtml(a.representante||"")}">
         <label>Teléfono</label><input id="e_tel" value="${escapeHtml(a.telefono||"")}">
@@ -93,7 +88,6 @@ export function openEditAthleteModal(athleteId){
       apellido: document.getElementById("e_apellido").value.trim(),
       categoria: document.getElementById("e_categoria").value,
       edad: Number(document.getElementById("e_edad").value),
-      posicion: document.getElementById("e_posicion").value,
       fechaNacimiento: document.getElementById("e_fnac").value,
       representante: document.getElementById("e_rep").value.trim(),
       telefono: document.getElementById("e_tel").value.trim(),

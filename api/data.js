@@ -313,7 +313,7 @@ export default async function handler(req, res) {
       const athlete = {
         id: `ath_${randomBytes(8).toString('hex')}`, registration_request_id: request.id, sede_id: staffSession.sede_id,
         nombre: nameParts.shift() || "Jugador", apellido: nameParts.join(" ") || "Sin apellido", categoria: String(request.category || "U8").toUpperCase(), edad: Number(request.athlete_age),
-        fechaNacimiento: "", posicion: "Por definir", representante: request.representative_name || "", telefono: request.phone || "", direccion: "", fechaIngreso: new Date().toISOString().slice(0, 10),
+        fechaNacimiento: "", representante: request.representative_name || "", telefono: request.phone || "", direccion: "", fechaIngreso: new Date().toISOString().slice(0, 10),
         matricula: { estado: "pendiente", monto: 0, fecha: new Date().toISOString().slice(0, 10) }, mensualidades: {}, torneos: [], asistenciaEntrenamiento: {}, asistenciaJuegos: {}, observaciones: request.notes || "", estadisticas: {}, statsGenerales: { goles: 0, asistencias: 0, tarjetasAmarillas: 0, tarjetasRojas: 0, partidosJugados: 0, entrenamientosAsistidos: 0, entrenamientosTotales: 0 }, evaluaciones: []
       };
       const otherSedeAthletes = athletes.filter(item => item.sede_id && item.sede_id !== staffSession.sede_id);

@@ -117,7 +117,7 @@ export function renderEvaluacion(){
           ${badge(a.categoria,"neutral")}
         </div>
         <div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>
-        <div class="meta">${a.posicion} · ${evals.length} evaluacion${evals.length!==1?"es":""}</div>
+        <div class="meta">${evals.length} evaluacion${evals.length!==1?"es":""}</div>
         <div class="attend">${ic.activity} Promedio: ${avg}</div>
       </button>`;
     }).join("");
@@ -161,7 +161,7 @@ export function renderEvaluacion(){
       <div>
         <h1 class="dia-title" style="font-size:20px;">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</h1>
         <div class="badges-row">
-          ${badge(a.categoria,"neutral")}${badge(a.posicion,"neutral")}
+          ${badge(a.categoria,"neutral")}
         </div>
       </div>
     </div>

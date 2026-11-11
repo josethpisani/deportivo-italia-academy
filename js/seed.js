@@ -10,7 +10,6 @@ export function makeAthlete(category, idx){
     nombre: fn, apellido: ln, categoria: category,
     edad: ageBase + (idx%2),
     fechaNacimiento: `${2026-(ageBase+(idx%2))}-0${(idx%9)+1}-1${idx%9}`,
-    posicion: ["Portero","Defensa","Mediocampo","Delantero"][idx%4],
     representante: `${LAST_NAMES[(idx+7)%LAST_NAMES.length]}, familia`,
     telefono: `+58 412-${(1000000+idx*137).toString().slice(0,7)}`,
     direccion: "Caracas, Venezuela",

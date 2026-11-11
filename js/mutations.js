@@ -28,7 +28,7 @@ export function addAthlete(data){
   const newA = makeAthlete(data.categoria, state.athletes.length+1);
   Object.assign(newA, {
     nombre:data.nombre, apellido:data.apellido, edad:Number(data.edad),
-    categoria:data.categoria, posicion:data.posicion, representante:data.representante,
+    categoria:data.categoria, representante:data.representante,
     telefono:data.telefono, fechaNacimiento:data.fechaNacimiento,
     direccion:data.direccion||"",
     matricula:{ estado:"pendiente", monto:costoMatricula, fecha:todayISO() },

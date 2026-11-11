@@ -718,7 +718,7 @@ export function attachEvents(){
       if (menuToggle && parentNav) menuToggle.onclick = () => { const open = parentSidebar.classList.toggle('menu-open'); menuToggle.setAttribute('aria-expanded', String(open)); };
       activateSection('resumen');
     };
-    const showAthlete = athlete => { panel.innerHTML = athlete ? renderParentAthlete(athlete) : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>'; wireParentMenu(); };
+    const showAthlete = athlete => { panel.innerHTML = athlete ? renderParentAthlete(athlete).replace(/(<p>[^<]*?)\s·\s*[^<]+(<\/p>)/, '$1$2') : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>'; wireParentMenu(); };
     showAthlete(payload.athletes[0]);
     selector.onchange = () => showAthlete(parentPortalPayload.athletes[Number(selector.value)]);
   };

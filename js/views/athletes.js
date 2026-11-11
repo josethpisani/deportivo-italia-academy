@@ -38,7 +38,7 @@ export function renderAthleteList(){
           ${badge(a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}
         </div>
         <div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>
-        <div class="meta">${a.categoria} · ${a.posicion} · ${a.edad} años</div>
+        <div class="meta">${a.categoria} · ${a.edad} años</div>
         <div class="attend">${ic.activity} Asistencia: ${rate}%</div>
       </button>`;
     }).join("")}</div>`;
@@ -48,7 +48,6 @@ export function renderAthleteList(){
       <div class="lh-info">Atleta</div>
       <div class="lh-stats">
         <div style="min-width:46px;text-align:center;">Edad</div>
-        <div style="min-width:80px;text-align:center;">Posición</div>
         <div style="min-width:70px;text-align:center;">Asist. %</div>
         <div style="min-width:72px;text-align:center;">Matrícula</div>
         <div style="width:20px;"></div>
@@ -64,7 +63,6 @@ export function renderAthleteList(){
         </div>
         <div class="stats">
           <div class="stat-item"><div class="sv">${a.edad}</div><div class="sl">Años</div></div>
-          <div class="stat-item"><div class="sv" style="font-size:11px;font-weight:700;">${a.posicion}</div><div class="sl">Posición</div></div>
           <div class="stat-item"><div class="sv" style="color:${rate>=70?"var(--green)":rate>=40?"var(--pitch)":"var(--red)"}">${rate}%</div><div class="sl">Asistencia</div></div>
           <div class="stat-item">${badge(a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}</div>
           <div class="arr">${ic.arr}</div>
@@ -158,7 +156,7 @@ export function renderAthleteDetail(){
       <div>
         <h1 class="dia-title">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</h1>
         <div class="badges-row">
-          ${badge(a.categoria,"neutral")}${badge(a.posicion,"neutral")}
+          ${badge(a.categoria,"neutral")}
           ${badge("Matrícula "+a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}
           ${state.athleteReadOnly ? `<span class="readonly-label">Solo visualización</span>` : `<button class="btn-outline" id="btnEditAthlete">${ic.pencil} Editar</button><button class="btn-outline" id="btnDeleteAthlete" style="color:var(--red);border-color:var(--red);">${ic.x} Eliminar</button><button class="btn-outline" data-edit-costs="${a.id}">${ic.dollar} Costos</button>`}
         </div>

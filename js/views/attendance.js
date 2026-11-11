@@ -24,7 +24,7 @@ export function renderAttendanceTab(){
     const status = a[field][dateKey];
     return `<div class="reg-row">
       <div class="who"><div class="avatar" style="width:32px;height:32px;font-size:12px;">${(a.nombre[0]||"")+(a.apellido[0]||"")}</div>
-        <div><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div><div class="sub">${a.categoria} · ${a.posicion}</div></div>
+        <div><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div><div class="sub">${a.categoria}</div></div>
       </div>
       <div class="opts">
         <button class="ok ${status==="presente"?"on":""}" data-regattend="${a.id}|presente">${ic.check} Presente</button>
