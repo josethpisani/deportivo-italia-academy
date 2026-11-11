@@ -438,12 +438,7 @@ export function renderAdmin(){
       ${statPill(ic.trophy,"Ingresos torneos", "$"+torneoIngresos,"var(--red)")}
       ${statPill(ic.alert,"Matrículas pendientes", pendientes,"var(--red)")}
     </div>
-    ${!['config','sedes','site','pruebas','inscripciones','portal'].includes(state.adminTab) ? `<div class="charts-row">
-      <div class="chart-card"><h4>Matrículas: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMatricula"></canvas></div></div>
-      <div class="chart-card"><h4>Mensualidades: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMensualidades"></canvas></div></div>
-      <div class="chart-card"><h4>Recaudación por torneo ($)</h4><div class="chart-wrap short"><canvas id="chartAdminTorneos"></canvas></div></div>
-      <div class="chart-card"><h4>Inscritos a torneos por categoría</h4><div class="chart-wrap short"><canvas id="chartAdminCatTorneos"></canvas></div></div>
-    </div>` : ""}
+    ${state.adminTab==="matriculas" ? `<div class="charts-row"><div class="chart-card"><h4>Matrículas: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMatricula"></canvas></div></div></div>` : state.adminTab==="mensualidades" ? `<div class="charts-row"><div class="chart-card"><h4>Mensualidades: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMensualidades"></canvas></div></div></div>` : state.adminTab==="uniformes" ? `<div class="charts-row"><div class="chart-card"><h4>Uniformes: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminUniformes"></canvas></div></div></div>` : state.adminTab==="torneos" ? `<div class="charts-row"><div class="chart-card"><h4>Recaudación por torneo ($)</h4><div class="chart-wrap short"><canvas id="chartAdminTorneos"></canvas></div></div><div class="chart-card"><h4>Inscritos a torneos por categoría</h4><div class="chart-wrap short"><canvas id="chartAdminCatTorneos"></canvas></div></div></div>` : ""}
     ${body}</main></div>
   `;
 }

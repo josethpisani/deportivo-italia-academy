@@ -137,6 +137,14 @@ export function drawAdminCharts(){
     options: doughnutOpts("Mensualidades ("+mes+"): pagado vs pendiente")
   });
 
+    const uniformesPagados = state.athletes.filter(a=>a.uniformes && a.uniformes.estado === "pagado").length;
+    const uniformesPendientes = state.athletes.length - uniformesPagados;
+    makeChart("chartAdminUniformes", {
+      type:"doughnut",
+      data:{ labels:["Pagado","Pendiente"], datasets:[{ data:[uniformesPagados,uniformesPendientes], backgroundColor:[C.green, C.red] }] },
+      options: doughnutOpts("Uniformes: pagado vs pendiente")
+    });
+
   const torLabels = state.torneos.map(t=>t.nombre);
   const torData = state.torneos.map(t=>{
     const inscritos = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
