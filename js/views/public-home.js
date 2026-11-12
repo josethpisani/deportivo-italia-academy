@@ -406,8 +406,8 @@ export function renderPublicHome() {
         </div>
       </footer>
       <div class="public-social-float">
-        <a class="public-social-button public-instagram-button" href="${instagramUrl}" target="_blank" rel="noopener noreferrer" aria-label="Deportivo Italia en Instagram">${ic.instagram} Instagram</a>
-        <a class="public-social-button public-whatsapp-button" href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp">${whatsappLogo} WhatsApp</a>
+        <a class="public-social-button public-instagram-button" href="${instagramUrl}" target="_blank" rel="noopener noreferrer" aria-label="Deportivo Italia en Instagram">${ic.instagram}</a>
+        <a class="public-social-button public-whatsapp-button" href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp">${whatsappLogo}</a>
       </div>
     </div>
   `;
