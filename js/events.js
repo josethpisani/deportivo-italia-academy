@@ -366,9 +366,6 @@ export function attachEvents(){
     e.preventDefault();
     const formData = new FormData(enrollmentForm);
     const data = Object.fromEntries(formData.entries());
-    data.id = `INS-${Date.now().toString(36).toUpperCase()}`;
-    data.status = 'pendiente';
-    data.created_at = new Date().toISOString();
     data.athlete_age = Number(data.athlete_age);
     const button = enrollmentForm.querySelector('button[type="submit"]');
     if (button) { button.disabled = true; button.textContent = 'Enviando...'; }
@@ -378,7 +375,7 @@ export function attachEvents(){
       if (!res.ok || !result.success) throw new Error(result.error || 'No se pudo enviar la solicitud');
       enrollmentForm.style.display = 'none';
       document.getElementById('enrollmentSuccess').style.display = 'block';
-      document.getElementById('enrollmentConfirmation').textContent = `Solicitud ${data.id} recibida para ${data.athlete_name}. Te contactaremos pronto.`;
+      document.getElementById('enrollmentConfirmation').textContent = `Solicitud ${result.id} recibida para ${data.athlete_name}. Te contactaremos pronto.`;
     } catch (err) {
       alert(err.message || 'No se pudo enviar la solicitud. Intenta nuevamente.');
     } finally {

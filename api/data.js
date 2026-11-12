@@ -2,6 +2,7 @@
 // Multi-branch support for Deportivo Italia Academy
 
 import { neon } from "@neondatabase/serverless";
+import { registrationFields } from "../js/registration-fields.js";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
 function hashToken(token) { return createHash("sha256").update(token).digest("hex"); }
@@ -195,6 +196,18 @@ export default async function handler(req, res) {
       return rows[0] || null;
     }
 
+    if (req.method === "GET" && req.query.key === "registration_requests") {
+      res.setHeader("Cache-Control", "private, no-store");
+      const staff = await getStaffSession();
+      if (!staff) return res.status(401).json({ error: "Sesión STAFF requerida" });
+      const rows = await sql`SELECT value FROM app_data WHERE key = 'registration_requests'`;
+      const requests = Array.isArray(rows[0]?.value) ? rows[0].value : [];
+      return res.status(200).json(requests.filter(item => item.sede_id === staff.sede_id));
+    }
+    if (["PUT", "DELETE"].includes(req.method) && (req.body?.key === "registration_requests" || req.query.key === "registration_requests")) {
+      return res.status(405).json({ error: "Usa el flujo de administración de inscripciones" });
+    }
+
     async function getParentAthletes(parentId) {
       const links = await sql`SELECT athlete_id, sede_id FROM parent_athletes WHERE parent_id = ${parentId}`;
       const rows = await sql`SELECT value FROM app_data WHERE key = 'athletes'`;
@@ -298,9 +311,17 @@ export default async function handler(req, res) {
       const requestIndex = requests.findIndex(item => String(item.id) === String(request_id) && item.sede_id === staffSession.sede_id);
       if (requestIndex < 0) return res.status(404).json({ error: "Solicitud no encontrada" });
       const request = requests[requestIndex];
+      const updateRequest = async (updated) => {
+        await sql`UPDATE app_data
+          SET value = (SELECT jsonb_agg(
+            CASE WHEN entry->>'id' = ${String(request.id)} AND entry->>'sede_id' = ${staffSession.sede_id}
+              THEN ${JSON.stringify(updated)}::jsonb ELSE entry END ORDER BY ord
+          ) FROM jsonb_array_elements(app_data.value) WITH ORDINALITY AS items(entry, ord)),
+          updated_at = NOW()
+          WHERE key = 'registration_requests'`;
+      };
       if (action === "decline") {
-        requests[requestIndex] = { ...request, status: "declinada", decline_reason: String(reason || ""), updated_at: new Date().toISOString() };
-        await sql`UPDATE app_data SET value = ${JSON.stringify(requests)}, updated_at = NOW() WHERE key = 'registration_requests'`;
+        await updateRequest({ ...request, status: "declinada", decline_reason: String(reason || ""), updated_at: new Date().toISOString() });
         return res.status(200).json({ success: true, status: "declinada" });
       }
       if (action !== "accept") return res.status(400).json({ error: "Acción de inscripción inválida" });
@@ -316,9 +337,7 @@ export default async function handler(req, res) {
         fechaNacimiento: "", representante: request.representative_name || "", telefono: request.phone || "", direccion: "", fechaIngreso: new Date().toISOString().slice(0, 10),
         matricula: { estado: "pendiente", monto: 0, fecha: new Date().toISOString().slice(0, 10) }, mensualidades: {}, torneos: [], asistenciaEntrenamiento: {}, asistenciaJuegos: {}, observaciones: request.notes || "", estadisticas: {}, statsGenerales: { goles: 0, asistencias: 0, tarjetasAmarillas: 0, tarjetasRojas: 0, partidosJugados: 0, entrenamientosAsistidos: 0, entrenamientosTotales: 0 }, evaluaciones: []
       };
-      const otherSedeAthletes = athletes.filter(item => item.sede_id && item.sede_id !== staffSession.sede_id);
-      const legacyAthletes = athletes.filter(item => !item.sede_id);
-      await sql`INSERT INTO app_data (key, value, sede_id, updated_at) VALUES ('athletes', ${JSON.stringify([...otherSedeAthletes, ...legacyAthletes, athlete])}, ${staffSession.sede_id}, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, sede_id = EXCLUDED.sede_id, updated_at = NOW()`;
+      await sql`INSERT INTO app_data (key, value, sede_id, updated_at) VALUES ('athletes', ${JSON.stringify([athlete])}, ${staffSession.sede_id}, NOW()) ON CONFLICT (key) DO UPDATE SET value = app_data.value::jsonb || EXCLUDED.value::jsonb, updated_at = NOW()`;
       const normalizedEmail = String(request.email || "").trim().toLowerCase();
       let parent = (await sql`SELECT id, status FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} LIMIT 1`)[0];
       let activationCode = null;
@@ -327,8 +346,7 @@ export default async function handler(req, res) {
         parent = (await sql`INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at) VALUES (${normalizedEmail}, ${request.representative_name || "Representante"}, 'pendiente', ${hashToken(activationCode)}, NULL) RETURNING id, status`)[0];
       }
       await sql`INSERT INTO parent_athletes (parent_id, athlete_id, sede_id) VALUES (${parent.id}, ${athlete.id}, ${staffSession.sede_id}) ON CONFLICT DO NOTHING`;
-      requests[requestIndex] = { ...request, status: "aceptada", athlete_id: athlete.id, parent_id: parent.id, updated_at: new Date().toISOString() };
-      await sql`UPDATE app_data SET value = ${JSON.stringify(requests)}, updated_at = NOW() WHERE key = 'registration_requests'`;
+      await updateRequest({ ...request, status: "aceptada", athlete_id: athlete.id, parent_id: parent.id, updated_at: new Date().toISOString() });
       return res.status(200).json({ success: true, status: "aceptada", athlete_id: athlete.id, activation_code: activationCode });
     }
 
@@ -413,7 +431,7 @@ export default async function handler(req, res) {
       }
 
       // Return all data (with optional sede filtering)
-      const rows = await sql`SELECT key, value, sede_id FROM app_data`;
+      const rows = await sql`SELECT key, value, sede_id FROM app_data WHERE key <> 'registration_requests'`;
       const out = {};
       rows.forEach(r => {
         if (sede_id) {
@@ -432,6 +450,46 @@ export default async function handler(req, res) {
       
       if (!key || value === undefined) {
         return res.status(400).json({ error: "Missing key or value" });
+      }
+
+      if (key === "registration_requests") {
+        const branches = await sql`SELECT id FROM sedes WHERE id = ${targetSedeId || ""} AND estado = 'activa'`;
+        if (!branches.length) return res.status(400).json({ error: "Selecciona una sede activa" });
+        const age = Number(value?.athlete_age);
+        const category = value?.category;
+        const request = {
+          id: `INS-${randomBytes(6).toString("hex").toUpperCase()}`,
+          sede_id: targetSedeId, status: "pendiente", created_at: new Date().toISOString(),
+          athlete_age: age, category
+        };
+        const fields = [
+          ...registrationFields,
+          ["athlete_name", "Nombre completo del jugador"],
+          ["representative_name", "Nombre completo del acudiente"],
+          ["phone", "Teléfono del acudiente"],
+          ["email", "Correo del acudiente"],
+          ["notes", "Comentarios", "text", false],
+        ];
+        for (const [name, label, type, required = true] of fields) {
+          const answer = typeof value?.[name] === "string" ? value[name].trim() : "";
+          if ((required && !answer) || answer.length > 250 || (Array.isArray(type) && !type.includes(answer))) {
+            return res.status(400).json({ error: `Revisa el campo: ${label}` });
+          }
+          request[name] = answer;
+        }
+        const birthDate = new Date(request.birth_date + "T00:00:00Z");
+        if (!Number.isInteger(age) || age < 3 || age > 18 ||
+            !["U4", "U6", "U8", "U10", "U12"].includes(category) ||
+            !/^\d{4}-\d{2}-\d{2}$/.test(request.birth_date) ||
+            !Number.isFinite(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== request.birth_date ||
+            birthDate > new Date() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(request.email) ||
+            !/^(?:\+?507[\s-]?)?[2-9]\d{3}[\s-]?\d{4}$/.test(request.phone)) {
+          return res.status(400).json({ error: "Revisa la edad, categoría, fecha de nacimiento, correo y teléfono" });
+        }
+        await sql`INSERT INTO app_data (key, value, updated_at)
+          VALUES ('registration_requests', ${JSON.stringify([request])}, NOW())
+          ON CONFLICT (key) DO UPDATE SET value = app_data.value::jsonb || EXCLUDED.value::jsonb, updated_at = NOW()`;
+        return res.status(201).json({ success: true, id: request.id });
       }
 
       // For sedes table
