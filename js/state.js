@@ -26,6 +26,7 @@ export const state = {
   search: "",
   adminTab: "config",
   adminCategory: "Todos",
+  adminViewMode: "grid",
   regTipo: "training",
   regDate: new Date().toISOString().slice(0,10),
   regCategory: "Todos",

@@ -69,6 +69,9 @@ export function attachEvents(){
   document.querySelectorAll('[data-admincat]').forEach(btn=>{
     btn.onclick = () => { state.adminCategory = btn.dataset.admincat; if (window.__render) window.__render(); };
   });
+  document.querySelectorAll('[data-adminview]').forEach(btn=>{
+    btn.onclick = () => { state.adminViewMode = btn.dataset.adminview; if (window.__render) window.__render(); };
+  });
   const staffYearSelect = document.getElementById('staffYearSelect');
   if (staffYearSelect) staffYearSelect.onchange = () => { state.staffYear = Number(staffYearSelect.value); if (state.view === 'asistencia') state.regDate = `${state.staffYear}-01-05`; if (window.__render) window.__render(); };
   const adminSidebar = document.querySelector('.admin-sidebar');

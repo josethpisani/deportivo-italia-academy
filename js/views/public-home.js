@@ -285,7 +285,7 @@ export function renderPublicHome() {
             ${sedes.map(sede => `
               <article class="sede-card-public">
                 <div class="sede-img-wrapper">
-                  ${sede.imagen_principal 
+                  ${sede.codigo === 'PV' || sede.id === 'sed_panama_viejo' ? `<img src="/img/panama-viejo.jpg" alt="Sede Panamá Viejo" class="sede-img">` : sede.imagen_principal 
                     ? `<img src="${escapeHtml(sede.imagen_principal)}" alt="${escapeHtml(sede.nombre)}" class="sede-img">`
                     : `<div class="sede-img-placeholder">${ic.mapPin}</div>`
                   }
