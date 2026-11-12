@@ -171,12 +171,12 @@ export function renderPublicHome() {
           <form id="enrollmentForm" class="modal-body">
             <div class="form-row"><div class="form-group"><label for="enrollAthleteName">Nombre completo del jugador *</label><input id="enrollAthleteName" name="athlete_name" required></div><div class="form-group"><label for="enrollAthleteAge">Edad *</label><input id="enrollAthleteAge" name="athlete_age" type="number" min="3" max="18" required></div></div>
             <div class="form-row"><div class="form-group"><label for="enrollCategory">Categoría *</label><select id="enrollCategory" name="category" required><option value="">Selecciona categoría</option><option>U4</option><option>U6</option><option>U8</option><option>U10</option><option>U12</option></select></div><div class="form-group"><label for="enrollSede">Sede *</label><select id="enrollSede" name="sede_id" required><option value="">Selecciona sede</option>${sedes.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.nombre)}</option>`).join('')}</select></div></div>
-            ${registrationFields.map(([name, label, type = "text", required = true]) => {
+            <div class="form-row">${registrationFields.map(([name, label, type = "text", required = true]) => {
               const control = Array.isArray(type)
                 ? `<select id="enroll-${name}" name="${name}" ${required ? "required" : ""}><option value="">Selecciona una opción</option>${type.map(option => `<option>${option}</option>`).join("")}</select>`
                 : `<input id="enroll-${name}" name="${name}" type="${type}" maxlength="250" ${required ? "required" : ""}>`;
               return `<div class="form-group"><label for="enroll-${name}">${label}${required ? " *" : ""}</label>${control}</div>`;
-            }).join("")}
+            }).join("")}</div>
             <div class="form-group"><label for="enrollRepresentative">Nombre completo del acudiente *</label><input id="enrollRepresentative" name="representative_name" required></div>
             <div class="form-row"><div class="form-group"><label for="enrollPhone">Teléfono *</label><input id="enrollPhone" name="phone" type="tel" pattern="(?:\\+?507[\\s-]?)?[2-9][0-9]{3}[\\s-]?[0-9]{4}" title="Ejemplo: +507 6000-0000" required></div><div class="form-group"><label for="enrollEmail">Correo electrónico *</label><input id="enrollEmail" name="email" type="email" required></div></div>
             <div class="form-group"><label for="enrollNotes">Comentarios</label><textarea id="enrollNotes" name="notes" rows="3" placeholder="Horario preferido, experiencia u otra información"></textarea></div>
