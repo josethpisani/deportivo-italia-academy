@@ -730,3 +730,22 @@
 .stat-card.pending { border-color: var(--accent-amber); }
 .stat-card.confirmed { border-color: var(--accent-green); }
 .stat-card.cancelled { border-color: var(--accent-red); }
+.public-whatsapp-button {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #087443;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  box-shadow: 0 4px 16px #0004;
+}
+.public-whatsapp-button:hover { background: #065b35; color: #fff; }
+.public-whatsapp-button:focus-visible { outline: 3px solid #123e6b; outline-offset: 3px; }

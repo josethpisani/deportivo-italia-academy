@@ -2,6 +2,9 @@ import { state } from "../state.js";
 import { ic } from "../icons.js";
 import { escapeHtml } from "../utils.js";
 
+const whatsappNumber = "+507 6431-1299";
+const whatsappUrl = "https://wa.me/50764311299";
+
 export function renderPublicHome() {
   /* Legacy duplicated template kept out of the render path. */
   const c = state.siteContent.hero;
@@ -327,7 +330,7 @@ export function renderPublicHome() {
                   <span class="contacto-icon">${ic.messageSquare}</span>
                   <div>
                     <strong>WhatsApp</strong>
-                    <p>${escapeHtml(state.siteContent.contacto.whatsapp || "+507 000-0000")}</p>
+                    <p><a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer">${whatsappNumber}</a></p>
                   </div>
                 </div>
                 <div class="contacto-item">
@@ -391,6 +394,7 @@ export function renderPublicHome() {
               <h4>Contacto</h4>
               <p>${ic.mapPin} Ciudad de Panamá</p>
               <p>${ic.phone} +507 000-0000</p>
+              <p>${ic.messageSquare} <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer">WhatsApp ${whatsappNumber}</a></p>
               <p>${ic.mail} info@deportivoitalia.com</p>
             </div>
           </div>
@@ -399,6 +403,7 @@ export function renderPublicHome() {
           </div>
         </div>
       </footer>
+      <a class="public-whatsapp-button" href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp">${ic.messageSquare} WhatsApp</a>
     </div>
   `;
 }
