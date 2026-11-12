@@ -7,6 +7,13 @@ const whatsappUrl = "https://wa.me/50764311299";
 const instagramUrl = "https://www.instagram.com/deportivoitaliapa/";
 const whatsappLogo = `<svg aria-hidden="true" width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.64-2.05-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.08-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.08c.15.2 2.09 3.19 5.06 4.47.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35M12 21.8a9.8 9.8 0 0 1-5-1.37l-.36-.21-3.71.97.99-3.61-.24-.37A9.8 9.8 0 1 1 12 21.8M12 0a12 12 0 0 0-10.4 17.98L0 24l6.16-1.62A12 12 0 1 0 12 0"/></svg>`;
 
+export function renderFloatingSocialLinks() {
+  return `<div class="public-social-float">
+    <a class="public-social-button public-instagram-button" href="${instagramUrl}" target="_blank" rel="noopener noreferrer" aria-label="Deportivo Italia en Instagram">${ic.instagram}</a>
+    <a class="public-social-button public-whatsapp-button" href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp">${whatsappLogo}</a>
+  </div>`;
+}
+
 export function renderPublicHome() {
   /* Legacy duplicated template kept out of the render path. */
   const c = state.siteContent.hero;
@@ -405,10 +412,6 @@ export function renderPublicHome() {
           </div>
         </div>
       </footer>
-      <div class="public-social-float">
-        <a class="public-social-button public-instagram-button" href="${instagramUrl}" target="_blank" rel="noopener noreferrer" aria-label="Deportivo Italia en Instagram">${ic.instagram}</a>
-        <a class="public-social-button public-whatsapp-button" href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp">${whatsappLogo}</a>
-      </div>
     </div>
   `;
 }

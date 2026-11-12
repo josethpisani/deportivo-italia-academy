@@ -9,7 +9,7 @@ import { renderAdmin } from "./views/admin.js";
 import { renderEstadisticas } from "./views/estadisticas.js";
 import { renderEvaluacion } from "./views/evaluacion.js";
 import { renderTorneos, renderTorneoDetail } from "./views/torneos.js";
-import { renderPublicHome } from "./views/public-home.js";
+import { renderFloatingSocialLinks, renderPublicHome } from "./views/public-home.js";
 import { renderAcceso } from "./views/acceso.js";
 import { renderParentPortal } from "./views/portal.js";
 import { drawHomeCharts, drawAthListChart, drawAthDetailChart, drawRegChart, drawAdminCharts, drawStatsCharts, drawEvalCharts, drawTorneoCharts } from "./charts.js";
@@ -76,7 +76,7 @@ function render(){
   
   if (isPublicView) {
     appEl.className = 'public-site';
-    appEl.innerHTML = mainContent;
+    appEl.innerHTML = mainContent + renderFloatingSocialLinks();
   } else {
     appEl.className = '';
     const yearViews = ['home','atleta-list','atleta-detail','asistencia','estadisticas','evaluaciones','torneos','torneo-detail','admin'];
