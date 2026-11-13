@@ -195,7 +195,7 @@ export function renderPublicHome() {
       </div>
 
       <!-- About Section -->
-      <section id="nosotros" class="section-nosotros">
+      <section id="nosotros" class="section-nosotros" ${state.academyRevealed ? "" : "hidden"}>
         <div class="container">
           <header class="section-header">
             <h2 class="dia-title">¿Quiénes Somos?</h2>

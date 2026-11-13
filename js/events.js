@@ -24,6 +24,17 @@ function formatDateInput(date) {
 }
 
 export function attachEvents(){
+  const academySection = document.getElementById("nosotros");
+  if (academySection) {
+    document.querySelectorAll('a[href="#nosotros"]').forEach(link => {
+      link.onclick = (event) => {
+        event.preventDefault();
+        state.academyRevealed = true;
+        academySection.hidden = false;
+        academySection.scrollIntoView({ block: "start" });
+      };
+    });
+  }
   const contactForm = document.getElementById("contactForm");
   if (contactForm) contactForm.onsubmit = (event) => {
     event.preventDefault();

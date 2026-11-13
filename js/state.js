@@ -20,6 +20,7 @@ export const state = {
   loaded: false,
   saveError: false,
   view: "public-home", // New: public home page
+  academyRevealed: false,
   activeCategory: "Todos",
   selectedId: null,
   athleteReadOnly: true,
