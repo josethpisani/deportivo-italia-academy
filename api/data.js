@@ -209,15 +209,18 @@ export default async function handler(req, res) {
       if (req.method === "GET") {
         return res.status(200).json(await sql`SELECT * FROM academy_news ORDER BY featured DESC, created_at DESC`);
       }
-      const { action, id, title, summary, image, instagram, featured } = req.body || {};
+      const { action, id, title = "", summary = "", image = "", instagram = "", featured } = req.body || {};
       if (action === "delete" && typeof id === "string") {
         await sql`DELETE FROM academy_news WHERE id = ${id}`;
         return res.status(200).json({ success: true });
       }
-      if (action !== "save" || typeof title !== "string" || !title.trim() || title.length > 120 ||
-          typeof summary !== "string" || !summary.trim() || summary.length > 2000 ||
+      if (action === "save" && !image && !instagram) {
+        return res.status(400).json({ error: "Agrega una foto o un enlace de Instagram para publicar." });
+      }
+      if (action !== "save" || typeof title !== "string" || title.length > 120 ||
+          typeof summary !== "string" || summary.length > 2000 ||
           typeof image !== "string" || image.length > 666700 ||
-          !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image) ||
+          (image && !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image)) ||
           typeof instagram !== "string" ||
           (instagram && !/^https:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/[A-Za-z0-9_-]+\/$/.test(instagram))) {
         return res.status(400).json({ error: "Revisa el título, resumen, foto y enlace de Instagram." });

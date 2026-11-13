@@ -39,7 +39,7 @@ export function renderNews() {
           ${cover ? `<img src="${esc(cover)}" alt="" loading="lazy">` : ""}
           <div class="news-copy">
             <time datetime="${esc(item.created_at)}">${formatDate(item.created_at)}</time>
-            <h3>${esc(item.title)}</h3>
+            ${item.title ? `<h3>${esc(item.title)}</h3>` : ""}
           </div>
         </${tag}>`;
       }).join("") || "<p>Aún no hay noticias publicadas.</p>"}</div>
@@ -52,10 +52,11 @@ export function renderNewsAdmin() {
   return `<section class="config-section">
     <h3 class="dia-title">${item ? "Editar noticia" : "Nueva noticia"}</h3>
     <form id="newsForm" class="news-form">
-      <label>Título<input name="title" required maxlength="120" value="${esc(item?.title || "")}"></label>
-      <label>Resumen<textarea name="summary" required maxlength="2000" rows="5">${esc(item?.summary || "")}</textarea></label>
-      <label>${item?.image ? "Reemplazar portada (opcional)" : "Portada obligatoria"} · JPG, PNG o WebP, hasta 500 KB
-        <input name="image" type="file" accept="image/jpeg,image/png,image/webp" ${item?.image ? "" : "required"}>
+      <label>Título (opcional)<input name="title" maxlength="120" value="${esc(item?.title || "")}"></label>
+      <label>Resumen (opcional)<textarea name="summary" maxlength="2000" rows="5">${esc(item?.summary || "")}</textarea></label>
+      <p>Agrega una foto o un enlace de Instagram. También puedes incluir ambos.</p>
+      <label>${item?.image ? "Reemplazar portada" : "Foto"} · JPG, PNG o WebP, hasta 500 KB
+        <input name="image" type="file" accept="image/jpeg,image/png,image/webp">
       </label>
       <label>Enlace opcional a un post o reel de Instagram<input name="instagram" type="url" value="${esc(item?.instagram || "")}"></label>
       <label class="news-check"><input type="checkbox" name="featured" ${item?.featured ? "checked" : ""}> Destacar noticia</label>
@@ -65,7 +66,7 @@ export function renderNewsAdmin() {
     </form>
   </section>
   <div class="news-admin-list">${state.news.map(news => `<article class="config-section">
-    <h4>${esc(news.title)}</h4><p>${formatDate(news.created_at)}${news.featured ? " · Destacada" : ""}</p>
+    <h4>${esc(news.title || "Publicación sin título")}</h4><p>${formatDate(news.created_at)}${news.featured ? " · Destacada" : ""}</p>
     <div class="news-actions">
       <button type="button" class="btn-outline" data-news-edit="${esc(news.id)}">Editar</button>
       <button type="button" class="btn-outline" data-news-delete="${esc(news.id)}">Eliminar</button>
@@ -116,6 +117,9 @@ export function attachNewsEvents() {
       const input = fields.get("instagram").trim();
       const match = /^https:\/\/(?:www\.)?instagram\.com\/(p|reel)\/([A-Za-z0-9_-]+)\/?(?:[?#].*)?$/.exec(input);
       if (input && !match) throw new Error("Pega el enlace de un post o reel de Instagram.");
+      if (!match && !file?.size && !item?.image) {
+        throw new Error("Agrega una foto o un enlace de Instagram para publicar.");
+      }
       await requestNews({
         action: "save", id: item?.id, title: fields.get("title"), summary: fields.get("summary"),
         featured: fields.has("featured"),
