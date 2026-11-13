@@ -126,6 +126,10 @@ export function renderPublicHome() {
   
   return `
     <div class="public-site">
+      <nav class="public-portal-shortcuts" aria-label="Accesos a los portales">
+        <a href="/acceso">${ic.shield} Sistema Staff</a>
+        <a href="/portal-padres">${ic.users} Portal de padres</a>
+      </nav>
       <!-- Hero Section -->
       <section class="hero-section">
         <div class="hero-bg pitch-bg"></div>
@@ -137,10 +141,8 @@ export function renderPublicHome() {
           <p class="hero-subtitle">${escapeHtml(c.subtitle || "Formando futbolistas, desarrollando talentos y construyendo valores.")}</p>
           <div class="hero-ctas">
             <a href="#nosotros" class="btn-hero btn-hero-primary">${ic.users} ${escapeHtml(c.ctaPrimary || "Conoce nuestra academia")}</a>
-            <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary === "Acceder al sistema" ? "Sistema Staff" : (c.ctaSecondary || "Sistema Staff"))}</a>
-            <a href="/portal-padres" class="btn-hero btn-hero-secondary">${ic.users} Portal de padres</a>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Práctica de prueba</button>
-            <button type="button" class="btn-hero btn-hero-trial" id="btnEnrollmentRequest">${ic.users} Inscribir jugador</button>
+            <button type="button" class="btn-hero btn-hero-trial" id="btnEnrollmentRequest">${ic.users} Inscripción de Atleta</button>
           </div>
         </div>
         <div class="hero-scroll">${ic.chevronDown}</div>

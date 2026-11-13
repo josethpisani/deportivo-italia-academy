@@ -769,6 +769,34 @@
 .stat-card.pending { border-color: var(--accent-amber); }
 .stat-card.confirmed { border-color: var(--accent-green); }
 .stat-card.cancelled { border-color: var(--accent-red); }
+.public-portal-shortcuts {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+}
+.public-portal-shortcuts a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #123e6b;
+  color: #fff;
+  font-size: clamp(12px, 2vw, 14px);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 4px 16px #0004;
+}
+.public-portal-shortcuts a:hover { background: #0b2847; color: #fff; }
+.public-portal-shortcuts a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
 .public-social-float {
   position: fixed;
   right: max(16px, env(safe-area-inset-right));
