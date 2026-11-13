@@ -315,7 +315,6 @@ export function renderPublicHome() {
                   <p class="sede-desc">${escapeHtml(sede.descripcion || "")}</p>
                   <div class="sede-meta">
                     <span>${ic.mapPin} ${escapeHtml(sede.direccion || "")}</span>
-                    <span>${ic.phone} ${escapeHtml(sede.telefono || "")}</span>
                     <span>${ic.mail} ${escapeHtml(sede.email || "")}</span>
                   </div>
                 </div>
@@ -336,13 +335,6 @@ export function renderPublicHome() {
             <div class="contacto-info">
               <h3>Información de Contacto</h3>
               <div class="contacto-items">
-                <div class="contacto-item">
-                  <span class="contacto-icon">${ic.phone}</span>
-                  <div>
-                    <strong>Teléfono</strong>
-                    <p>${escapeHtml(state.siteContent.contacto.telefono || "+507 000-0000")}</p>
-                  </div>
-                </div>
                 <div class="contacto-item">
                   <span class="contacto-icon">${ic.messageSquare}</span>
                   <div>
@@ -410,7 +402,6 @@ export function renderPublicHome() {
             <div class="footer-contact">
               <h4>Contacto</h4>
               <p>${ic.mapPin} Ciudad de Panamá</p>
-              <p>${ic.phone} +507 000-0000</p>
               <p>${ic.messageSquare} <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer">WhatsApp ${whatsappNumber}</a></p>
               <p>${ic.mail} <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
             </div>
