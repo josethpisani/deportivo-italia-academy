@@ -25,12 +25,14 @@ function formatDateInput(date) {
 
 export function attachEvents(){
   const academySection = document.getElementById("nosotros");
+  const academyWork = document.getElementById("trabajo");
   if (academySection) {
     document.querySelectorAll('a[href="#nosotros"]').forEach(link => {
       link.onclick = (event) => {
         event.preventDefault();
         state.academyRevealed = true;
         academySection.hidden = false;
+        if (academyWork) academyWork.hidden = false;
         academySection.scrollIntoView({ block: "start" });
       };
     });
