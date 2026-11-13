@@ -1,6 +1,6 @@
 import { state } from "../state.js";
 import { ic } from "../icons.js";
-import { escapeHtml } from "../utils.js";
+import { escapeHtml, sedeDisplayName } from "../utils.js";
 import { CONTACT_EMAIL } from "../constants.js";
 import { registrationFields } from "../registration-fields.js";
 
@@ -312,7 +312,7 @@ export function renderPublicHome() {
                   }
                 </div>
                 <div class="sede-info">
-                  <h3>${escapeHtml(sede.nombre)}</h3>
+                  <h3>${escapeHtml(sedeDisplayName(sede))}</h3>
                   <p class="sede-desc">${escapeHtml(sede.descripcion || "")}</p>
                   <div class="sede-meta">
                     <span>${ic.mapPin} ${escapeHtml(sede.direccion || "")}</span>
@@ -396,8 +396,8 @@ export function renderPublicHome() {
             <div class="footer-links">
               <h4>Sedes</h4>
               <ul>
-                <li><a href="/acceso?sede=PV">Panamá Viejo</a></li>
-                <li><a href="/acceso?sede=BR">Brisas</a></li>
+                <li><a href="/acceso?sede=PV">${sedeDisplayName({ codigo: "PV" })}</a></li>
+                <li><a href="/acceso?sede=BR">${sedeDisplayName({ codigo: "BR" })}</a></li>
               </ul>
             </div>
             <div class="footer-contact">

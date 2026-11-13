@@ -1,6 +1,6 @@
 import { state } from "../state.js";
 import { ic } from "../icons.js";
-import { escapeHtml } from "../utils.js";
+import { escapeHtml, sedeDisplayName } from "../utils.js";
 
 export function renderAcceso() {
   const sedes = state.sedes.filter(s => s.estado === 'activa');
@@ -58,7 +58,7 @@ export function renderAcceso() {
                     <div class="sede-icon-wrapper">
                       <span class="sede-icon">${ic.mapPin}</span>
                     </div>
-                    <h2 class="sede-name">${escapeHtml(sede.nombre)}</h2>
+                    <h2 class="sede-name">${escapeHtml(sedeDisplayName(sede))}</h2>
                     <p class="sede-code">Código: ${escapeHtml(sede.codigo)}</p>
                     
                     <!-- Inline Login Form -->

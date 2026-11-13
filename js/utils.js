@@ -1,5 +1,10 @@
 export function uid(prefix){ return prefix + "_" + Math.random().toString(36).slice(2,9); }
 export function todayISO(){ return new Date().toISOString().slice(0,10); }
+export function sedeDisplayName(sede) {
+  if (sede.id === "sed_panama_viejo" || sede.codigo === "PV") return "Panamá Viejo (Reactive Complex)";
+  if (sede.id === "sed_brisas" || sede.codigo === "BR") return "Brisas (Minuto 90)";
+  return sede.nombre;
+}
 export function staffYearOf(value){
   const match = String(value || "").match(/(?:^|\D)(20\d{2})(?:\D|$)/);
   return match ? Number(match[1]) : null;
