@@ -3,6 +3,10 @@ import { escapeHtml } from "./utils.js";
 
 const endpoint = "/api/data?key=academy_news";
 const esc = escapeHtml;
+const savedCovers = {
+  "https://www.instagram.com/p/C-DkHjOOkg5/": "/img/noticia-donde-nos-encuentras.jpg",
+  "https://www.instagram.com/p/DfsFKBWhPET/": "/img/noticia-calendario-noviembre.jpg"
+};
 
 async function requestNews(body) {
   const response = await fetch(endpoint, body ? {
@@ -27,7 +31,7 @@ export function renderNews() {
       <header class="section-header"><h2 id="news-heading" class="dia-title">Noticias de la Academia</h2></header>
       <div class="news-grid">${state.news.map((item, index) => {
         const instagram = /^https:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/[A-Za-z0-9_-]+\/$/.test(item.instagram) ? item.instagram : "";
-        const cover = item.image || (instagram === "https://www.instagram.com/p/C-DkHjOOkg5/" ? "/img/noticia-donde-nos-encuentras.jpg" : "");
+        const cover = item.image || (instagram && (savedCovers[instagram] || `${instagram}media/?size=l`));
         const tag = instagram ? "a" : "article";
         const link = instagram ? `href="${esc(instagram)}" target="_blank" rel="noopener noreferrer"` : "";
         return `
