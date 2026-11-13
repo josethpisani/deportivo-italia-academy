@@ -126,7 +126,7 @@ export function renderPublicHome() {
   */
   
   return `
-    <div class="public-site">
+    <div class="public-site academy-watermark">
       <nav class="public-portal-shortcuts" aria-label="Accesos a los portales">
         <a href="/acceso">${ic.shield} Sistema Staff</a>
         <a href="/portal-padres">${ic.users} Portal de padres</a>

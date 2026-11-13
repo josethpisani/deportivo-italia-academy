@@ -833,6 +833,23 @@
   padding: clamp(36px, 6vw, 72px) 0;
   background: #f5f7fa;
 }
+.academy-watermark {
+  position: relative;
+  isolation: isolate;
+  background: #f5f7fa;
+}
+.academy-watermark::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("/img/escudo-marca-agua.png") center / min(70vw, 48vh, 460px) auto no-repeat;
+  opacity: 0.07;
+}
+.academy-watermark > :is(.section-news, .section-nosotros, .section-trabajo, .section-sedes, .section-contacto, .section-sponsors) {
+  background: transparent;
+}
 .news-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
