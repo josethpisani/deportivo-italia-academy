@@ -25,16 +25,22 @@ export function renderNews() {
   return `<section class="section-news" id="noticias" aria-labelledby="news-heading">
     <div class="container">
       <header class="section-header"><h2 id="news-heading" class="dia-title">Noticias de la Academia</h2></header>
-      <div class="news-grid">${state.news.map((item, index) => `
-        <article class="news-card ${index === 0 && item.featured ? "news-featured" : ""}">
-          ${item.image ? `<img src="${esc(item.image)}" alt="" loading="lazy">` : ""}
+      <div class="news-grid">${state.news.map((item, index) => {
+        const instagram = /^https:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/[A-Za-z0-9_-]+\/$/.test(item.instagram) ? item.instagram : "";
+        const cover = item.image || (instagram === "https://www.instagram.com/p/C-DkHjOOkg5/" ? "/img/noticia-donde-nos-encuentras.jpg" : "");
+        const tag = instagram ? "a" : "article";
+        const link = instagram ? `href="${esc(instagram)}" target="_blank" rel="noopener noreferrer"` : "";
+        return `
+        <${tag} class="news-card ${index === 0 && item.featured ? "news-featured" : ""}" ${link}>
+          ${cover ? `<img src="${esc(cover)}" alt="" loading="lazy">` : ""}
           <div class="news-copy">
             <time datetime="${esc(item.created_at)}">${formatDate(item.created_at)}</time>
             <h3>${esc(item.title)}</h3>
             <p>${esc(item.summary)}</p>
-            ${item.instagram ? `<a href="${esc(item.instagram)}" target="_blank" rel="noopener noreferrer">Ver publicación en Instagram</a>` : ""}
+            ${instagram ? '<span class="news-instagram-label">Ver publicación en Instagram ↗</span>' : ""}
           </div>
-        </article>`).join("") || "<p>Aún no hay noticias publicadas.</p>"}</div>
+        </${tag}>`;
+      }).join("") || "<p>Aún no hay noticias publicadas.</p>"}</div>
     </div>
   </section>`;
 }
