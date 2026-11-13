@@ -1,4 +1,5 @@
 import { state } from "./state.js";
+import { attachNewsEvents, loadNews } from "./news.js";
 import { CONTACT_EMAIL } from "./constants.js";
 import { ic } from "./icons.js";
 import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo, updateAthleteCosts, setUniformePago } from "./mutations.js";
@@ -24,6 +25,7 @@ function formatDateInput(date) {
 }
 
 export function attachEvents(){
+  attachNewsEvents();
   const academySection = document.getElementById("nosotros");
   const academyWork = document.getElementById("trabajo");
   if (academySection) {
@@ -90,6 +92,18 @@ export function attachEvents(){
   document.querySelectorAll("[data-admintab]").forEach(btn=>{
     btn.onclick = ()=>{ state.adminTab = btn.dataset.admintab; if(window.__render) window.__render(); };
   });
+  const newsTab = document.querySelector('[data-admintab="news"]');
+  if (newsTab) newsTab.onclick = async () => {
+    state.adminTab = "news";
+    window.__render?.();
+    try {
+      await loadNews();
+      if (state.view === "admin" && state.adminTab === "news") window.__render?.();
+    } catch (error) {
+      const message = document.getElementById("newsMessage");
+      if (message) message.textContent = error.message;
+    }
+  };
   document.querySelectorAll('[data-admincat]').forEach(btn=>{
     btn.onclick = () => { state.adminCategory = btn.dataset.admincat; if (window.__render) window.__render(); };
   });

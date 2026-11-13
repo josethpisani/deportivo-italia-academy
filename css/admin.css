@@ -1,4 +1,11 @@
 /* ADMIN */
+.news-form, .news-admin-list { display: grid; gap: 12px; }
+.news-form label { display: grid; gap: 5px; min-width: 0; }
+.news-form input:not([type="checkbox"]), .news-form textarea {
+  width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--chalk-dim); border-radius: 8px;
+}
+.news-form .news-check, .news-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.news-admin-list { margin-top: 16px; overflow-wrap: anywhere; }
 .registration-details{min-width:180px;max-width:320px;white-space:normal;overflow-wrap:anywhere}
 .registration-details summary{cursor:pointer}
 .registration-details dt{font-weight:700}

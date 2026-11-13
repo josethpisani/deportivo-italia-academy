@@ -4,6 +4,7 @@ import { ic } from "../icons.js";
 import { escapeHtml, staffYearAthletes, matchesStaffYear } from "../utils.js";
 import { statPill, badge } from "../render-helpers.js";
 import { registrationFields } from "../registration-fields.js";
+import { renderNewsAdmin } from "../news.js";
 
 export function renderAdmin(){
   if(!state.adminAuth){
@@ -46,6 +47,7 @@ export function renderAdmin(){
     {key:"torneos",label:"Torneos y pagos"},
     {key:"sedes",label:"Gestión de sedes"},
     {key:"site",label:"Configuración del sitio"},
+    {key:"news",label:"Noticias"},
     {key:"pruebas",label:"Pruebas de Ingreso"},
     {key:"inscripciones",label:"Solicitudes de inscripción"},
     {key:"portal",label:"Portal de padres"},
@@ -232,6 +234,8 @@ export function renderAdmin(){
         <p>${ic.alert} Cada sede tiene su propia base de datos aislada. Los atletas, torneos y pagos pertenecen a una sede específica.</p>
       </div>
     `;
+  } else if(state.adminTab==="news") {
+    body = renderNewsAdmin();
   } else if(state.adminTab==="site") {
     // Site content management
     const sc = state.siteContent;

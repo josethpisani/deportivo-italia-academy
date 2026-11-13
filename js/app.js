@@ -1,5 +1,6 @@
 console.log("APP MODULE LOADED");
 import { state } from "./state.js";
+import { loadNews } from "./news.js";
 import { loadData, setRenderCallbacks, loadSedes, setCurrentSede, loadSiteContent } from "./api.js";
 import { renderSidebar, renderSaveStatus } from "./views/sidebar.js";
 import { renderHome } from "./views/home.js";
@@ -306,7 +307,7 @@ async function init() {
     render();
     setupGlobalEvents();
     await loadSedes();
-    await loadSiteContent();
+    await Promise.all([loadSiteContent(), route === "public-home" ? loadNews().catch(console.warn) : null]);
     if (state.view === route) render();
     window.addEventListener('popstate', () => {
       const nextRoute = parseRoute();

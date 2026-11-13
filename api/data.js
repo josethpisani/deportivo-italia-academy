@@ -196,6 +196,43 @@ export default async function handler(req, res) {
       return rows[0] || null;
     }
 
+    if (req.query.key === "academy_news" && ["GET", "POST"].includes(req.method)) {
+      res.setHeader("Cache-Control", "no-store");
+      if (req.method === "POST" && !(await getStaffSession())) {
+        return res.status(401).json({ error: "Sesión STAFF requerida" });
+      }
+      await sql`CREATE TABLE IF NOT EXISTS academy_news (
+        id TEXT PRIMARY KEY, title TEXT NOT NULL, summary TEXT NOT NULL,
+        image TEXT NOT NULL, instagram TEXT NOT NULL, featured BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`;
+      if (req.method === "GET") {
+        return res.status(200).json(await sql`SELECT * FROM academy_news ORDER BY featured DESC, created_at DESC`);
+      }
+      const { action, id, title, summary, image, instagram, featured } = req.body || {};
+      if (action === "delete" && typeof id === "string") {
+        await sql`DELETE FROM academy_news WHERE id = ${id}`;
+        return res.status(200).json({ success: true });
+      }
+      if (action !== "save" || typeof title !== "string" || !title.trim() || title.length > 120 ||
+          typeof summary !== "string" || !summary.trim() || summary.length > 2000 ||
+          typeof image !== "string" || image.length > 750000 ||
+          (image && !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image)) ||
+          typeof instagram !== "string" ||
+          (instagram && !/^https:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/[A-Za-z0-9_-]+\/$/.test(instagram))) {
+        return res.status(400).json({ error: "Revisa el título, resumen, foto y enlace de Instagram." });
+      }
+      if (typeof id === "string" && id) {
+        const rows = await sql`UPDATE academy_news SET title = ${title.trim()}, summary = ${summary.trim()},
+          image = ${image}, instagram = ${instagram}, featured = ${featured === true} WHERE id = ${id} RETURNING id`;
+        if (!rows.length) return res.status(404).json({ error: "Noticia no encontrada" });
+      } else {
+        await sql`INSERT INTO academy_news (id, title, summary, image, instagram, featured)
+          VALUES (${randomBytes(12).toString("hex")}, ${title.trim()}, ${summary.trim()}, ${image}, ${instagram}, ${featured === true})`;
+      }
+      return res.status(200).json({ success: true });
+    }
+
     if (req.method === "GET" && req.query.key === "registration_requests") {
       res.setHeader("Cache-Control", "private, no-store");
       const staff = await getStaffSession();

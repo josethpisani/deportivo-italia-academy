@@ -3,6 +3,7 @@ import { ic } from "../icons.js";
 import { escapeHtml, sedeDisplayName } from "../utils.js";
 import { CONTACT_EMAIL } from "../constants.js";
 import { registrationFields } from "../registration-fields.js";
+import { renderNews } from "../news.js";
 
 const sponsors = [
   { name: "Sportza", logo: "patrocinante-sportza.png" },
@@ -195,6 +196,8 @@ export function renderPublicHome() {
           <div class="modal-success" id="enrollmentSuccess" style="display:none"><div class="success-icon">${ic.checkCircle}</div><h3>¡Solicitud recibida!</h3><p id="enrollmentConfirmation">Te contactaremos para confirmar los siguientes pasos.</p><button type="button" class="btn-close-success" id="btnCloseEnrollment">${ic.check} Cerrar</button></div>
         </div>
       </div>
+
+      ${renderNews()}
 
       <!-- About Section -->
       <section id="nosotros" class="section-nosotros" ${state.academyRevealed ? "" : "hidden"}>

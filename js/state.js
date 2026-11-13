@@ -26,6 +26,8 @@ export const state = {
   athleteReadOnly: true,
   search: "",
   adminTab: "config",
+  news: [],
+  newsEditingId: null,
   adminCategory: "Todos",
   adminViewMode: "grid",
   regTipo: "training",
