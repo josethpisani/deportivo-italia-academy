@@ -1,6 +1,7 @@
 import { state } from "../state.js";
 import { ic } from "../icons.js";
 import { escapeHtml } from "../utils.js";
+import { CONTACT_EMAIL } from "../constants.js";
 import { registrationFields } from "../registration-fields.js";
 
 const whatsappNumber = "+507 6431-1299";
@@ -353,7 +354,7 @@ export function renderPublicHome() {
                   <span class="contacto-icon">${ic.mail}</span>
                   <div>
                     <strong>Email</strong>
-                    <p>${escapeHtml(state.siteContent.contacto.email || "info@deportivoitalia.com")}</p>
+                    <p><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
                   </div>
                 </div>
               </div>
@@ -375,7 +376,7 @@ export function renderPublicHome() {
               </div>
               <input type="text" name="asunto" placeholder="Asunto" required>
               <textarea name="mensaje" placeholder="Tu mensaje..." rows="5" required></textarea>
-              <button type="submit" class="btn-submit">${ic.send} Enviar mensaje</button>
+              <button type="submit" class="btn-submit">${ic.send} Abrir en mi correo</button>
             </form>
           </div>
         </div>
@@ -411,7 +412,7 @@ export function renderPublicHome() {
               <p>${ic.mapPin} Ciudad de Panamá</p>
               <p>${ic.phone} +507 000-0000</p>
               <p>${ic.messageSquare} <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer">WhatsApp ${whatsappNumber}</a></p>
-              <p>${ic.mail} info@deportivoitalia.com</p>
+              <p>${ic.mail} <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
             </div>
           </div>
           <div class="footer-bottom">

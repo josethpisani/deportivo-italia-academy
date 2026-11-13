@@ -1,4 +1,5 @@
 import { state } from "./state.js";
+import { CONTACT_EMAIL } from "./constants.js";
 import { ic } from "./icons.js";
 import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo, updateAthleteCosts, setUniformePago } from "./mutations.js";
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from "./modals.js";
@@ -23,6 +24,16 @@ function formatDateInput(date) {
 }
 
 export function attachEvents(){
+  const contactForm = document.getElementById("contactForm");
+  if (contactForm) contactForm.onsubmit = (event) => {
+    event.preventDefault();
+    const fields = new FormData(contactForm);
+    const subject = encodeURIComponent(String(fields.get("asunto")).trim());
+    const body = encodeURIComponent(
+      `Nombre: ${fields.get("nombre")}\r\nCorreo: ${fields.get("email")}\r\n\r\n${fields.get("mensaje")}`
+    );
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+  };
   document.querySelectorAll("[data-nav]").forEach(btn=>{
     btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view === "admin") state.staffYear = new Date().getFullYear(); if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(state.view!=="evaluaciones"){ state.evalAthleteId=null; state.evalEditingId=null; } if(state.view!=="torneos" && state.view!=="torneo-detail") state.torneoId=null; if(window.__render) window.__render(); };
   });
