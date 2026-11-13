@@ -17,6 +17,24 @@
   width: 100%;
 }
 
+.academy-watermark .hero-section {
+  min-height: max(420px, 31.25vw);
+  padding: 76px 0 72px;
+  background: #0b221d url('/img/verde-cancha-escritorio.webp') center / 100% 100% no-repeat;
+}
+.academy-watermark .hero-subtitle {
+  color: white;
+  text-shadow: 0 2px 8px #000;
+}
+.academy-watermark .hero-scroll { bottom: 18px; }
+
+@media (max-width: 700px) {
+  .academy-watermark .hero-section {
+    min-height: max(490px, 111.11vw);
+    background-image: url('/img/verde-cancha-movil.webp');
+  }
+}
+
 /* Football pitch background - disabled for solid panel color */
 .pitch-bg {
   display: none !important;
