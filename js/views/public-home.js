@@ -4,6 +4,13 @@ import { escapeHtml, sedeDisplayName } from "../utils.js";
 import { CONTACT_EMAIL } from "../constants.js";
 import { registrationFields } from "../registration-fields.js";
 
+const sponsors = [
+  { name: "Sportza", logo: "patrocinante-sportza.png" },
+  { name: "La Parmigiana", logo: "patrocinante-parmigiana.png" },
+  { name: "La Parmigiana, 40 años", logo: "patrocinante-parmigiana-40.png" },
+  { name: "CR Pizza & Cucina", logo: "patrocinante-cr.png" },
+];
+
 const whatsappNumber = "+507 6431-1299";
 const whatsappUrl = "https://wa.me/50764311299";
 const instagramUrl = "https://www.instagram.com/deportivoitaliapa/";
@@ -372,6 +379,17 @@ export function renderPublicHome() {
               <button type="submit" class="btn-submit">${ic.send} Abrir en mi correo</button>
             </form>
           </div>
+        </div>
+      </section>
+
+      <section id="patrocinantes" class="section-sponsors" aria-labelledby="sponsors-title">
+        <div class="container">
+          <header class="section-header">
+            <h2 class="dia-title" id="sponsors-title">Nuestros patrocinantes</h2>
+          </header>
+          <ul class="sponsor-grid">
+            ${sponsors.map(({ name, logo }) => `<li><img src="/img/${escapeHtml(logo)}" alt="${escapeHtml(name)}" loading="lazy" decoding="async"></li>`).join("")}
+          </ul>
         </div>
       </section>
 
