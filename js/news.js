@@ -56,7 +56,7 @@ export function renderNewsAdmin() {
       <label>Título (opcional)<input name="title" maxlength="120" value="${esc(item?.title || "")}"></label>
       <label>Resumen (opcional)<textarea name="summary" maxlength="2000" rows="5">${esc(item?.summary || "")}</textarea></label>
       <p>Agrega una foto o un enlace de Instagram. También puedes incluir ambos.</p>
-      <label>${item?.image ? "Reemplazar portada" : "Foto"} · JPG, PNG o WebP, hasta 500 KB
+      <label>${item?.image ? "Reemplazar portada" : "Foto"} · JPG, PNG o WebP, hasta 20 MB. Se optimiza al guardar.
         <input name="image" type="file" accept="image/jpeg,image/png,image/webp">
       </label>
       <label>Enlace opcional a un post o reel de Instagram<input name="instagram" type="url" value="${esc(item?.instagram || "")}"></label>
@@ -75,20 +75,42 @@ export function renderNewsAdmin() {
 }
 
 async function imageData(file) {
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 500000) {
-    throw new Error("Selecciona una imagen JPG, PNG o WebP de hasta 500 KB.");
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 20_000_000) {
+    throw new Error("Selecciona una imagen JPG, PNG o WebP de hasta 20 MB.");
   }
+  let bitmap;
   try {
-    const bitmap = await createImageBitmap(file);
-    bitmap.close();
+    bitmap = await createImageBitmap(file);
   } catch {
     throw new Error("La portada no se puede abrir. Selecciona otra imagen.");
+  }
+  let image = file;
+  if (file.size > 500_000) {
+    try {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d", { alpha: false });
+      for (const [edge, quality] of [[1600, 0.85], [1400, 0.75], [1100, 0.7], [800, 0.65], [640, 0.55]]) {
+        const scale = Math.min(1, edge / Math.max(bitmap.width, bitmap.height));
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        image = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", quality));
+        if (image && image.size <= 500_000) break;
+      }
+      if (!image || image.size > 500_000) throw new Error("No se pudo optimizar la portada. Prueba con otra imagen.");
+    } finally {
+      bitmap.close();
+    }
+  } else {
+    bitmap.close();
   }
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.onerror = () => reject(new Error("No se pudo leer la foto."));
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(image);
   });
 }
 
