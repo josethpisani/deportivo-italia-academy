@@ -54,8 +54,9 @@ export function renderNewsAdmin() {
     <form id="newsForm" class="news-form">
       <label>Título<input name="title" required maxlength="120" value="${esc(item?.title || "")}"></label>
       <label>Resumen<textarea name="summary" required maxlength="2000" rows="5">${esc(item?.summary || "")}</textarea></label>
-      <label>Foto opcional (JPG, PNG o WebP, hasta 500 KB)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
-      ${item?.image ? '<label class="news-check"><input type="checkbox" name="removeImage"> Retirar foto actual</label>' : ""}
+      <label>${item?.image ? "Reemplazar portada (opcional)" : "Portada obligatoria"} · JPG, PNG o WebP, hasta 500 KB
+        <input name="image" type="file" accept="image/jpeg,image/png,image/webp" ${item?.image ? "" : "required"}>
+      </label>
       <label>Enlace opcional a un post o reel de Instagram<input name="instagram" type="url" value="${esc(item?.instagram || "")}"></label>
       <label class="news-check"><input type="checkbox" name="featured" ${item?.featured ? "checked" : ""}> Destacar noticia</label>
       <div class="news-actions"><button class="btn-primary" type="submit">${item ? "Guardar cambios" : "Publicar noticia"}</button>
@@ -71,9 +72,15 @@ export function renderNewsAdmin() {
     </div></article>`).join("")}</div>`;
 }
 
-function imageData(file) {
+async function imageData(file) {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 500000) {
     throw new Error("Selecciona una imagen JPG, PNG o WebP de hasta 500 KB.");
+  }
+  try {
+    const bitmap = await createImageBitmap(file);
+    bitmap.close();
+  } catch {
+    throw new Error("La portada no se puede abrir. Selecciona otra imagen.");
   }
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -113,7 +120,7 @@ export function attachNewsEvents() {
         action: "save", id: item?.id, title: fields.get("title"), summary: fields.get("summary"),
         featured: fields.has("featured"),
         instagram: match ? `https://www.instagram.com/${match[1]}/${match[2]}/` : "",
-        image: file?.size ? await imageData(file) : fields.has("removeImage") ? "" : item?.image || ""
+        image: file?.size ? await imageData(file) : item?.image || ""
       });
       await refresh();
     });

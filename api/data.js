@@ -216,8 +216,8 @@ export default async function handler(req, res) {
       }
       if (action !== "save" || typeof title !== "string" || !title.trim() || title.length > 120 ||
           typeof summary !== "string" || !summary.trim() || summary.length > 2000 ||
-          typeof image !== "string" || image.length > 750000 ||
-          (image && !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image)) ||
+          typeof image !== "string" || image.length > 666700 ||
+          !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image) ||
           typeof instagram !== "string" ||
           (instagram && !/^https:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/[A-Za-z0-9_-]+\/$/.test(instagram))) {
         return res.status(400).json({ error: "Revisa el título, resumen, foto y enlace de Instagram." });
