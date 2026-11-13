@@ -288,19 +288,6 @@ export function renderPublicHome() {
         </div>
       </section>
 
-      <!-- Gallery Section -->
-      <section id="galeria" class="section-galeria">
-        <div class="container">
-          <header class="section-header">
-            <h2 class="dia-title">Galería</h2>
-            <p class="section-subtitle">Momentos de nuestra academia</p>
-          </header>
-          <div class="galeria-grid" id="galeriaGrid">
-            ${renderGaleria()}
-          </div>
-        </div>
-      </section>
-
       <!-- Branches Section -->
       <section id="sedes" class="section-sedes">
         <div class="container">
@@ -405,7 +392,6 @@ export function renderPublicHome() {
               <h4>Enlaces Rápidos</h4>
               <ul>
                 <li><a href="#nosotros">Nosotros</a></li>
-                <li><a href="#galeria">Galería</a></li>
                 <li><a href="#sedes">Sedes</a></li>
                 <li><a href="/acceso">Sistema Staff</a></li>
                 <li><a href="/portal-padres">Portal de padres</a></li>
@@ -430,39 +416,6 @@ export function renderPublicHome() {
           </div>
         </div>
       </footer>
-    </div>
-  `;
-}
-
-function renderGaleria() {
-  const galeria = state.siteContent.galeria || [];
-  const categorias = [...new Set(galeria.map(g => g.categoria).filter(Boolean))];
-  
-  if (galeria.length === 0) {
-    return `
-      <div class="galeria-empty">
-        <div class="empty-icon">${ic.image}</div>
-        <p>No hay imágenes en la galería aún.</p>
-        <small>Las imágenes se pueden administrar desde el panel administrativo.</small>
-      </div>
-    `;
-  }
-
-  return `
-    <div class="galeria-filters">
-      <button class="galeria-filter active" data-filter="all">Todas</button>
-      ${categorias.map(cat => `<button class="galeria-filter" data-filter="${cat}">${cat}</button>`).join("")}
-    </div>
-    <div class="galeria-masonry">
-      ${galeria.map((img, idx) => `
-        <div class="galeria-item" data-categoria="${escapeHtml(img.categoria || "")}">
-          <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.descripcion || `Imagen ${idx + 1}`)}" loading="lazy">
-          <div class="galeria-overlay">
-            <h4>${escapeHtml(img.descripcion || "")}</h4>
-            <span class="galeria-cat">${escapeHtml(img.categoria || "")}</span>
-          </div>
-        </div>
-      `).join("")}
     </div>
   `;
 }
