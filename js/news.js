@@ -36,8 +36,6 @@ export function renderNews() {
           <div class="news-copy">
             <time datetime="${esc(item.created_at)}">${formatDate(item.created_at)}</time>
             <h3>${esc(item.title)}</h3>
-            <p>${esc(item.summary)}</p>
-            ${instagram ? '<span class="news-instagram-label">Ver publicación en Instagram ↗</span>' : ""}
           </div>
         </${tag}>`;
       }).join("") || "<p>Aún no hay noticias publicadas.</p>"}</div>

@@ -859,8 +859,6 @@
 .news-copy { padding: 20px; }
 .news-copy time { color: #526275; font-size: 13px; }
 .news-copy h3 { margin: 8px 0; color: #123e6b; }
-.news-copy p { white-space: pre-wrap; }
-.news-instagram-label { color: #123e6b; font-weight: 700; text-decoration: underline; }
 a.news-card { color: inherit; text-decoration: none; }
 a.news-card img { aspect-ratio: 1; object-fit: contain; background: #f5f7fa; }
 a.news-card:hover { border-color: #123e6b; }
