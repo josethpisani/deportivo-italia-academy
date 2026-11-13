@@ -5,6 +5,7 @@ import { escapeHtml, staffYearAthletes, matchesStaffYear } from "../utils.js";
 import { statPill, badge } from "../render-helpers.js";
 import { registrationFields } from "../registration-fields.js";
 import { renderNewsAdmin } from "../news.js";
+import { galleryGroups, galleryMedia } from "../gallery.js";
 
 export function renderAdmin(){
   if(!state.adminAuth){
@@ -315,7 +316,7 @@ export function renderAdmin(){
       <div class="site-config-section" style="margin-top:32px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
           <h3 class="dia-title" style="margin:0;">Galería de Imágenes</h3>
-          <button class="btn-primary" id="btnAddGaleria">${ic.plus} Agregar imagen</button>
+          <button class="btn-primary" id="btnAddGaleria">${ic.plus} Agregar foto o video</button>
         </div>
         ${renderGaleriaAdmin()}
       </div>
@@ -466,20 +467,20 @@ function renderRegistrationDetails(request) {
 function renderGaleriaAdmin() {
   const galeria = state.siteContent.galeria || [];
   if (galeria.length === 0) {
-    return `<p class="empty-msg">No hay imágenes en la galería. Agrega la primera.</p>`;
+    return `<p class="empty-msg">Todavía no hay fotos ni videos en la galería.</p>`;
   }
-  return `
+  return galleryGroups(galeria).map(([category, entries]) => `
+    <section class="gallery-category"><h4>${escapeHtml(category)}</h4>
     <div class="galeria-admin-grid">
-      ${galeria.map((img, idx) => `
+      ${entries.map(({ item: img, index: idx }) => `
         <div class="galeria-admin-item">
-          <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.descripcion || "")}" loading="lazy">
+          ${galleryMedia(img)}
           <div class="galeria-admin-overlay">
-            <span class="galeria-cat">${escapeHtml(img.categoria || "")}</span>
-            <button class="btn-delete-galeria" data-delete-galeria="${idx}" title="Eliminar">${ic.x}</button>
+            <button class="btn-delete-galeria" data-delete-galeria="${idx}" aria-label="Eliminar archivo">${ic.x}</button>
           </div>
           <p class="galeria-desc">${escapeHtml(img.descripcion || "")}</p>
         </div>
       `).join("")}
-    </div>
-  `;
+    </div></section>
+  `).join("");
 }

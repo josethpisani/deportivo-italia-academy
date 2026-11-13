@@ -172,6 +172,17 @@ export async function addGalleryImage(image) {
   state.siteContent.galeria = result.gallery;
 }
 
+export async function deleteGalleryItem(item) {
+  const res = await fetch(API, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify({ key: "gallery", action: "delete", id: item.id, url: item.id ? undefined : item.url })
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || "No se pudo eliminar el archivo.");
+  state.siteContent.galeria = result.gallery;
+}
+
 export function setCurrentSede(sede) {
   state.currentSede = sede;
   // Reset data when switching branches

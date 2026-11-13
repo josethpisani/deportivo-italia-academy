@@ -1,11 +1,12 @@
 import { state } from "./state.js";
 import { attachNewsEvents, loadNews } from "./news.js";
+import { galleryGroups, galleryMedia } from "./gallery.js";
 import { CONTACT_EMAIL } from "./constants.js";
 import { ic } from "./icons.js";
 import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo, updateAthleteCosts, setUniformePago } from "./mutations.js";
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from "./modals.js";
 import { dayNameFromDate, escapeHtml } from "./utils.js";
-import { saveSede, updateSede, saveSiteContent, createTrialRequest, getTrialRequests } from "./api.js";
+import { saveSede, updateSede, saveSiteContent, deleteGalleryItem, createTrialRequest, getTrialRequests } from "./api.js";
 
 // Estado local del flujo público de práctica de prueba.
 let trialModalOpen = false;
@@ -374,14 +375,18 @@ export function attachEvents(){
 
   document.querySelectorAll("[data-delete-galeria]").forEach(btn=>{
     btn.onclick = async ()=>{
-      if(confirm("¿Eliminar esta imagen?")){
+      if(confirm("¿Eliminar este archivo de la galería?")){
         const idx = parseInt(btn.dataset.deleteGaleria);
-        const galeria = state.siteContent.galeria.filter((_, index) => index !== idx);
-        if (!await saveSiteContent({ galeria })) {
-          alert("No se pudo eliminar la foto.");
+        const item = state.siteContent.galeria[idx];
+        if (!item) return;
+        btn.disabled = true;
+        try {
+          await deleteGalleryItem(item);
+        } catch (error) {
+          alert(error.message);
+          btn.disabled = false;
           return;
         }
-        state.siteContent.galeria = galeria;
         if (window.__render) window.__render();
       }
     };
@@ -697,7 +702,10 @@ export function attachEvents(){
   const dashboardView = document.getElementById('parentDashboardView');
   const showPortalMessage = (id, message) => { const el = document.getElementById(id); if (el) el.textContent = message; };
   let parentPortalPayload = null;
-  const renderGallery = images => images.map(image => `<figure class="portal-gallery-item"><img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.descripcion || image.categoria || 'Galería Deportivo Italia')}" loading="lazy"><figcaption>${escapeHtml(image.descripcion || image.categoria || 'Galería')}<small>${escapeHtml(image.fecha || '')}</small></figcaption></figure>`).join('') || '<p class="portal-empty">No hay fotografías publicadas.</p>';
+  const renderGallery = items => galleryGroups(items).map(([category, entries]) => `
+    <section class="gallery-category"><h4>${escapeHtml(category)}</h4><div class="portal-gallery-grid">
+      ${entries.map(({ item }) => `<figure class="portal-gallery-item">${galleryMedia(item)}<figcaption>${escapeHtml(item.descripcion || (item.tipo === 'video' ? 'Video' : 'Foto'))}<small>${escapeHtml(item.fecha || '')}</small></figcaption></figure>`).join('')}
+    </div></section>`).join('') || '<p class="portal-empty">Todavía no hay fotos ni videos publicados.</p>';
   const formatPortalDate = (value) => value ? new Date(`${value}T12:00:00`).toLocaleDateString('es-PA', { day: '2-digit', month: 'long', year: 'numeric' }) : 'No registrada';
   const renderParentAthlete = (athlete) => {
     const fullName = `${athlete.nombre || ''} ${athlete.apellido || ''}`.trim() || 'Atleta';
@@ -747,18 +755,18 @@ export function attachEvents(){
     const wireParentMenu = () => {
       const menuToggle = document.getElementById('parentMenuToggle');
       const parentNav = document.getElementById('parentPortalNav');
-      panel.insertAdjacentHTML('beforeend', '<section class="portal-info-section" data-parent-gallery><h3>Galería del club</h3><p class="portal-section-note">Fotografías publicadas por el equipo Staff.</p><div class="portal-gallery-grid"></div><p role="status"></p></section>');
+      panel.insertAdjacentHTML('beforeend', '<section class="portal-info-section" data-parent-gallery><h3>Galería del club</h3><div data-gallery-content></div><p role="status"></p></section>');
       const gallery = panel.querySelector('[data-parent-gallery]');
-      const grid = gallery.querySelector('.portal-gallery-grid');
+      const grid = gallery.querySelector('[data-gallery-content]');
       const status = gallery.querySelector('[role="status"]');
-      grid.innerHTML = renderGallery(parentPortalPayload.galeria || []);
+      if (parentPortalPayload.galeria) grid.innerHTML = renderGallery(parentPortalPayload.galeria);
       grid.addEventListener('error', event => {
-        if (event.target.tagName === 'IMG') event.target.replaceWith(document.createTextNode('Foto no disponible'));
+        if (event.target.matches('img, video')) event.target.replaceWith(document.createTextNode('Archivo no disponible'));
       }, true);
       let galleryRequest = 0;
       const refreshGallery = async () => {
         const request = ++galleryRequest;
-        status.textContent = '';
+        status.textContent = parentPortalPayload.galeria ? '' : 'Cargando galería…';
         try {
           const response = await fetch('/api/data?key=portal_gallery', { cache: 'no-store' });
           if (!response.ok) throw new Error();
@@ -766,6 +774,7 @@ export function attachEvents(){
           if (request !== galleryRequest || !gallery.isConnected) return;
           parentPortalPayload.galeria = images;
           grid.innerHTML = renderGallery(images);
+          status.textContent = '';
         } catch {
           if (request === galleryRequest) status.textContent = 'No se pudo actualizar la galería. Vuelve a abrirla para reintentar.';
         }

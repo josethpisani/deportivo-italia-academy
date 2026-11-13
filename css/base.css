@@ -30,3 +30,6 @@ p.page-sub{color:var(--muted);margin:0 0 22px;font-size:13.5px;}
 /* MISC */
 .loading-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;color:#fff;flex-direction:column;gap:10px;}
 .empty-msg{color:#999;font-size:13px;}
+.gallery-category { margin-block: 0 24px; }
+.gallery-category h4 { margin: 0 0 12px; }
+.gallery-video { display: block; width: 100%; height: 150px; background: #111; object-fit: contain; }

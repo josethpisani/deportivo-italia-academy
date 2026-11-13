@@ -3,6 +3,7 @@
 
 import { neon } from "@neondatabase/serverless";
 import { registrationFields } from "../js/registration-fields.js";
+import { galleryCategories } from "../js/gallery.js";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
 function hashToken(token) { return createHash("sha256").update(token).digest("hex"); }
@@ -266,7 +267,7 @@ export default async function handler(req, res) {
     async function getParentGallery() {
       return (await getGallery())
         .filter(image => image?.url && image.portal_visible !== false)
-        .map(({ url, descripcion, categoria, fecha }) => ({ url, descripcion: descripcion || '', categoria: categoria || 'General', fecha: fecha || '' }));
+        .map(({ url, tipo, descripcion, categoria, fecha }) => ({ url, tipo, descripcion: descripcion || '', categoria: categoria || 'General', fecha: fecha || '' }));
     }
 
     async function getParentPortalData(parentId) {
@@ -275,8 +276,7 @@ export default async function handler(req, res) {
       const allTorneos = Array.isArray(tournamentRows[0]?.value) ? tournamentRows[0].value : [];
       const torneoIds = new Set(athletes.flatMap(athlete => (Array.isArray(athlete.torneos) ? athlete.torneos : []).map(item => String(item.torneoId || item.id || ''))));
       const torneos = allTorneos.filter(torneo => torneoIds.has(String(torneo.id)));
-      const galeria = await getParentGallery();
-      return { athletes, torneos, galeria };
+      return { athletes, torneos };
     }
 
     if (req.query.key === "portal_gallery" && req.method === "GET") {
@@ -285,16 +285,87 @@ export default async function handler(req, res) {
       return res.status(200).json(await getParentGallery());
     }
 
+    if (req.query.key === "gallery_video" && ["GET", "HEAD"].includes(req.method)) {
+      const { id } = req.query;
+      const staff = await getStaffSession();
+      if (!staff && !(await getParentSession())) return res.status(401).end();
+      if (!/^[a-f0-9]{32}$/.test(id || "")) return res.status(404).end();
+      const rows = await sql`
+        SELECT m.value FROM app_data m
+        JOIN app_data site ON site.key = 'siteContent'
+        WHERE m.key = ${"gallery_video:" + id}
+          AND EXISTS (
+            SELECT 1 FROM jsonb_array_elements(COALESCE(site.value->'galeria', '[]'::jsonb)) AS item
+            WHERE item->>'id' = ${id} AND (${Boolean(staff)} OR item->'portal_visible' IS DISTINCT FROM 'false'::jsonb)
+          )
+      `;
+      if (!rows.length) return res.status(404).end();
+      const { mime, video } = rows[0].value;
+      const bytes = Buffer.from(video, "base64");
+      res.setHeader("Content-Type", mime);
+      res.setHeader("Cache-Control", "private, no-store");
+      res.setHeader("Accept-Ranges", "bytes");
+      const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
+      if (range && (range[1] || range[2])) {
+        const start = range[1] ? Number(range[1]) : Math.max(0, bytes.length - Number(range[2]));
+        const end = Math.min(bytes.length - 1, range[1] && range[2] ? Number(range[2]) : bytes.length - 1);
+        if (start > end) {
+          res.setHeader("Content-Range", `bytes */${bytes.length}`);
+          return res.status(416).end();
+        }
+        res.setHeader("Content-Range", `bytes ${start}-${end}/${bytes.length}`);
+        res.setHeader("Content-Length", end - start + 1);
+        return res.status(206).end(req.method === "HEAD" ? undefined : bytes.subarray(start, end + 1));
+      }
+      res.setHeader("Content-Length", bytes.length);
+      return res.status(200).end(req.method === "HEAD" ? undefined : bytes);
+    }
+
     if (req.body?.key === "gallery" && req.method === "POST") {
       if (!(await getStaffSession())) return res.status(401).json({ error: "Vuelve a iniciar sesión en Staff." });
-      const { image } = req.body;
-      const url = typeof image?.url === "string" ? image.url : "";
-      if (!(url.length <= 2048 && /^https:\/\/[^\s]+$/i.test(url)) &&
+      const { image, action, id: deleteId, url: deleteUrl } = req.body;
+      if (action === "delete") {
+        const byId = typeof deleteId === "string" && /^[a-f0-9]{32}$/.test(deleteId);
+        const match = byId ? deleteId : deleteUrl;
+        if (typeof match !== "string" || !match) return res.status(400).json({ error: "Archivo inválido." });
+        await sql`
+          WITH updated AS (
+            UPDATE app_data site
+            SET value = jsonb_set(site.value, '{galeria}', (
+              SELECT COALESCE(jsonb_agg(item ORDER BY position), '[]'::jsonb)
+              FROM jsonb_array_elements(COALESCE(site.value->'galeria', '[]'::jsonb)) WITH ORDINALITY AS entries(item, position)
+              WHERE (CASE WHEN ${byId} THEN item->>'id' WHEN NOT (item ? 'id') THEN item->>'url' END) IS DISTINCT FROM ${match}
+            )), updated_at = NOW()
+            WHERE key = 'siteContent'
+            RETURNING key
+          )
+          DELETE FROM app_data WHERE key = ${byId ? "gallery_video:" + match : null} AND EXISTS (SELECT 1 FROM updated)
+        `;
+        return res.status(200).json({ gallery: await getGallery() });
+      }
+      const id = randomBytes(16).toString("hex");
+      const isVideo = image?.tipo === "video";
+      const url = isVideo ? `/api/data?key=gallery_video&id=${id}` : (typeof image?.url === "string" ? image.url : "");
+      if (isVideo) {
+        const { mime, video } = image;
+        if (!["video/mp4", "video/webm"].includes(mime) || typeof video !== "string" || video.length > 4_000_000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(video)) {
+          return res.status(400).json({ error: "Selecciona un MP4 o WebM de hasta 3 MB." });
+        }
+        const bytes = Buffer.from(video, "base64");
+        const valid = mime === "video/mp4" ? bytes.toString("ascii", 4, 8) === "ftyp" : bytes.subarray(0, 4).toString("hex") === "1a45dfa3";
+        if (!valid) return res.status(400).json({ error: "El archivo no es un video válido." });
+      } else if (!(url.length <= 2048 && /^https:\/\/[^\s]+$/i.test(url)) &&
           !(url.length <= 667000 && /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(url))) {
         return res.status(400).json({ error: "La foto o el enlace no tienen un formato válido." });
       }
-      const entry = { url, descripcion: String(image.descripcion || "").slice(0, 500), categoria: String(image.categoria || "General").slice(0, 80), fecha: new Date().toISOString().slice(0, 10), portal_visible: true };
+      const categoria = galleryCategories.includes(image.categoria) ? image.categoria : "General";
+      const entry = { id, url, tipo: isVideo ? "video" : "imagen", descripcion: String(image.descripcion || "").slice(0, 500), categoria, fecha: new Date().toISOString().slice(0, 10), portal_visible: true };
       const rows = await sql`
+        WITH video_upload AS (
+          INSERT INTO app_data (key, value)
+          SELECT ${"gallery_video:" + id}, ${isVideo ? JSON.stringify({ mime: image.mime, video: image.video }) : null}::jsonb
+          WHERE ${isVideo}
+        )
         INSERT INTO app_data (key, value, updated_at)
         VALUES ('siteContent', jsonb_build_object('galeria', ${JSON.stringify([entry])}::jsonb), NOW())
         ON CONFLICT (key) DO UPDATE
@@ -493,6 +564,7 @@ export default async function handler(req, res) {
 
       // Regular data keys with sede filtering
       if (key) {
+        if (key.startsWith("gallery_video:")) return res.status(404).end();
         const rows = await sql`SELECT value, sede_id FROM app_data WHERE key = ${key}`;
         if (rows.length === 0) return res.status(200).json(null);
         if (key === "siteContent") {
@@ -510,7 +582,7 @@ export default async function handler(req, res) {
       }
 
       // Return all data (with optional sede filtering)
-      const rows = await sql`SELECT key, CASE WHEN key = 'siteContent' THEN value - 'galeria' ELSE value END AS value, sede_id FROM app_data WHERE key <> 'registration_requests'`;
+      const rows = await sql`SELECT key, CASE WHEN key = 'siteContent' THEN value - 'galeria' ELSE value END AS value, sede_id FROM app_data WHERE key <> 'registration_requests' AND key NOT LIKE 'gallery_video:%'`;
       const out = {};
       rows.forEach(r => {
         if (sede_id) {
@@ -525,6 +597,7 @@ export default async function handler(req, res) {
     // ── POST ── Upsert data for a specific sede
     if (req.method === "POST") {
       const { key, value, sede_id: bodySedeId } = req.body;
+      if (typeof key === "string" && key.startsWith("gallery_video:")) return res.status(404).end();
       const targetSedeId = bodySedeId || sede_id;
       
       if (!key || value === undefined) {
@@ -708,6 +781,7 @@ export default async function handler(req, res) {
     // ── PUT ── Update specific item within a key for a sede
     if (req.method === "PUT") {
       const { key, itemId, updates, sede_id: bodySedeId } = req.body;
+      if (typeof key === "string" && key.startsWith("gallery_video:")) return res.status(404).end();
       const targetSedeId = bodySedeId || sede_id;
 
       if (key === "trial_requests") {
@@ -779,6 +853,7 @@ export default async function handler(req, res) {
     // ── DELETE ──
     if (req.method === "DELETE") {
       const { key, itemId, sede_id: bodySedeId } = req.body;
+      if (typeof key === "string" && key.startsWith("gallery_video:")) return res.status(404).end();
       const targetSedeId = bodySedeId || sede_id;
       
       if (!key || (!targetSedeId && key !== "sedes" && key !== "trial_requests")) {

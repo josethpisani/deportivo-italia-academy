@@ -5,6 +5,7 @@ import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveE
 import { escapeHtml } from "./utils.js";
 import { saveSede, updateSede, addGalleryImage } from "./api.js";
 import { imageData } from "./news.js";
+import { galleryCategories } from "./gallery.js";
 
 export function closeModal(){
   const ov = document.getElementById("modalOverlay");
@@ -517,21 +518,17 @@ export function openAddGaleriaModal(){
   const html = `
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal">
-        <div class="mh"><h3 class="dia-title">Agregar imagen a galería</h3><button id="modalClose">${ic.x}</button></div>
-        <label for="g_file">Foto · JPG, PNG o WebP, hasta 20 MB</label>
-        <input id="g_file" type="file" accept="image/jpeg,image/png,image/webp">
+        <div class="mh"><h3 class="dia-title">Agregar foto o video</h3><button id="modalClose">${ic.x}</button></div>
+        <label for="g_file">Examinar archivos</label>
+        <input id="g_file" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.mp4,.webm" aria-describedby="g_formats">
+        <p id="g_formats">JPG, PNG o WebP hasta 20 MB. MP4 o WebM hasta 3 MB.</p>
         <label for="g_url">O enlace directo a la imagen</label><input id="g_url" type="url" placeholder="https://...">
         <label>Descripción</label><input id="g_desc" placeholder="Descripción de la imagen">
         <label>Categoría</label>
         <select id="g_categoria">
-          <option value="Entrenamientos">Entrenamientos</option>
-          <option value="Partidos">Partidos</option>
-          <option value="Torneos">Torneos</option>
-          <option value="Eventos">Eventos</option>
-          <option value="Jugadores">Jugadores</option>
-          <option value="Sedes">Sedes</option>
+          ${galleryCategories.map(category => `<option>${category}</option>`).join("")}
         </select>
-        <button class="save-btn" id="g_save" disabled>Agregar imagen</button>
+        <button class="save-btn" id="g_save" disabled>Publicar en galería</button>
         <p id="g_status" role="status"></p>
       </div>
     </div>`;
@@ -549,15 +546,26 @@ export function openAddGaleriaModal(){
   save.onclick = async () => {
     saving = true;
     updateButton();
-    status.textContent = "Guardando foto…";
+    status.textContent = "Guardando archivo…";
     const newImage = {
       descripcion: document.getElementById("g_desc").value.trim(),
       categoria: document.getElementById("g_categoria").value
     };
     try {
       const url = link.value.trim();
-      if (file.files[0]) {
-        newImage.url = await imageData(file.files[0]);
+      const selected = file.files[0];
+      if (selected && /\.(mp4|webm)$/i.test(selected.name)) {
+        if (!selected.size || selected.size > 3_000_000) throw new Error("Selecciona un video de hasta 3 MB.");
+        newImage.tipo = "video";
+        newImage.mime = /\.mp4$/i.test(selected.name) ? "video/mp4" : "video/webm";
+        newImage.video = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result).split(",")[1]);
+          reader.onerror = () => reject(new Error("No se pudo leer el video."));
+          reader.readAsDataURL(selected);
+        });
+      } else if (selected) {
+        newImage.url = await imageData(selected);
       } else {
         if (!/^https:\/\//i.test(url) || !link.validity.valid) {
           throw new Error("Selecciona un archivo o pega un enlace HTTPS a la imagen.");
