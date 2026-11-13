@@ -161,6 +161,17 @@ export async function saveSiteContent(content) {
   }
 }
 
+export async function addGalleryImage(image) {
+  const res = await fetch(API, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify({ key: "gallery", image })
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || "No se pudo guardar la foto.");
+  state.siteContent.galeria = result.gallery;
+}
+
 export function setCurrentSede(sede) {
   state.currentSede = sede;
   // Reset data when switching branches

@@ -3,7 +3,8 @@ import { CATEGORIES } from "./constants.js";
 import { ic } from "./icons.js";
 import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveEstadisticas, saveConfigData, updateAthleteCosts, addJuego, updateJuego, saveJuegoStats } from "./mutations.js";
 import { escapeHtml } from "./utils.js";
-import { saveSede, updateSede, saveSiteContent } from "./api.js";
+import { saveSede, updateSede, addGalleryImage } from "./api.js";
+import { imageData } from "./news.js";
 
 export function closeModal(){
   const ov = document.getElementById("modalOverlay");
@@ -517,7 +518,9 @@ export function openAddGaleriaModal(){
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal">
         <div class="mh"><h3 class="dia-title">Agregar imagen a galería</h3><button id="modalClose">${ic.x}</button></div>
-        <label>URL de la imagen</label><input id="g_url" placeholder="https://...">
+        <label for="g_file">Foto · JPG, PNG o WebP, hasta 20 MB</label>
+        <input id="g_file" type="file" accept="image/jpeg,image/png,image/webp">
+        <label for="g_url">O enlace directo a la imagen</label><input id="g_url" type="url" placeholder="https://...">
         <label>Descripción</label><input id="g_desc" placeholder="Descripción de la imagen">
         <label>Categoría</label>
         <select id="g_categoria">
@@ -529,28 +532,49 @@ export function openAddGaleriaModal(){
           <option value="Sedes">Sedes</option>
         </select>
         <button class="save-btn" id="g_save" disabled>Agregar imagen</button>
+        <p id="g_status" role="status"></p>
       </div>
     </div>`;
   document.getElementById("app").insertAdjacentHTML("beforeend", html);
   document.getElementById("modalClose").onclick = closeModal;
   document.getElementById("modalOverlay").addEventListener("click", e=>{ if(e.target.id==="modalOverlay") closeModal(); });
-  const checkValid = ()=>{
-    const ok = document.getElementById("g_url").value.trim();
-    document.getElementById("g_save").disabled = !ok;
-  };
-  document.getElementById("g_url").addEventListener("input", checkValid);
-  document.getElementById("g_save").onclick = async ()=>{
+  const file = document.getElementById("g_file");
+  const link = document.getElementById("g_url");
+  const save = document.getElementById("g_save");
+  const status = document.getElementById("g_status");
+  let saving = false;
+  const updateButton = () => { save.disabled = saving || !(file.files.length || link.value.trim()); };
+  file.onchange = updateButton;
+  link.oninput = updateButton;
+  save.onclick = async () => {
+    saving = true;
+    updateButton();
+    status.textContent = "Guardando foto…";
     const newImage = {
-      url: document.getElementById("g_url").value.trim(),
       descripcion: document.getElementById("g_desc").value.trim(),
-      categoria: document.getElementById("g_categoria").value,
-      fecha: new Date().toISOString().slice(0,10),
-      portal_visible: true
+      categoria: document.getElementById("g_categoria").value
     };
-    if (!state.siteContent.galeria) state.siteContent.galeria = [];
-    state.siteContent.galeria.unshift(newImage);
-    await saveSiteContent(state.siteContent);
-    closeModal();
-    if(window.__render) window.__render();
+    try {
+      const url = link.value.trim();
+      if (file.files[0]) {
+        newImage.url = await imageData(file.files[0]);
+      } else {
+        if (!/^https:\/\//i.test(url) || !link.validity.valid) {
+          throw new Error("Selecciona un archivo o pega un enlace HTTPS a la imagen.");
+        }
+        const image = new Image();
+        image.src = url;
+        await image.decode().catch(() => { throw new Error("El enlace no abre una imagen. Carga el archivo directamente."); });
+        newImage.url = url;
+      }
+      await addGalleryImage(newImage);
+      closeModal();
+      if (window.__render) window.__render();
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      saving = false;
+      updateButton();
+    }
   };
 }

@@ -278,6 +278,7 @@ async function handleLogin(form) {
     // Set current sede and load data
     setCurrentSede(sede);
     await loadData();
+    await loadSiteContent();
     state.adminAuth = true;
     state.view = 'home';
     state.targetSede = null;

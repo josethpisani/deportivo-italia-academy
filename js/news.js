@@ -74,7 +74,7 @@ export function renderNewsAdmin() {
     </div></article>`).join("")}</div>`;
 }
 
-async function imageData(file) {
+export async function imageData(file) {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 20_000_000) {
     throw new Error("Selecciona una imagen JPG, PNG o WebP de hasta 20 MB.");
   }
@@ -82,7 +82,7 @@ async function imageData(file) {
   try {
     bitmap = await createImageBitmap(file);
   } catch {
-    throw new Error("La portada no se puede abrir. Selecciona otra imagen.");
+    throw new Error("La foto no se puede abrir. Selecciona otra imagen.");
   }
   let image = file;
   if (file.size > 500_000) {
@@ -99,7 +99,7 @@ async function imageData(file) {
         image = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", quality));
         if (image && image.size <= 500_000) break;
       }
-      if (!image || image.size > 500_000) throw new Error("No se pudo optimizar la portada. Prueba con otra imagen.");
+      if (!image || image.size > 500_000) throw new Error("No se pudo optimizar la foto. Prueba con otra imagen.");
     } finally {
       bitmap.close();
     }

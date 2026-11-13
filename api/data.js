@@ -258,18 +258,52 @@ export default async function handler(req, res) {
       }).filter(Boolean).map(({ password_hash, ...safe }) => safe);
     }
 
+    async function getGallery() {
+      const rows = await sql`SELECT value->'galeria' AS gallery FROM app_data WHERE key = 'siteContent'`;
+      return Array.isArray(rows[0]?.gallery) ? rows[0].gallery : [];
+    }
+
+    async function getParentGallery() {
+      return (await getGallery())
+        .filter(image => image?.url && image.portal_visible !== false)
+        .map(({ url, descripcion, categoria, fecha }) => ({ url, descripcion: descripcion || '', categoria: categoria || 'General', fecha: fecha || '' }));
+    }
+
     async function getParentPortalData(parentId) {
       const athletes = await getParentAthletes(parentId);
       const tournamentRows = await sql`SELECT value FROM app_data WHERE key = 'torneos'`;
       const allTorneos = Array.isArray(tournamentRows[0]?.value) ? tournamentRows[0].value : [];
       const torneoIds = new Set(athletes.flatMap(athlete => (Array.isArray(athlete.torneos) ? athlete.torneos : []).map(item => String(item.torneoId || item.id || ''))));
       const torneos = allTorneos.filter(torneo => torneoIds.has(String(torneo.id)));
-      const siteRows = await sql`SELECT value FROM app_data WHERE key = 'siteContent'`;
-      const siteContent = siteRows[0]?.value || {};
-      const galeria = Array.isArray(siteContent.galeria)
-        ? siteContent.galeria.filter(image => image && image.portal_visible !== false).map(({ url, descripcion, categoria, fecha }) => ({ url, descripcion: descripcion || '', categoria: categoria || 'General', fecha: fecha || '' }))
-        : [];
+      const galeria = await getParentGallery();
       return { athletes, torneos, galeria };
+    }
+
+    if (req.query.key === "portal_gallery" && req.method === "GET") {
+      if (!(await getParentSession())) return res.status(401).json({ error: "Sesión no válida" });
+      res.setHeader("Cache-Control", "private, no-store");
+      return res.status(200).json(await getParentGallery());
+    }
+
+    if (req.body?.key === "gallery" && req.method === "POST") {
+      if (!(await getStaffSession())) return res.status(401).json({ error: "Vuelve a iniciar sesión en Staff." });
+      const { image } = req.body;
+      const url = typeof image?.url === "string" ? image.url : "";
+      if (!(url.length <= 2048 && /^https:\/\/[^\s]+$/i.test(url)) &&
+          !(url.length <= 667000 && /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(url))) {
+        return res.status(400).json({ error: "La foto o el enlace no tienen un formato válido." });
+      }
+      const entry = { url, descripcion: String(image.descripcion || "").slice(0, 500), categoria: String(image.categoria || "General").slice(0, 80), fecha: new Date().toISOString().slice(0, 10), portal_visible: true };
+      const rows = await sql`
+        INSERT INTO app_data (key, value, updated_at)
+        VALUES ('siteContent', jsonb_build_object('galeria', ${JSON.stringify([entry])}::jsonb), NOW())
+        ON CONFLICT (key) DO UPDATE
+        SET value = jsonb_set(app_data.value, '{galeria}', EXCLUDED.value->'galeria' ||
+          CASE WHEN jsonb_typeof(app_data.value->'galeria') = 'array' THEN app_data.value->'galeria' ELSE '[]'::jsonb END),
+          updated_at = NOW()
+        RETURNING value->'galeria' AS gallery
+      `;
+      return res.status(201).json({ gallery: rows[0].gallery });
     }
 
     if (req.method === "GET" && req.query.key === "portal_me") {
@@ -461,6 +495,11 @@ export default async function handler(req, res) {
       if (key) {
         const rows = await sql`SELECT value, sede_id FROM app_data WHERE key = ${key}`;
         if (rows.length === 0) return res.status(200).json(null);
+        if (key === "siteContent") {
+          const { galeria, ...content } = rows[0].value || {};
+          res.setHeader("Cache-Control", "private, no-store");
+          return res.status(200).json(await getStaffSession() ? { ...content, galeria } : content);
+        }
         
         // If sede_id specified, filter the array
         if (sede_id) {
@@ -471,7 +510,7 @@ export default async function handler(req, res) {
       }
 
       // Return all data (with optional sede filtering)
-      const rows = await sql`SELECT key, value, sede_id FROM app_data WHERE key <> 'registration_requests'`;
+      const rows = await sql`SELECT key, CASE WHEN key = 'siteContent' THEN value - 'galeria' ELSE value END AS value, sede_id FROM app_data WHERE key <> 'registration_requests'`;
       const out = {};
       rows.forEach(r => {
         if (sede_id) {
@@ -617,10 +656,13 @@ export default async function handler(req, res) {
 
       // Site content is global; operational data is isolated by sede.
       if (key === "siteContent") {
+        if (Object.hasOwn(value || {}, "galeria") && !(await getStaffSession())) {
+          return res.status(401).json({ error: "Sesión STAFF requerida" });
+        }
         await sql`
           INSERT INTO app_data (key, value, updated_at)
           VALUES (${key}, ${JSON.stringify(value)}, NOW())
-          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+          ON CONFLICT (key) DO UPDATE SET value = app_data.value || EXCLUDED.value, updated_at = NOW()
         `;
         return res.status(200).json({ success: true });
       }
