@@ -1,6 +1,6 @@
 console.log("APP MODULE LOADED");
 import { state } from "./state.js";
-import { loadNews } from "./news.js";
+import { loadNews, renderNews } from "./news.js";
 import { loadData, setRenderCallbacks, loadSedes, setCurrentSede, loadSiteContent } from "./api.js";
 import { renderSidebar, renderSaveStatus } from "./views/sidebar.js";
 import { renderHome } from "./views/home.js";
@@ -185,6 +185,7 @@ function setupGlobalEvents() {
       state.view = 'public-home';
       setRoute('public-home');
       render();
+      void refreshHomeNews();
       return;
     }
 
@@ -204,6 +205,23 @@ function setupGlobalEvents() {
       return;
     }
   });
+}
+
+let homeNewsRequest;
+async function refreshHomeNews() {
+  if (state.view !== "public-home" || homeNewsRequest) return;
+  homeNewsRequest = loadNews();
+  try {
+    await homeNewsRequest;
+    if (state.view === "public-home") {
+      const section = document.getElementById("noticias");
+      if (section) section.outerHTML = renderNews();
+    }
+  } catch (error) {
+    console.warn("No se pudieron cargar las noticias.", error);
+  } finally {
+    homeNewsRequest = null;
+  }
 }
 
 // SPA Navigation helper
@@ -226,6 +244,7 @@ function navigateTo(href) {
     window.location.hash = hash || 'home';
   }
   render();
+  void refreshHomeNews();
 }
 
 async function handleLogin(form) {
@@ -300,19 +319,24 @@ setRenderCallbacks(render, renderSaveStatus);
 async function init() {
   const route = parseRoute();
   state.view = route;
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") void refreshHomeNews();
+  });
 
   // Show public and parent-portal screens immediately; their private data is
   // loaded only after the initial UI is visible.
   if (['public-home', 'acceso', 'sede-login', 'portal-padres'].includes(route)) {
     render();
     setupGlobalEvents();
+    void refreshHomeNews();
     await loadSedes();
-    await Promise.all([loadSiteContent(), route === "public-home" ? loadNews().catch(console.warn) : null]);
+    await loadSiteContent();
     if (state.view === route) render();
     window.addEventListener('popstate', () => {
       const nextRoute = parseRoute();
       state.view = nextRoute;
       render();
+      void refreshHomeNews();
     });
     return;
   }
