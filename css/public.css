@@ -824,3 +824,19 @@
   height: clamp(72px, 11vw, 108px);
   object-fit: contain;
 }
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .sponsor-grid li {
+    transition: transform 220ms ease, box-shadow 220ms ease;
+  }
+  .sponsor-grid img {
+    transition: transform 260ms ease;
+  }
+  .sponsor-grid li:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(18, 62, 107, 0.13);
+  }
+  .sponsor-grid li:hover img {
+    transform: scale(1.07) rotate(-2deg);
+  }
+}
