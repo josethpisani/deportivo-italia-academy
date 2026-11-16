@@ -11,7 +11,7 @@ import { renderEstadisticas } from "./views/estadisticas.js";
 import { renderEvaluacion } from "./views/evaluacion.js";
 import { renderTorneos, renderTorneoDetail } from "./views/torneos.js";
 import { renderFloatingSocialLinks, renderPublicHome } from "./views/public-home.js";
-import { renderAcceso } from "./views/acceso.js";
+import { handleAccesoClick, renderAcceso } from "./views/acceso.js";
 import { renderParentPortal } from "./views/portal.js";
 import { drawHomeCharts, drawAthListChart, drawAthDetailChart, drawRegChart, drawAdminCharts, drawStatsCharts, drawEvalCharts, drawTorneoCharts } from "./charts.js";
 import { attachEvents } from "./events.js";
@@ -106,6 +106,7 @@ function render(){
 
 // Event delegation for dynamic elements
 function setupGlobalEvents() {
+  document.addEventListener('click', handleAccesoClick);
   // Internal navigation links (SPA routing)
   document.addEventListener('click', (e) => {
     const link = e.target.closest('a[href^="/"]');
@@ -229,6 +230,9 @@ async function handleLogin(form, sede) {
   const password = form.querySelector('[name="password"]').value;
   const btn = form.querySelector('#btnLogin') || form.querySelector('.btn-sede-login');
   
+  const buttonLabel = btn.textContent;
+  const feedback = form.querySelector(".staff-login-error");
+  feedback.textContent = "";
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = `${ic.loader} Entrando...`;
@@ -252,8 +256,8 @@ async function handleLogin(form, sede) {
     setRoute('home');
     render();
   } catch (error) {
-    if (btn) { btn.disabled = false; btn.textContent = 'Ingresar al sistema'; }
-    alert(error.message);
+    if (btn) { btn.disabled = false; btn.textContent = buttonLabel; }
+    feedback.textContent = error.message;
   }
 }
 

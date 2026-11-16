@@ -1,131 +1,91 @@
 import { state } from "../state.js";
-import { ic } from "../icons.js";
 import { escapeHtml, sedeDisplayName } from "../utils.js";
 
+function describeSede(sede) {
+  const displayName = sedeDisplayName(sede);
+  const [, name, venue = ""] = /^(.*) \(([^()]+)\)$/.exec(displayName) ?? ["", displayName];
+  const photo = { PV: "/img/panama-viejo.jpg", BR: "/img/sede-brisas.jpg" }[sede.codigo];
+  return { ...sede, name, venue, photo: photo || sede.imagen_principal, caption: [name, venue].filter(Boolean).join(" · ") };
+}
+
 export function renderAcceso() {
-  const sedes = state.sedes.filter(s => s.estado === 'activa');
-  const urlParams = new URLSearchParams(window.location.search);
-  const preselectedSede = urlParams.get('sede');
-  
+  const sedes = state.sedes.filter(sede => sede.estado === "activa").map(describeSede);
+  const requested = new URLSearchParams(window.location.search).get("sede");
+  const selected = sedes.find(sede => sede.codigo === requested) ?? sedes[0];
+
+  function choice(sede, photo) {
+    return `
+      <button type="button" class="${photo ? "staff-login-photo" : "staff-login-choice"}"
+        data-login-choice="${escapeHtml(sede.codigo)}" aria-pressed="${sede === selected}">
+        ${photo && sede.photo ? `<img src="${escapeHtml(sede.photo)}" alt="" class="staff-login-photo-image">` : ""}
+        <strong>${escapeHtml(sede.name)}</strong>
+        ${photo && sede.venue ? `<span>${escapeHtml(sede.venue)}</span>` : ""}
+      </button>`;
+  }
 
   return `
-    <div class="acceso-page">
-      <!-- Header -->
-      <header class="acceso-header">
-        <div class="container">
-          <a href="/" class="acceso-back-btn" title="Volver al inicio">
-            ${ic.arrowLeft}
-          </a>
-          <a href="/" class="acceso-logo">
-            <img src="/img/logo-deportivoitalia.png" alt="Deportivo Italia Academy">
-            <span>DEPORTIVO ITALIA ACADEMY</span>
-          </a>
-        </div>
+    <div class="staff-login">
+      <header class="staff-login-header">
+        <a href="/" class="staff-login-brand"><img src="/img/logo-deportivoitalia.png" alt="">Deportivo Italia Academy</a>
+        <a href="/">← Volver al inicio</a>
       </header>
-
-      <!-- Main Content -->
-      <main class="acceso-main">
-        <div class="container">
-          <!-- Hero -->
-          <section class="acceso-hero">
-            <div class="acceso-hero-content">
-              <div class="acceso-badge">${ic.shield} Acceso al Sistema STAFF</div>
-              <h1 class="acceso-title">Selecciona tu sede</h1>
-              <p class="acceso-subtitle">Ingresa tus credenciales directamente en la tarjeta de tu sede</p>
+      <main class="staff-login-main">
+        <h1>Sistema Staff</h1>
+        <p>Selecciona tu sede para iniciar sesión.</p>
+        ${selected ? `
+          <div class="staff-login-layout">
+            <div class="staff-login-photos" role="group" aria-label="Fotos de las sedes">
+              ${sedes.map(sede => choice(sede, true)).join("")}
             </div>
-          </section>
-
-          <!-- Sedess Cards with Inline Login -->
-          <section class="acceso-sedes">
-            <div class="sedes-grid-acceso">
-              ${sedes.map(sede => {
-                return `
-                <article class="sede-card-acceso ${preselectedSede === sede.codigo ? 'preselected' : ''}" data-sede-codigo="${sede.codigo}">
-                  <div class="sede-card-bg">
-                    ${sede.codigo === 'BR' || sede.id === 'sed_brisas' ? `<img src="/img/sede-brisas.jpg" alt="Cancha de la sede Brisas" class="sede-bg-img" style="object-position: center 67%">` :
-                      sede.codigo === 'PV' || sede.id === 'sed_panama_viejo' ? `<img src="/img/panama-viejo.jpg" alt="Sede Panamá Viejo" class="sede-bg-img">` : sede.imagen_principal 
-                      ? `<img src="${escapeHtml(sede.imagen_principal)}" alt="${escapeHtml(sede.nombre)}" class="sede-bg-img">`
-                      : `<div class="sede-bg-placeholder">${ic.mapPin}</div>`
-                    }
-                    <div class="sede-card-overlay"></div>
-                  </div>
-                  <div class="sede-card-content">
-                    <div class="sede-icon-wrapper">
-                      <span class="sede-icon">${ic.mapPin}</span>
-                    </div>
-                    <h2 class="sede-name">${escapeHtml(sedeDisplayName(sede))}</h2>
-                    <p class="sede-code">Código: ${escapeHtml(sede.codigo)}</p>
-                    
-                    <!-- Inline Login Form -->
-                    <form class="sede-login-form" data-sede-codigo="${sede.codigo}">
-                      <div class="login-fields">
-                        <div class="form-row">
-                          <div class="form-group">
-                            <label for="user-${sede.codigo}">${ic.user} Usuario</label>
-                            <input type="text" id="user-${sede.codigo}" name="email" placeholder="Usuario" required autocomplete="username">
-                          </div>
-                          <div class="form-group">
-                            <label for="pass-${sede.codigo}">${ic.lock} Contraseña</label>
-                            <input type="password" id="pass-${sede.codigo}" name="password" placeholder="Contraseña" required autocomplete="current-password">
-                          </div>
-                        </div>
-                        <button type="submit" class="btn-sede-login">
-                          ${ic.logIn} ACCEDER A ${escapeHtml(sede.nombre).toUpperCase()}
-                        </button>
-                      </div>
-                    </form>
-                    
-                    <div class="sede-meta-acceso">
-                      <span class="sede-status ${sede.estado === 'activa' ? 'active' : 'inactive'}">
-                        <span class="status-dot"></span>
-                        ${sede.estado === 'activa' ? 'Activa' : 'Inactiva'}
-                      </span>
-                    </div>
-                    <div class="sede-location">
-                      ${ic.mapPin} ${escapeHtml(sede.direccion || "Dirección no disponible")}
-                    </div>
-                  </div>
-                </article>
-              `}).join("")}
-            </div>
-          </section>
-
-          <!-- Info Section -->
-          <section class="acceso-info">
-            <div class="info-cards">
-              <div class="info-card">
-                <div class="info-icon">${ic.users}</div>
-                <h3>Administradores</h3>
-                <p>Gestión completa de atletas, pagos, torneos y estadísticas</p>
+            <form class="sede-login-form staff-login-form" data-sede-codigo="${escapeHtml(selected.codigo)}">
+              <h2>Iniciar sesión</h2>
+              <p data-login-caption aria-live="polite">${escapeHtml(selected.caption)}</p>
+              <div class="staff-login-choices" role="group" aria-label="Seleccionar sede">
+                ${sedes.map(sede => choice(sede, false)).join("")}
               </div>
-              <div class="info-card">
-                <div class="info-icon">${ic.clipboard}</div>
-                <h3>Entrenadores</h3>
-                <p>Registro de asistencias, evaluaciones y seguimiento de jugadores</p>
+              <label for="staff-login-user">Usuario</label>
+              <input id="staff-login-user" type="text" name="email" placeholder="Usuario" required autocomplete="username">
+              <label for="staff-login-password">Contraseña</label>
+              <div class="staff-login-password">
+                <input id="staff-login-password" type="password" name="password" placeholder="Contraseña" required autocomplete="current-password">
+                <button type="button" data-login-toggle aria-controls="staff-login-password">Mostrar</button>
               </div>
-              <div class="info-card">
-                <div class="info-icon">${ic.shield}</div>
-                <h3>Acceso Seguro</h3>
-                <p>Cada sede tiene su base de datos aislada y protegida</p>
-              </div>
-            </div>
-          </section>
-
-          <!-- Back to Public Site -->
-          <section class="acceso-back">
-            <a href="/" class="btn-back-home">
-              ${ic.home} Volver al sitio público
-            </a>
-          </section>
-        </div>
+              <button type="submit" id="btnLogin" class="staff-login-submit">Entrar a ${escapeHtml(selected.name)} →</button>
+              <p class="staff-login-error" role="alert"></p>
+            </form>
+          </div>` : '<p role="status">No hay sedes disponibles en este momento.</p>'}
       </main>
+    </div>`;
+}
 
-      <!-- Footer -->
-      <footer class="acceso-footer">
-        <div class="container">
-          <p>&copy; 2026 Deportivo Italia Academy. Todos los derechos reservados.</p>
-        </div>
-      </footer>
-    </div>
-  `;
+export function handleAccesoClick(event) {
+  const button = event.target.closest("[data-login-choice], [data-login-toggle]");
+  if (!button) return;
+
+  const page = button.closest(".staff-login");
+  const form = page.querySelector(".staff-login-form");
+  const password = form.elements.password;
+  const toggle = form.querySelector("[data-login-toggle]");
+
+  if (button === toggle) {
+    const show = password.type === "password";
+    password.type = show ? "text" : "password";
+    toggle.textContent = show ? "Ocultar" : "Mostrar";
+    return;
+  }
+
+  const code = button.dataset.loginChoice;
+  if (form.dataset.sedeCodigo === code || form.querySelector("#btnLogin").disabled) return;
+
+  const sede = describeSede(state.sedes.find(item => item.codigo === code));
+  form.dataset.sedeCodigo = code;
+  for (const choice of page.querySelectorAll("[data-login-choice]")) {
+    choice.setAttribute("aria-pressed", String(choice.dataset.loginChoice === code));
+  }
+  form.querySelector("[data-login-caption]").textContent = sede.caption;
+  form.querySelector("#btnLogin").textContent = `Entrar a ${sede.name} →`;
+  form.querySelector(".staff-login-error").textContent = "";
+  password.value = "";
+  password.type = "password";
+  toggle.textContent = "Mostrar";
 }
