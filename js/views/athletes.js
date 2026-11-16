@@ -2,7 +2,8 @@ import { state } from "../state.js";
 import { CATEGORIES, TRAINING_DAYS } from "../constants.js";
 import { ic } from "../icons.js";
 import { escapeHtml, attendanceRate, lastNDates, staffYearAthletes, matchesStaffYear, staffYearRecord } from "../utils.js";
-import { statPill, badge, initials } from "../render-helpers.js";
+import { statPill, badge } from "../render-helpers.js";
+import { athletePhoto } from "../athlete-photo.js";
 
 function attendGrid(sessions, record, athleteId, type){
   const readOnly = state.athleteReadOnly;
@@ -34,7 +35,7 @@ export function renderAthleteList(){
       const rate = attendanceRate(a.asistenciaEntrenamiento);
       return `<button class="ath-card" data-open="${a.id}">
         <div class="top">
-          <div class="avatar">${initials(a)}</div>
+          <div class="avatar athlete-photo-frame">${athletePhoto(a, state.currentSede?.id)}</div>
           ${badge(a.matricula.estado, a.matricula.estado==="pagado"?"good":"bad")}
         </div>
         <div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>
@@ -56,7 +57,7 @@ export function renderAthleteList(){
     const rows = filtered.map(a=>{
       const rate = attendanceRate(a.asistenciaEntrenamiento);
       return `<button class="ath-list-row" data-open="${a.id}">
-        <div class="avatar" style="width:34px;height:34px;font-size:12px;flex-shrink:0;">${initials(a)}</div>
+        <div class="avatar athlete-photo-frame" style="width:34px;height:34px;font-size:12px;flex-shrink:0;">${athletePhoto(a, state.currentSede?.id)}</div>
         <div class="info">
           <div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>
           <div class="meta">${a.categoria} · Representante: ${escapeHtml(a.representante)}</div>
@@ -152,7 +153,7 @@ export function renderAthleteDetail(){
   return `
     <button class="back-btn" id="btnBack">${ic.back} Volver a atletas</button>
     <div class="profile-head">
-      <div class="avatar big">${initials(a)}</div>
+      <div class="avatar big athlete-photo-frame">${athletePhoto(a, state.currentSede?.id)}</div>
       <div>
         <h1 class="dia-title">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</h1>
         <div class="badges-row">
@@ -162,6 +163,12 @@ export function renderAthleteDetail(){
         </div>
       </div>
     </div>
+    ${state.athleteReadOnly ? "" : `<form id="athletePhotoForm" class="athlete-photo-form">
+      <label for="athletePhotoFile">Foto del atleta</label>
+      <input id="athletePhotoFile" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+      <button class="btn-primary" type="submit">Guardar foto</button>
+      <p role="status"></p>
+    </form>`}
     <div class="stats-row">
       ${statPill(ic.trend,"Asist. entrenamiento", trainRate+"%","var(--pitch)")}
       ${statPill(ic.trophy,"Asist. juegos", gameRate+"%","var(--green)")}

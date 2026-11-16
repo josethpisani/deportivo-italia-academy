@@ -197,6 +197,52 @@ export default async function handler(req, res) {
       return rows[0] || null;
     }
 
+    if (req.query.key === "athlete_photo" && ["GET", "POST"].includes(req.method)) {
+      res.setHeader("Cache-Control", "private, no-store");
+      const { id } = req.query;
+      if (!id || !sede_id || typeof id !== "string" || typeof sede_id !== "string" || id.length > 128 || sede_id.length > 128) {
+        return res.status(400).json({ error: "Atleta o sede inválidos." });
+      }
+      const staff = await getStaffSession();
+      if (staff?.sede_id !== sede_id) {
+        const parent = req.method === "GET" ? await getParentSession() : null;
+        if (!parent) return res.status(401).json({ error: "Sesión requerida." });
+        const links = await sql`SELECT 1 FROM parent_athletes WHERE parent_id = ${parent.id} AND athlete_id = ${id} AND sede_id = ${sede_id}`;
+        if (!links.length) return res.status(403).end();
+      }
+      const athletes = await sql`
+        SELECT 1 FROM jsonb_array_elements((SELECT value FROM app_data WHERE key = 'athletes')) AS athlete
+        WHERE athlete->>'id' = ${id}
+          AND COALESCE(NULLIF(athlete->>'sede_id', ''), ${sede_id}) = ${sede_id}
+        LIMIT 1
+      `;
+      if (!athletes.length) return res.status(404).json({ error: "Atleta no encontrado en esta sede." });
+      const key = "athlete_photo:" + JSON.stringify([sede_id, id]);
+      if (req.method === "GET") {
+        const rows = await sql`SELECT value FROM app_data WHERE key = ${key}`;
+        if (!rows.length) return res.status(204).end();
+        const { mime, data } = rows[0].value;
+        res.setHeader("Content-Type", mime);
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        return res.status(200).end(Buffer.from(data, "base64"));
+      }
+      const photo = req.body?.photo;
+      const match = typeof photo === "string" && photo.length <= 667000
+        ? /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(photo)
+        : null;
+      if (!match) return res.status(400).json({ error: "Selecciona una foto JPG, PNG o WebP." });
+      const [, mime, data] = match;
+      await sql`
+        INSERT INTO app_data (key, value, sede_id) VALUES (${key}, ${JSON.stringify({ mime, data })}, ${sede_id})
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+      `;
+      return res.status(200).json({ success: true });
+    }
+
+    if ([req.query.key, req.body?.key].some(key => typeof key === "string" && key.startsWith("athlete_photo:"))) {
+      return res.status(404).end();
+    }
+
     if (req.query.key === "academy_news" && ["GET", "POST"].includes(req.method)) {
       res.setHeader("Cache-Control", "no-store");
       if (req.method === "POST" && !(await getStaffSession())) {
@@ -582,7 +628,7 @@ export default async function handler(req, res) {
       }
 
       // Return all data (with optional sede filtering)
-      const rows = await sql`SELECT key, CASE WHEN key = 'siteContent' THEN value - 'galeria' ELSE value END AS value, sede_id FROM app_data WHERE key <> 'registration_requests' AND key NOT LIKE 'gallery_video:%'`;
+      const rows = await sql`SELECT key, CASE WHEN key = 'siteContent' THEN value - 'galeria' ELSE value END AS value, sede_id FROM app_data WHERE key <> 'registration_requests' AND key NOT LIKE 'gallery_video:%' AND key NOT LIKE 'athlete_photo:%'`;
       const out = {};
       rows.forEach(r => {
         if (sede_id) {

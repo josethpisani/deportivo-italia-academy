@@ -1,5 +1,6 @@
 import { state } from "./state.js";
-import { attachNewsEvents, loadNews } from "./news.js";
+import { attachNewsEvents, imageData, loadNews } from "./news.js";
+import { athletePhoto } from "./athlete-photo.js";
 import { galleryGroups, galleryMedia } from "./gallery.js";
 import { CONTACT_EMAIL } from "./constants.js";
 import { ic } from "./icons.js";
@@ -25,7 +26,42 @@ function formatDateInput(date) {
   return `${year}-${month}-${day}`;
 }
 
+document.addEventListener("error", event => {
+  if (event.target instanceof HTMLImageElement && event.target.classList.contains("athlete-photo")) {
+    event.target.hidden = true;
+  }
+}, true);
+
 export function attachEvents(){
+  const photoForm = document.getElementById("athletePhotoForm");
+  if (photoForm) photoForm.onsubmit = async event => {
+    event.preventDefault();
+    const button = photoForm.querySelector("button");
+    const status = photoForm.querySelector('[role="status"]');
+    const file = photoForm.elements.photo.files[0];
+    if (!file) return;
+    const query = new URLSearchParams({ key: "athlete_photo", id: state.selectedId, sede_id: state.currentSede.id });
+    button.disabled = true;
+    status.textContent = "Guardando foto…";
+    try {
+      const photo = await imageData(file);
+      const response = await fetch(`/api/data?${query}`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ photo })
+      });
+      if (!response.ok) throw new Error((await response.json()).error || "No se pudo guardar la foto.");
+      const preview = document.querySelector(".profile-head .athlete-photo");
+      if (photoForm.isConnected && preview) {
+        preview.src = photo;
+        preview.hidden = false;
+      }
+      photoForm.reset();
+      status.textContent = "Foto guardada.";
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  };
   attachNewsEvents();
   const academySection = document.getElementById("nosotros");
   const academyWork = document.getElementById("trabajo");
@@ -733,7 +769,7 @@ export function attachEvents(){
     const gameRows = tournaments.flatMap(entry => { const torneo = torneos.find(item => String(item.id) === String(entry.torneoId)); return (torneo?.juegos || []).map(game => { const gameStats = athlete.juegosStats?.[entry.torneoId]?.[game.id] || {}; const result = game.estado === 'jugado' ? `${game.marcadorF ?? 0} - ${game.marcadorC ?? 0}` : 'Por jugar'; return `<tr><td>${esc(torneo?.nombre || 'Torneo')}</td><td>${esc(game.fecha || '—')}</td><td>vs. ${esc(game.rival || 'Rival')}</td><td><strong>${esc(result)}</strong></td><td>${esc(`${gameStats.goles || 0} goles · ${gameStats.asistencias || 0} asistencias`)}</td></tr>`; }); }).join('') || '<tr><td colspan="5">No hay juegos registrados para los torneos inscritos.</td></tr>';
     const monthlyRows = payments.map(([month, payment]) => `<tr><td>${esc(month)}</td><td>${esc(payment?.monto ? `$${payment.monto}` : '—')}</td><td><span class="portal-status ${payment?.estado === 'pagado' ? '' : 'negative'}">${esc(payment?.estado || 'pendiente')}</span></td><td>${esc(payment?.fecha || '—')}</td></tr>`).join('') || '<tr><td colspan="4">No hay mensualidades registradas.</td></tr>';
     const uniformRows = uniforms.map(([label, payment]) => `<tr><td>${esc(label)}</td><td>${esc(payment?.monto ? `$${payment.monto}` : '—')}</td><td><span class="portal-status ${payment?.estado === 'pagado' ? '' : 'negative'}">${esc(payment?.estado || 'No registrado')}</span></td><td>${esc(payment?.fecha || '—')}</td></tr>`).join('') || '<tr><td colspan="4">No hay pagos de uniformes registrados.</td></tr>';
-    return `<div class="portal-athlete-hero"><div class="portal-athlete-avatar large">${esc(fullName.slice(0, 2).toUpperCase())}</div><div><span class="portal-eyebrow">Perfil del atleta · ${esc(athlete.sede_id === 'sed_brisas' ? 'Brisas' : 'Panamá Viejo')}</span><h2>${esc(fullName)}</h2><p>${esc(athlete.categoria || 'Categoría no registrada')} · ${esc(athlete.posicion || 'Posición no registrada')}</p></div><span class="portal-readonly">Solo consulta</span></div><div class="portal-metric-grid"><article><strong>${esc(athlete.categoria || '—')}</strong><span>Categoría</span></article><article><strong>${esc(athlete.edad || '—')}</strong><span>Edad</span></article><article><strong>${present}</strong><span>Asistencias</span></article><article><strong>${tournaments.length}</strong><span>Torneos</span></article></div><section class="portal-info-section"><h3>Información del atleta</h3><div class="portal-info-grid"><article class="portal-info-card"><dl><div><dt>Fecha de nacimiento</dt><dd>${esc(formatPortalDate(athlete.fechaNacimiento))}</dd></div><div><dt>Ingreso a la academia</dt><dd>${esc(formatPortalDate(athlete.fechaIngreso))}</dd></div><div><dt>Representante</dt><dd>${esc(athlete.representante || 'No registrada')}</dd></div><div><dt>Teléfono</dt><dd>${esc(athlete.telefono || 'No registrado')}</dd></div><div><dt>Dirección</dt><dd>${esc(athlete.direccion || 'No registrada')}</dd></div></dl></article><article class="portal-info-card"><h3>Estadísticas generales</h3><div class="portal-stat-list"><span>Partidos <b>${stats.partidosJugados || 0}</b></span><span>Goles <b>${stats.goles || 0}</b></span><span>Asistencias <b>${stats.asistencias || 0}</b></span><span>Entrenamientos <b>${stats.entrenamientosAsistidos || 0}/${stats.entrenamientosTotales || 0}</b></span><span>Tarjetas <b>${stats.tarjetasAmarillas || 0} amarillas · ${stats.tarjetasRojas || 0} rojas</b></span></div></article></div>${athlete.observaciones ? `<p class="portal-observation"><strong>Observaciones:</strong> ${esc(athlete.observaciones)}</p>` : ''}</section><section class="portal-info-section"><h3>Asistencias</h3><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Fecha</th><th>Actividad</th><th>Estado</th></tr></thead><tbody>${attendanceRows}</tbody></table></div></section><section class="portal-info-section"><h3>Calendario de juegos y resultados</h3><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Torneo</th><th>Fecha</th><th>Rival</th><th>Resultado</th><th>Estadísticas</th></tr></thead><tbody>${gameRows}</tbody></table></div></section><section class="portal-info-section"><h3>Mensualidades y matrícula</h3><div class="portal-payment-highlight"><span>Matrícula</span><strong>${esc(athlete.matricula?.monto ? `$${athlete.matricula.monto}` : '—')}</strong><b class="portal-status ${athlete.matricula?.estado === 'pagado' ? '' : 'negative'}">${esc(athlete.matricula?.estado || 'No registrada')}</b></div><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Mes</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${monthlyRows}</tbody></table></div></section><section class="portal-info-section"><h3>Pagos de torneos</h3><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Torneo</th><th>Fecha</th><th>Monto</th><th>Estadísticas</th></tr></thead><tbody>${tournamentRows}</tbody></table></div></section><section class="portal-info-section"><h3>Pagos de uniformes</h3><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Concepto</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${uniformRows}</tbody></table></div></section><section class="portal-info-section"><h3>Evaluación mensual del atleta</h3><div class="portal-evaluations">${evaluationRows}</div></section><div class="portal-readonly-note">${ic.shield} Esta información es de consulta. Los pagos, la asistencia, las estadísticas, las evaluaciones y la galería son administrados por el personal del club.</div>`;
+    return `<div class="portal-athlete-hero"><div class="portal-athlete-avatar large athlete-photo-frame">${athletePhoto(athlete, athlete.sede_id)}</div><div><span class="portal-eyebrow">Perfil del atleta · ${esc(athlete.sede_id === 'sed_brisas' ? 'Brisas' : 'Panamá Viejo')}</span><h2>${esc(fullName)}</h2><p>${esc(athlete.categoria || 'Categoría no registrada')} · ${esc(athlete.posicion || 'Posición no registrada')}</p></div><span class="portal-readonly">Solo consulta</span></div><div class="portal-metric-grid"><article><strong>${esc(athlete.categoria || '—')}</strong><span>Categoría</span></article><article><strong>${esc(athlete.edad || '—')}</strong><span>Edad</span></article><article><strong>${present}</strong><span>Asistencias</span></article><article><strong>${tournaments.length}</strong><span>Torneos</span></article></div><section class="portal-info-section"><h3>Información del atleta</h3><div class="portal-info-grid"><article class="portal-info-card"><dl><div><dt>Fecha de nacimiento</dt><dd>${esc(formatPortalDate(athlete.fechaNacimiento))}</dd></div><div><dt>Ingreso a la academia</dt><dd>${esc(formatPortalDate(athlete.fechaIngreso))}</dd></div><div><dt>Representante</dt><dd>${esc(athlete.representante || 'No registrada')}</dd></div><div><dt>Teléfono</dt><dd>${esc(athlete.telefono || 'No registrado')}</dd></div><div><dt>Dirección</dt><dd>${esc(athlete.direccion || 'No registrada')}</dd></div></dl></article><article class="portal-info-card"><h3>Estadísticas generales</h3><div class="portal-stat-list"><span>Partidos <b>${stats.partidosJugados || 0}</b></span><span>Goles <b>${stats.goles || 0}</b></span><span>Asistencias <b>${stats.asistencias || 0}</b></span><span>Entrenamientos <b>${stats.entrenamientosAsistidos || 0}/${stats.entrenamientosTotales || 0}</b></span><span>Tarjetas <b>${stats.tarjetasAmarillas || 0} amarillas · ${stats.tarjetasRojas || 0} rojas</b></span></div></article></div>${athlete.observaciones ? `<p class="portal-observation"><strong>Observaciones:</strong> ${esc(athlete.observaciones)}</p>` : ''}</section><section class="portal-info-section"><h3>Asistencias</h3><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Fecha</th><th>Actividad</th><th>Estado</th></tr></thead><tbody>${attendanceRows}</tbody></table></div></section><section class="portal-info-section"><h3>Calendario de juegos y resultados</h3><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Torneo</th><th>Fecha</th><th>Rival</th><th>Resultado</th><th>Estadísticas</th></tr></thead><tbody>${gameRows}</tbody></table></div></section><section class="portal-info-section"><h3>Mensualidades y matrícula</h3><div class="portal-payment-highlight"><span>Matrícula</span><strong>${esc(athlete.matricula?.monto ? `$${athlete.matricula.monto}` : '—')}</strong><b class="portal-status ${athlete.matricula?.estado === 'pagado' ? '' : 'negative'}">${esc(athlete.matricula?.estado || 'No registrada')}</b></div><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Mes</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${monthlyRows}</tbody></table></div></section><section class="portal-info-section"><h3>Pagos de torneos</h3><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Torneo</th><th>Fecha</th><th>Monto</th><th>Estadísticas</th></tr></thead><tbody>${tournamentRows}</tbody></table></div></section><section class="portal-info-section"><h3>Pagos de uniformes</h3><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Concepto</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${uniformRows}</tbody></table></div></section><section class="portal-info-section"><h3>Evaluación mensual del atleta</h3><div class="portal-evaluations">${evaluationRows}</div></section><div class="portal-readonly-note">${ic.shield} Esta información es de consulta. Los pagos, la asistencia, las estadísticas, las evaluaciones y la galería son administrados por el personal del club.</div>`;
   };
   const renderParentDashboard = (payload) => {
     if (!dashboardView) return;
@@ -786,7 +822,7 @@ export function attachEvents(){
       const targets = { ficha: findSection('información del atleta'), asistencia: findSection('asistencias'), pagos: sections.filter(section => ['mensualidades', 'pagos de torneos', 'pagos de uniformes'].some(label => section.querySelector('h3')?.textContent.toLowerCase().includes(label))), torneos: findSection('calendario de juegos'), evaluaciones: findSection('evaluación mensual'), galeria: findSection('galería') };
       const activateSection = sectionName => {
         if (homeRepresentative) homeRepresentative.style.display = sectionName === 'resumen' ? '' : 'none';
-        if (hero) hero.style.display = sectionName === 'resumen' ? '' : 'none';
+        if (hero) hero.style.display = ['resumen', 'ficha'].includes(sectionName) ? '' : 'none';
         if (metrics) metrics.style.display = sectionName === 'resumen' ? '' : 'none';
         sections.forEach(section => { section.style.display = 'none'; });
         const selected = sectionName === 'resumen' ? [findSection('información del atleta')] : (Array.isArray(targets[sectionName]) ? targets[sectionName] : [targets[sectionName]]);
