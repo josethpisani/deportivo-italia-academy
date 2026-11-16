@@ -3,7 +3,7 @@
 
 import { neon } from "@neondatabase/serverless";
 import { registrationFields } from "../js/registration-fields.js";
-import { galleryCategories } from "../js/gallery.js";
+import { galleryCategories, galleryVideoMaxBytes, galleryVideoMaxLabel } from "../js/gallery.js";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
 function hashToken(token) { return createHash("sha256").update(token).digest("hex"); }
@@ -348,8 +348,8 @@ export default async function handler(req, res) {
       const url = isVideo ? `/api/data?key=gallery_video&id=${id}` : (typeof image?.url === "string" ? image.url : "");
       if (isVideo) {
         const { mime, video } = image;
-        if (!["video/mp4", "video/webm"].includes(mime) || typeof video !== "string" || video.length > 4_000_000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(video)) {
-          return res.status(400).json({ error: "Selecciona un MP4 o WebM de hasta 3 MB." });
+        if (!["video/mp4", "video/webm"].includes(mime) || typeof video !== "string" || video.length > 4 * Math.ceil(galleryVideoMaxBytes / 3) || !/^[A-Za-z0-9+/]+={0,2}$/.test(video)) {
+          return res.status(400).json({ error: `Selecciona un MP4 o WebM de hasta ${galleryVideoMaxLabel}.` });
         }
         const bytes = Buffer.from(video, "base64");
         const valid = mime === "video/mp4" ? bytes.toString("ascii", 4, 8) === "ftyp" : bytes.subarray(0, 4).toString("hex") === "1a45dfa3";

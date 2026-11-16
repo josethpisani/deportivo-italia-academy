@@ -5,7 +5,7 @@ import { addAthlete, addTorneo, updateAthlete, updateTorneo, deleteTorneo, saveE
 import { escapeHtml } from "./utils.js";
 import { saveSede, updateSede, addGalleryImage } from "./api.js";
 import { imageData } from "./news.js";
-import { galleryCategories } from "./gallery.js";
+import { galleryCategories, galleryVideoMaxBytes, galleryVideoMaxLabel } from "./gallery.js";
 
 export function closeModal(){
   const ov = document.getElementById("modalOverlay");
@@ -521,7 +521,7 @@ export function openAddGaleriaModal(){
         <div class="mh"><h3 class="dia-title">Agregar foto o video</h3><button id="modalClose">${ic.x}</button></div>
         <label for="g_file">Examinar archivos</label>
         <input id="g_file" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.mp4,.webm" aria-describedby="g_formats">
-        <p id="g_formats">JPG, PNG o WebP hasta 20 MB. MP4 o WebM hasta 3 MB.</p>
+        <p id="g_formats">JPG, PNG o WebP hasta 20 MB. MP4 o WebM hasta ${galleryVideoMaxLabel}.</p>
         <label for="g_url">O enlace directo a la imagen</label><input id="g_url" type="url" placeholder="https://...">
         <label>Descripción</label><input id="g_desc" placeholder="Descripción de la imagen">
         <label>Categoría</label>
@@ -555,7 +555,9 @@ export function openAddGaleriaModal(){
       const url = link.value.trim();
       const selected = file.files[0];
       if (selected && /\.(mp4|webm)$/i.test(selected.name)) {
-        if (!selected.size || selected.size > 3_000_000) throw new Error("Selecciona un video de hasta 3 MB.");
+        if (!selected.size || selected.size > galleryVideoMaxBytes) {
+          throw new Error(`Selecciona un video de hasta ${galleryVideoMaxLabel}.`);
+        }
         newImage.tipo = "video";
         newImage.mime = /\.mp4$/i.test(selected.name) ? "video/mp4" : "video/webm";
         newImage.video = await new Promise((resolve, reject) => {
