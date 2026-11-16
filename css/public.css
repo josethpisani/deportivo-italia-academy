@@ -135,13 +135,13 @@
 .section-nosotros { background: var(--bg-secondary); }
 .section-trabajo { background: var(--bg-primary); }
 .section-galeria { background: var(--bg-secondary); }
-.section-sedes { background: var(--primary); }
+.section-sedes, .section-sponsors { background: var(--primary); }
 .section-contacto { background: var(--bg-secondary); }
 
 .section-header { text-align: center; margin-bottom: 60px; }
 .section-header .dia-title { font-size: 36px; color: var(--text-primary); margin: 0 0 8px; }
 .section-subtitle { color: var(--text-muted); font-size: 16px; margin: 0; }
-.section-sedes .section-header :is(.dia-title, .section-subtitle) { color: var(--chalk); }
+:is(.section-sedes, .section-sponsors) .section-header :is(.dia-title, .section-subtitle) { color: var(--chalk); }
 
 /* NOSOTROS */
 .nosotros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
@@ -845,7 +845,6 @@
 
 .section-sponsors {
   padding: clamp(36px, 6vw, 72px) 0;
-  background: #f5f7fa;
 }
 
 .section-news {
@@ -866,7 +865,7 @@
   background: url("/img/escudo-marca-agua.png") center / min(70vw, 48vh, 460px) auto no-repeat;
   opacity: 0.07;
 }
-.academy-watermark > :is(.section-news, .section-nosotros, .section-trabajo, .section-contacto, .section-sponsors) {
+.academy-watermark > :is(.section-news, .section-nosotros, .section-trabajo, .section-contacto) {
   background: transparent;
 }
 .news-grid {
