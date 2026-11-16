@@ -1,5 +1,6 @@
 import { state } from "./state.js";
 import { escapeHtml } from "./utils.js";
+import { ic } from "./icons.js";
 
 const endpoint = "/api/data?key=academy_news";
 const esc = escapeHtml;
@@ -34,13 +35,17 @@ export function renderNews() {
         const instagram = /^https:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/[A-Za-z0-9_-]+\/$/.test(item.instagram) ? item.instagram : "";
         const cover = item.image || (instagram && (savedCovers[instagram] || `${instagram.replace("/reel/", "/p/")}media/?size=l`));
         const tag = instagram ? "a" : "article";
-        const link = instagram ? `href="${esc(instagram)}" target="_blank" rel="noopener noreferrer"` : "";
+        const linkLabel = item.title ? `${item.title} · Ver en Instagram` : "Ver publicación en Instagram";
+        const link = instagram ? `href="${esc(instagram)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(linkLabel)}"` : "";
         return `
         <${tag} class="news-card ${index === 0 && item.featured ? "news-featured" : ""}" ${link}>
           ${cover ? `<img src="${esc(cover)}" alt="" loading="lazy">` : ""}
           <div class="news-copy">
             <time datetime="${esc(item.created_at)}">${formatDate(item.created_at)}</time>
-            ${item.title ? `<h3>${esc(item.title)}</h3>` : ""}
+            ${instagram ? `<div class="news-title-row">
+              ${item.title ? `<h3>${esc(item.title)}</h3>` : ""}
+              <span class="news-instagram-logo" aria-hidden="true">${ic.instagram}</span>
+            </div>` : (item.title ? `<h3>${esc(item.title)}</h3>` : "")}
           </div>
         </${tag}>`;
       }).join("") || "<p>Aún no hay noticias publicadas.</p>"}</div>
