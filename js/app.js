@@ -39,7 +39,7 @@ function setRoute(view, params = {}) {
   } else if (view === 'public-home') {
     window.history.pushState({}, '', '/');
   } else {
-    window.location.hash = view;
+    window.history.pushState({}, '', `/staff#${view}`);
   }
 }
 

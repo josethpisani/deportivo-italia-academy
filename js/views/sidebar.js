@@ -12,13 +12,13 @@ export function renderSidebar(){
     {key:"estadisticas", label:"Estadísticas", icon:ic.trophy},
     {key:"evaluaciones", label:"Evaluaciones", icon:ic.trend},
     {key:"admin", label:"Administración", icon:ic.clipboard},
-  ];
+  ].filter(it => it.key !== "admin" || state.adminAuth);
   const pageLabels = {home:"Resumen","atleta-list":"Atletas","atleta-detail":"Perfil",asistencia:"Asistencia",torneos:"Torneos","torneo-detail":"Torneo",estadisticas:"Estadísticas",evaluaciones:"Evaluaciones",admin:"Administración"};
   const currentLabel = pageLabels[state.view] || "Academia";
 
   const isAct = k => state.view===k || (k==="atleta-list" && state.view==="atleta-detail") || (k==="torneos" && state.view==="torneo-detail");
 
-  const navHtml = items.filter(it => it.key !== "admin" || state.adminAuth).map(it =>
+  const navHtml = items.map(it =>
     `<button class="nav-btn ${isAct(it.key)?"active":""}" data-nav="${it.key}">${it.icon}${it.label}</button>`
   ).join("");
 
@@ -41,10 +41,10 @@ export function renderSidebar(){
           <span class="sede-opt-code">${state.currentSede.codigo}</span>
         </div>
         <div class="sede-divider"></div>
-        <button class="sede-option sede-manage" data-sede-id="manage">
+        ${state.adminAuth ? `<button class="sede-option sede-manage" data-sede-id="manage">
           ${ic.settings} Gestionar sedes
         </button>
-        <div class="sede-divider"></div>
+        <div class="sede-divider"></div>` : ""}
         <button class="sede-option sede-logout" data-action="logout">
           ${ic.logOut} Cerrar sesión
         </button>
