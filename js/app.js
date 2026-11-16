@@ -257,39 +257,27 @@ async function handleLogin(form) {
     btn.innerHTML = `${ic.loader} Entrando...`;
   }
   
-  // Credenciales por sede
   const sede = state.targetSede;
-  let valid = false;
-  
-  if (sede?.codigo === 'PV') {
-    valid = email === 'acceso pv' && password === 'pv12345';
-  } else if (sede?.codigo === 'BR') {
-    valid = email === 'acceso br' && password === 'br12345';
-  }
-  
-  if (valid) {
-    try {
-      const staffAuth = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ key: 'staff_auth', action: 'login', email, password, sede_id: sede.id }) });
-      if (!staffAuth.ok) throw new Error('No se pudo validar la sesión STAFF');
-    } catch (error) {
-      if (btn) { btn.disabled = false; btn.innerHTML = `${ic.logIn} Ingresar al sistema`; }
-      alert(error.message); return;
+  try {
+    const response = await fetch('/api/data', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      body: JSON.stringify({ key: 'staff_auth', action: 'login', email, password, sede_id: sede.id })
+    });
+    const result = await response.json();
+    if (!response.ok || !['admin', 'staff'].includes(result.role)) {
+      throw new Error(result.error || 'No se pudo iniciar sesión.');
     }
-    // Set current sede and load data
     setCurrentSede(sede);
+    state.adminAuth = result.role === 'admin';
     await loadData();
-    await loadSiteContent();
-    state.adminAuth = true;
+    if (state.adminAuth) await loadSiteContent();
     state.view = 'home';
     state.targetSede = null;
     setRoute('home');
     render();
-  } else {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = `${ic.logIn} Ingresar al sistema`;
-    }
-    alert('Credenciales incorrectas');
+  } catch (error) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Ingresar al sistema'; }
+    alert(error.message);
   }
 }
 

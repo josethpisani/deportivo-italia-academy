@@ -18,7 +18,7 @@ export function renderSidebar(){
 
   const isAct = k => state.view===k || (k==="atleta-list" && state.view==="atleta-detail") || (k==="torneos" && state.view==="torneo-detail");
 
-  const navHtml = items.map(it =>
+  const navHtml = items.filter(it => it.key !== "admin" || state.adminAuth).map(it =>
     `<button class="nav-btn ${isAct(it.key)?"active":""}" data-nav="${it.key}">${it.icon}${it.label}</button>`
   ).join("");
 

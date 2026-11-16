@@ -25,10 +25,6 @@ export async function loadSedes() {
     const sedes = await res.json();
     state.sedes = sedes || [];
     
-    // Set default sede if not set
-    if (!state.currentSede && state.sedes.length > 0) {
-      state.currentSede = state.sedes[0];
-    }
   } catch (e) {
     console.warn("Could not load sedes:", e);
     state.sedes = [];

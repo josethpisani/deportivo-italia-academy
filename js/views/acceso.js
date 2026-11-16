@@ -7,10 +7,6 @@ export function renderAcceso() {
   const urlParams = new URLSearchParams(window.location.search);
   const preselectedSede = urlParams.get('sede');
   
-  const getCreds = (codigo) => {
-    const isPV = codigo === 'PV';
-    return { user: isPV ? 'acceso pv' : 'acceso br', pass: isPV ? 'pv12345' : 'br12345' };
-  };
 
   return `
     <div class="acceso-page">
@@ -43,7 +39,6 @@ export function renderAcceso() {
           <section class="acceso-sedes">
             <div class="sedes-grid-acceso">
               ${sedes.map(sede => {
-                const creds = getCreds(sede.codigo);
                 return `
                 <article class="sede-card-acceso ${preselectedSede === sede.codigo ? 'preselected' : ''}" data-sede-codigo="${sede.codigo}">
                   <div class="sede-card-bg">
@@ -67,19 +62,16 @@ export function renderAcceso() {
                         <div class="form-row">
                           <div class="form-group">
                             <label for="user-${sede.codigo}">${ic.user} Usuario</label>
-                            <input type="text" id="user-${sede.codigo}" name="email" placeholder="${creds.user}" required autocomplete="username" value="${creds.user}">
+                            <input type="text" id="user-${sede.codigo}" name="email" placeholder="Usuario" required autocomplete="username">
                           </div>
                           <div class="form-group">
                             <label for="pass-${sede.codigo}">${ic.lock} Contraseña</label>
-                            <input type="password" id="pass-${sede.codigo}" name="password" placeholder="${creds.pass}" required autocomplete="current-password" value="${creds.pass}">
+                            <input type="password" id="pass-${sede.codigo}" name="password" placeholder="Contraseña" required autocomplete="current-password">
                           </div>
                         </div>
                         <button type="submit" class="btn-sede-login">
                           ${ic.logIn} ACCEDER A ${escapeHtml(sede.nombre).toUpperCase()}
                         </button>
-                      </div>
-                      <div class="login-hint">
-                        ${ic.info} Credenciales prellenadas para prueba
                       </div>
                     </form>
                     

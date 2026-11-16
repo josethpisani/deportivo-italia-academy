@@ -15,7 +15,7 @@ function createActivationCode() {
 }
 function verifyPassword(password, stored) {
   const [, salt, expected] = String(stored || "").split("$");
-  if (!salt || !expected) return false;
+  if (!salt || !/^[a-f0-9]{128}$/.test(expected || "")) return false;
   const actual = scryptSync(password, salt, 64);
   return timingSafeEqual(actual, Buffer.from(expected, "hex"));
 }
@@ -193,9 +193,10 @@ export default async function handler(req, res) {
     async function getStaffSession() {
       const rawToken = readCookie(req, "dia_staff_session");
       if (!rawToken) return null;
-      const rows = await sql`SELECT * FROM staff_sessions WHERE token_hash = ${hashToken(rawToken)} AND expires_at > NOW() LIMIT 1`;
+      const rows = await sql`SELECT sede_id, role FROM staff_sessions WHERE token_hash = ${hashToken(rawToken)} AND expires_at > NOW() AND role IN ('admin', 'staff') LIMIT 1`;
       return rows[0] || null;
     }
+    const isAdmin = async () => (await getStaffSession())?.role === "admin";
 
     if (req.query.key === "athlete_photo" && ["GET", "POST"].includes(req.method)) {
       res.setHeader("Cache-Control", "private, no-store");
@@ -226,6 +227,7 @@ export default async function handler(req, res) {
         res.setHeader("X-Content-Type-Options", "nosniff");
         return res.status(200).end(Buffer.from(data, "base64"));
       }
+      if (staff.role !== "admin") return res.status(403).json({ error: "Acceso de administrador requerido." });
       const photo = req.body?.photo;
       const match = typeof photo === "string" && photo.length <= 667000
         ? /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(photo)
@@ -245,7 +247,7 @@ export default async function handler(req, res) {
 
     if (req.query.key === "academy_news" && ["GET", "POST"].includes(req.method)) {
       res.setHeader("Cache-Control", "no-store");
-      if (req.method === "POST" && !(await getStaffSession())) {
+      if (req.method === "POST" && !await isAdmin()) {
         return res.status(401).json({ error: "Sesión STAFF requerida" });
       }
       await sql`CREATE TABLE IF NOT EXISTS academy_news (
@@ -286,7 +288,7 @@ export default async function handler(req, res) {
     if (req.method === "GET" && req.query.key === "registration_requests") {
       res.setHeader("Cache-Control", "private, no-store");
       const staff = await getStaffSession();
-      if (!staff) return res.status(401).json({ error: "Sesión STAFF requerida" });
+      if (staff?.role !== "admin") return res.status(403).json({ error: "Acceso de administrador requerido." });
       const rows = await sql`SELECT value FROM app_data WHERE key = 'registration_requests'`;
       const requests = Array.isArray(rows[0]?.value) ? rows[0].value : [];
       return res.status(200).json(requests.filter(item => item.sede_id === staff.sede_id));
@@ -368,7 +370,7 @@ export default async function handler(req, res) {
     }
 
     if (req.body?.key === "gallery" && req.method === "POST") {
-      if (!(await getStaffSession())) return res.status(401).json({ error: "Vuelve a iniciar sesión en Staff." });
+      if (!await isAdmin()) return res.status(403).json({ error: "Acceso de administrador requerido." });
       const { image, action, id: deleteId, url: deleteUrl } = req.body;
       if (action === "delete") {
         const byId = typeof deleteId === "string" && /^[a-f0-9]{32}$/.test(deleteId);
@@ -430,7 +432,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "GET" && req.query.key === "parent_admin") {
-      if (!(await getStaffSession())) return res.status(401).json({ error: "Sesión STAFF requerida" });
+      if (!await isAdmin()) return res.status(403).json({ error: "Acceso de administrador requerido." });
       const accounts = await sql`SELECT id, email, full_name, status, last_login_at, created_at FROM parent_accounts ORDER BY created_at DESC`;
       const links = await sql`SELECT parent_id, athlete_id, sede_id FROM parent_athletes ORDER BY created_at`;
       return res.status(200).json(accounts.map(account => ({ ...account, links: links.filter(link => String(link.parent_id) === String(account.id)) })));
@@ -477,12 +479,22 @@ export default async function handler(req, res) {
     if (req.method === "POST" && req.body?.key === "staff_auth") {
       const { action, email, password, sede_id: staffSedeId } = req.body;
       if (action === "login") {
-        const valid = (staffSedeId === 'sed_brisas' && email === 'acceso br' && password === 'br12345') || (staffSedeId === 'sed_panama_viejo' && email === 'acceso pv' && password === 'pv12345');
-        if (!valid) return res.status(401).json({ error: "Credenciales STAFF incorrectas" });
+        const username = typeof email === "string" ? email.trim().toLowerCase() : "";
+        if (!["admin", "staff"].includes(username) || typeof password !== "string" || password.length > 128 ||
+            !["sed_brisas", "sed_panama_viejo"].includes(staffSedeId)) {
+          return res.status(401).json({ error: "Usuario o contraseña incorrectos para esta sede." });
+        }
+        const accounts = await sql`
+          SELECT password_hash FROM staff_credentials
+          WHERE username = ${username} AND sede_id = ${username === "admin" ? "all" : staffSedeId}
+        `;
+        if (!verifyPassword(password, accounts[0]?.password_hash)) {
+          return res.status(401).json({ error: "Usuario o contraseña incorrectos para esta sede." });
+        }
         const token = randomBytes(32).toString('hex');
-        await sql`INSERT INTO staff_sessions (token_hash, sede_id, expires_at) VALUES (${hashToken(token)}, ${staffSedeId}, NOW() + INTERVAL '8 hours')`;
+        await sql`INSERT INTO staff_sessions (token_hash, sede_id, role, expires_at) VALUES (${hashToken(token)}, ${staffSedeId}, ${username}, NOW() + INTERVAL '8 hours')`;
         res.setHeader("Set-Cookie", `dia_staff_session=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800`);
-        return res.status(200).json({ success: true });
+        return res.status(200).json({ success: true, role: username });
       }
       if (action === "logout") {
         const token = readCookie(req, 'dia_staff_session');
@@ -495,7 +507,7 @@ export default async function handler(req, res) {
 
     if (req.method === "POST" && req.body?.key === "registration_admin") {
       const staffSession = await getStaffSession();
-      if (!staffSession) return res.status(401).json({ error: "Sesión STAFF requerida" });
+      if (staffSession?.role !== "admin") return res.status(403).json({ error: "Acceso de administrador requerido." });
       const { action, request_id, reason } = req.body;
       const stored = await sql`SELECT value FROM app_data WHERE key = 'registration_requests'`;
       const requests = Array.isArray(stored[0]?.value) ? stored[0].value : [];
@@ -542,7 +554,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "POST" && req.body?.key === "parent_admin") {
-      if (!(await getStaffSession())) return res.status(401).json({ error: "Sesión STAFF requerida" });
+      if (!await isAdmin()) return res.status(403).json({ error: "Acceso de administrador requerido." });
       const { action, id, email, full_name, athlete_id, sede_id: linkSedeId } = req.body;
       if (action === "create") {
         const normalizedEmail = String(email || "").trim().toLowerCase();
@@ -578,6 +590,14 @@ export default async function handler(req, res) {
     // ── GET ──
     if (req.method === "GET") {
       const { key } = req.query;
+      const staff = await getStaffSession();
+      if (!["sedes", "sede", "siteContent"].includes(key)) {
+        res.setHeader("Cache-Control", "private, no-store");
+        if (!staff) return res.status(401).json({ error: "Sesión STAFF requerida." });
+        if (sede_id && sede_id !== staff.sede_id) return res.status(403).end();
+        if (key === "trial_requests" && staff.role !== "admin") return res.status(403).end();
+        if (key && !["athletes", "torneos", "config", "trial_requests"].includes(key)) return res.status(404).end();
+      }
 
       // Special endpoint: get all sedes
       if (key === "sedes") {
@@ -616,27 +636,20 @@ export default async function handler(req, res) {
         if (key === "siteContent") {
           const { galeria, ...content } = rows[0].value || {};
           res.setHeader("Cache-Control", "private, no-store");
-          return res.status(200).json(await getStaffSession() ? { ...content, galeria } : content);
+          return res.status(200).json(staff?.role === "admin" ? { ...content, galeria } : content);
         }
         
         // If sede_id specified, filter the array
-        if (sede_id) {
-          const filtered = filterBySede(rows[0].value, sede_id);
+        if (staff) {
+          const filtered = filterBySede(rows[0].value, staff.sede_id);
           return res.status(200).json(filtered);
         }
         return res.status(200).json(rows[0].value);
       }
 
       // Return all data (with optional sede filtering)
-      const rows = await sql`SELECT key, CASE WHEN key = 'siteContent' THEN value - 'galeria' ELSE value END AS value, sede_id FROM app_data WHERE key <> 'registration_requests' AND key NOT LIKE 'gallery_video:%' AND key NOT LIKE 'athlete_photo:%'`;
-      const out = {};
-      rows.forEach(r => {
-        if (sede_id) {
-          out[r.key] = filterBySede(r.value, sede_id);
-        } else {
-          out[r.key] = r.value;
-        }
-      });
+      const rows = await sql`SELECT key, value FROM app_data WHERE key IN ('athletes', 'torneos', 'config')`;
+      const out = Object.fromEntries(rows.map(row => [row.key, filterBySede(row.value, staff.sede_id)]));
       return res.status(200).json(out);
     }
 
@@ -648,6 +661,37 @@ export default async function handler(req, res) {
       
       if (!key || value === undefined) {
         return res.status(400).json({ error: "Missing key or value" });
+      }
+
+      if (!["registration_requests", "trial_requests"].includes(key)) {
+        const staff = await getStaffSession();
+        if (!staff) return res.status(401).json({ error: "Sesión STAFF requerida." });
+        if (targetSedeId && targetSedeId !== staff.sede_id) return res.status(403).end();
+        if (staff.role !== "admin") {
+          if (!["athletes", "torneos"].includes(key) || !Array.isArray(value)) return res.status(403).end();
+          if (key === "athletes") {
+            await sql`
+              UPDATE app_data SET value = (
+                SELECT COALESCE(jsonb_agg(
+                  CASE WHEN incoming.item IS NOT NULL AND COALESCE(NULLIF(existing.item->>'sede_id', ''), ${staff.sede_id}) = ${staff.sede_id}
+                    THEN existing.item || COALESCE((
+                      SELECT jsonb_object_agg(field, data)
+                      FROM jsonb_each(incoming.item) AS fields(field, data)
+                      WHERE field IN ('asistenciaEntrenamiento', 'asistenciaJuegos', 'torneos', 'estadisticas', 'statsGenerales', 'evaluaciones', 'observaciones')
+                    ), '{}'::jsonb)
+                    ELSE existing.item END ORDER BY existing.position
+                ), '[]'::jsonb)
+                FROM jsonb_array_elements(app_data.value) WITH ORDINALITY AS existing(item, position)
+                LEFT JOIN LATERAL (
+                  SELECT item FROM jsonb_array_elements(${JSON.stringify(value)}::jsonb) AS submitted(item)
+                  WHERE item->>'id' = existing.item->>'id' LIMIT 1
+                ) AS incoming ON true
+              ), updated_at = NOW() WHERE key = 'athletes'
+            `;
+            return res.status(200).json({ success: true });
+          }
+        }
+        if (!["sedes", "sede", "siteContent", "config", "athletes", "torneos"].includes(key)) return res.status(404).end();
       }
 
       if (key === "registration_requests") {
@@ -829,6 +873,9 @@ export default async function handler(req, res) {
       const { key, itemId, updates, sede_id: bodySedeId } = req.body;
       if (typeof key === "string" && key.startsWith("gallery_video:")) return res.status(404).end();
       const targetSedeId = bodySedeId || sede_id;
+      const staff = await getStaffSession();
+      if (staff?.role !== "admin" || (targetSedeId && targetSedeId !== staff.sede_id)) return res.status(403).end();
+      if (!["sede", "trial_requests", "athletes", "torneos"].includes(key)) return res.status(404).end();
 
       if (key === "trial_requests") {
         const editableFields = ["status", "notes", "representative_name", "athlete_name", "athlete_age", "category", "email", "phone", "preferred_date", "preferred_time_slot", "test_date", "test_time"];
@@ -901,6 +948,9 @@ export default async function handler(req, res) {
       const { key, itemId, sede_id: bodySedeId } = req.body;
       if (typeof key === "string" && key.startsWith("gallery_video:")) return res.status(404).end();
       const targetSedeId = bodySedeId || sede_id;
+      const staff = await getStaffSession();
+      if (staff?.role !== "admin" || (targetSedeId && targetSedeId !== staff.sede_id)) return res.status(403).end();
+      if (!["sedes", "trial_requests", "athletes", "torneos"].includes(key)) return res.status(404).end();
       
       if (!key || (!targetSedeId && key !== "sedes" && key !== "trial_requests")) {
         return res.status(400).json({ error: "Missing key or sede_id" });
