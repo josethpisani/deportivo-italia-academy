@@ -182,6 +182,81 @@ function setupGlobalEvents() {
   });
 }
 
+let homeNewsRequest;
+async function refreshHomeNews() {
+  if (state.view !== "public-home" || homeNewsRequest) return;
+  homeNewsRequest = loadNews();
+  try {
+    await homeNewsRequest;
+    if (state.view === "public-home") {
+      const section = document.getElementById("noticias");
+      if (section) section.outerHTML = renderNews();
+    }
+  } catch (error) {
+    console.warn("No se pudieron cargar las noticias.", error);
+  } finally {
+    homeNewsRequest = null;
+  }
+}
+
+// SPA Navigation helper
+function navigateTo(href) {
+  if (href === '/' || href === '/index.html') {
+    state.view = 'public-home';
+    setRoute('public-home');
+  } else if (href === '/acceso' || href === '/acceso/') {
+    state.view = 'acceso';
+    setRoute('acceso');
+  } else if (href === '/portal-padres' || href === '/portal-padres/') {
+    // Use a real navigation for the parent portal so the route works even
+    // when the public SPA has not finished loading its initial data.
+    window.location.assign('/portal-padres');
+    return;
+  } else {
+    // Hash-based admin routes
+    const hash = href.startsWith('#') ? href.slice(1) : href;
+    state.view = hash || 'home';
+    window.location.hash = hash || 'home';
+  }
+  render();
+  void refreshHomeNews();
+}
+
+let staffLoginPending = false;
+
+async function handleLogin(form, sede) {
+  const email = form.querySelector('[name="email"]').value;
+  const password = form.querySelector('[name="password"]').value;
+  const btn = form.querySelector('#btnLogin') || form.querySelector('.btn-sede-login');
+  
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `${ic.loader} Entrando...`;
+  }
+  
+  try {
+    const response = await fetch('/api/data', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      body: JSON.stringify({ key: 'staff_auth', action: 'login', email, password, sede_id: sede.id })
+    });
+    const result = await response.json();
+    if (!response.ok || !['admin', 'staff'].includes(result.role)) {
+      throw new Error(result.error || 'No se pudo iniciar sesión.');
+    }
+    setCurrentSede(sede);
+    state.adminAuth = result.role === 'admin';
+    await loadData();
+    if (state.adminAuth) await loadSiteContent();
+    state.view = 'home';
+    state.targetSede = null;
+    setRoute('home');
+    render();
+  } catch (error) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Ingresar al sistema'; }
+    alert(error.message);
+  }
+}
+
 async function switchSede(sede) {
   // Save current data before switching
   if (state.currentSede) {
