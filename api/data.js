@@ -149,8 +149,7 @@ function filterBySede(data, sedeId) {
   // Preserve object-shaped legacy data such as config.
   if (!Array.isArray(data)) return data;
   if (!sedeId) return data; // If no sede_id specified, return all (for superadmin)
-  // Keep legacy rows without sede_id visible until an explicit migration is approved.
-  return data.filter(item => !item.sede_id || item.sede_id === sedeId);
+  return data.filter(item => item.sede_id === sedeId);
 }
 
 async function updateSedeRecord(sql, id, updates = {}) {
@@ -479,6 +478,10 @@ export default async function handler(req, res) {
     if (req.method === "POST" && req.body?.key === "staff_auth") {
       const { action, email, password, sede_id: staffSedeId } = req.body;
       if (action === "login") {
+        const activeSession = await getStaffSession();
+        if (activeSession && activeSession.sede_id !== staffSedeId) {
+          return res.status(409).json({ error: "Cierra la sesión de tu sede actual antes de entrar a otra." });
+        }
         const username = typeof email === "string" ? email.trim().toLowerCase() : "";
         if (!["admin", "staff"].includes(username) || typeof password !== "string" || password.length > 128 ||
             !["sed_brisas", "sed_panama_viejo"].includes(staffSedeId)) {
@@ -595,6 +598,7 @@ export default async function handler(req, res) {
         res.setHeader("Cache-Control", "private, no-store");
         if (!staff) return res.status(401).json({ error: "Sesión STAFF requerida." });
         if (sede_id && sede_id !== staff.sede_id) return res.status(403).end();
+        if (key === "staff_session") return res.status(200).json(staff);
         if (key === "trial_requests" && staff.role !== "admin") return res.status(403).end();
         if (key && !["athletes", "torneos", "config", "trial_requests", "trial_summary"].includes(key)) return res.status(404).end();
       }
@@ -647,6 +651,21 @@ export default async function handler(req, res) {
         return res.status(200).json(rows);
       }
 
+      if (key === "config" || !key) {
+        const configKey = `config:${staff.sede_id}`;
+        const rows = await sql`
+          SELECT key, value FROM app_data
+          WHERE key = ${configKey}
+             OR (key = 'config' AND (sede_id IS NULL OR sede_id = ${staff.sede_id}))
+             OR (${!key} AND key IN ('athletes', 'torneos'))
+        `;
+        const config = rows.find(row => row.key === configKey)?.value ?? rows.find(row => row.key === "config")?.value;
+        if (key) return res.status(200).json(config ?? null);
+        const out = Object.fromEntries(rows.filter(row => ["athletes", "torneos"].includes(row.key))
+          .map(row => [row.key, filterBySede(row.value, staff.sede_id)]));
+        return res.status(200).json({ ...out, config });
+      }
+
       // Regular data keys with sede filtering
       if (key) {
         if (key.startsWith("gallery_video:")) return res.status(404).end();
@@ -666,10 +685,6 @@ export default async function handler(req, res) {
         return res.status(200).json(rows[0].value);
       }
 
-      // Return all data (with optional sede filtering)
-      const rows = await sql`SELECT key, value FROM app_data WHERE key IN ('athletes', 'torneos', 'config')`;
-      const out = Object.fromEntries(rows.map(row => [row.key, filterBySede(row.value, staff.sede_id)]));
-      return res.status(200).json(out);
     }
 
     // ── POST ── Upsert data for a specific sede
@@ -850,9 +865,11 @@ export default async function handler(req, res) {
       }
 
       if (key === "config") {
+        if (!targetSedeId) return res.status(400).json({ error: "sede_id is required" });
+        const configKey = `config:${targetSedeId}`;
         await sql`
           INSERT INTO app_data (key, value, sede_id, updated_at)
-          VALUES (${key}, ${JSON.stringify(value)}, ${targetSedeId || null}, NOW())
+          VALUES (${configKey}, ${JSON.stringify(value)}, ${targetSedeId}, NOW())
           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, sede_id = EXCLUDED.sede_id, updated_at = NOW()
         `;
         return res.status(200).json({ success: true });
@@ -862,26 +879,21 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "sede_id is required for data operations" });
       }
 
-      // Get existing data for this key
-      const existingRows = await sql`SELECT value FROM app_data WHERE key = ${key}`;
-      let existingData = existingRows[0]?.value || [];
-      
-      if (!Array.isArray(existingData)) existingData = [];
-
-      // Remove any existing items for this sede_id
-      const otherSedesData = existingData.filter(item => item.sede_id !== targetSedeId);
-      
-      // Add new data with sede_id
       const newData = Array.isArray(value) 
         ? value.map(item => ({ ...item, sede_id: targetSedeId }))
         : [{ ...value, sede_id: targetSedeId }];
 
-      const mergedData = [...otherSedesData, ...newData];
-
       await sql`
         INSERT INTO app_data (key, value, sede_id, updated_at)
-        VALUES (${key}, ${JSON.stringify(mergedData)}, ${targetSedeId}, NOW())
-        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+        VALUES (${key}, ${JSON.stringify(newData)}, ${targetSedeId}, NOW())
+        ON CONFLICT (key) DO UPDATE SET
+          value = COALESCE((
+            SELECT jsonb_agg(item ORDER BY position)
+            FROM jsonb_array_elements(CASE WHEN jsonb_typeof(app_data.value::jsonb) = 'array'
+              THEN app_data.value::jsonb ELSE '[]'::jsonb END) WITH ORDINALITY AS records(item, position)
+            WHERE item->>'sede_id' IS DISTINCT FROM EXCLUDED.sede_id
+          ), '[]'::jsonb) || EXCLUDED.value::jsonb,
+          updated_at = NOW()
       `;
 
       return res.status(200).json({ success: true });

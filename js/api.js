@@ -1,5 +1,5 @@
 import { state } from "./state.js";
-import { seedAthletes, seedTorneos } from "./seed.js";
+
 
 const API = "/api/data";
 const HEADERS = {"Content-Type":"application/json"};
@@ -36,20 +36,12 @@ export async function loadData(){
     const res = await fetchWithSede(API);
     const d = await res.json();
 
-    if(d.athletes && d.athletes.length){ state.athletes = d.athletes; }
-    else {
-      state.athletes = await seedAthletes();
-      // Don't auto-save seed data for new branches
-    }
-    
-    if(d.torneos && d.torneos.length){ state.torneos = d.torneos; }
-    else {
-      state.torneos = seedTorneos();
-    }
-    
+    if (!res.ok) throw new Error("No se pudieron cargar los datos de la sede.");
+    state.athletes = Array.isArray(d.athletes) ? d.athletes : [];
+    state.torneos = Array.isArray(d.torneos) ? d.torneos : [];
     if(d.config && Object.keys(d.config).length){ state.config = d.config; }
   }catch(e){
-    console.warn("No se pudo conectar al servidor, usando datos locales.");
+    console.warn("No se pudieron cargar los datos de la sede.");
     state.athletes = await seedAthletes();
     state.torneos = seedTorneos();
   }finally{

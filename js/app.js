@@ -111,7 +111,7 @@ function render(){
 function setupGlobalEvents() {
   document.addEventListener('click', handleAccesoClick);
   // Internal navigation links (SPA routing)
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', async (e) => {
     const link = e.target.closest('a[href^="/"]');
     if (link && !link.target) {
       const href = link.getAttribute('href');
@@ -123,41 +123,22 @@ function setupGlobalEvents() {
       }
     }
 
-    // Branch selector toggle
-    const switchBtn = e.target.closest('#btnSedeSwitch');
-    if (switchBtn) {
-      const dropdown = document.getElementById('sedeDropdown');
-      if (dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-      return;
-    }
-
-    // Branch option selection (only logout allowed - no sede switching without re-login)
-    const option = e.target.closest('.sede-option');
-    if (option) {
-      const action = option.dataset.action;
-      if (action === 'logout') {
-        fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ key: 'staff_auth', action: 'logout' }) }).catch(() => {});
-        // Logout: clear auth, go back to sede selection
-        state.adminAuth = false;
-        state.currentSede = null;
-        state.targetSede = null;
-        state.view = 'acceso';
-        setRoute('acceso');
-        render();
-        const dropdown = document.getElementById('sedeDropdown');
-        if (dropdown) dropdown.style.display = 'none';
-        return;
+    const logout = e.target.closest('[data-staff-logout]');
+    if (logout) {
+      const feedback = logout.nextElementSibling;
+      feedback.textContent = '';
+      logout.disabled = true;
+      try {
+        const response = await fetch('/api/data', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'staff_auth', action: 'logout' })
+        });
+        if (!response.ok) throw new Error();
+        window.location.replace('/acceso');
+      } catch {
+        feedback.textContent = 'No se pudo cerrar la sesión. Intenta de nuevo.';
+        logout.disabled = false;
       }
-      // Ignore other sede-option clicks (no switching without re-login)
-      const dropdown = document.getElementById('sedeDropdown');
-      if (dropdown) dropdown.style.display = 'none';
-      return;
-    }
-
-    // Close dropdown on outside click
-    if (!e.target.closest('.sede-selector')) {
-      const dropdown = document.getElementById('sedeDropdown');
-      if (dropdown) dropdown.style.display = 'none';
     }
 
     // Back to public home
@@ -209,8 +190,8 @@ function navigateTo(href) {
     state.view = 'public-home';
     setRoute('public-home');
   } else if (href === '/acceso' || href === '/acceso/') {
-    state.view = 'acceso';
-    setRoute('acceso');
+    window.location.assign('/acceso');
+    return;
   } else if (href === '/portal-padres' || href === '/portal-padres/') {
     // Use a real navigation for the parent portal so the route works even
     // when the public SPA has not finished loading its initial data.
@@ -262,26 +243,6 @@ async function handleLogin(form, sede) {
     if (btn) { btn.disabled = false; btn.textContent = buttonLabel; }
     feedback.textContent = error.message;
   }
-}
-
-async function switchSede(sede) {
-  // Save current data before switching
-  if (state.currentSede) {
-    await saveCurrentBranchData();
-  }
-  
-  setCurrentSede(sede);
-  await loadData();
-  state.view = 'home';
-  state.adminAuth = false;
-  setRoute('home');
-  render();
-}
-
-async function saveCurrentBranchData() {
-  // Data is auto-saved on each mutation, but we can force save here
-  if (state.athletes.length) await saveAthletes();
-  if (state.torneos.length) await saveTorneos();
 }
 
 // Initialize

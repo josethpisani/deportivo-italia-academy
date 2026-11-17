@@ -79,3 +79,10 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+.staff-session-menu { position:relative; margin: 0 8px 12px; }
+.staff-session-menu summary { display:flex; justify-content:center; align-items:center; cursor:pointer; list-style:none; }
+.staff-session-menu summary::-webkit-details-marker { display:none; }
+.staff-session-menu .sede-dropdown { left:auto; min-width:172px; }
+.staff-logout-error { color:white; margin:8px 12px; font-size:13px; }
+.staff-logout-error:empty { display:none; }
+#mobile-header .staff-session-menu { margin:0; }
