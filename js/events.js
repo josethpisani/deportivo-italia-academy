@@ -806,27 +806,30 @@ export function attachEvents(){
     const selector = document.getElementById('parentAthleteSelector');
     selector.innerHTML = payload.athletes.map((a, index) => `<option value="${index}">${escapeHtml(`${a.nombre || ''} ${a.apellido || ''}`.trim())} · ${escapeHtml(a.categoria || 'Sin categoría')}</option>`).join('');
     const panel = document.getElementById('parentAthletePanel');
-    const wireParentMenu = () => {
+    const wireParentMenu = athlete => {
       const menuToggle = document.getElementById('parentMenuToggle');
       const parentNav = document.getElementById('parentPortalNav');
-      panel.insertAdjacentHTML('beforeend', '<section class="portal-info-section" data-parent-gallery><h3>Galería del club</h3><div data-gallery-content></div><p role="status"></p></section>');
+      panel.insertAdjacentHTML('beforeend', '<section class="portal-info-section" data-parent-gallery><h3>Galería de la sede</h3><div data-gallery-content></div><p role="status"></p></section>');
       const gallery = panel.querySelector('[data-parent-gallery]');
       const grid = gallery.querySelector('[data-gallery-content]');
       const status = gallery.querySelector('[role="status"]');
-      if (parentPortalPayload.galeria) grid.innerHTML = renderGallery(parentPortalPayload.galeria);
       grid.addEventListener('error', event => {
         if (event.target.matches('img, video')) event.target.replaceWith(document.createTextNode('Archivo no disponible'));
       }, true);
       let galleryRequest = 0;
       const refreshGallery = async () => {
+        if (!athlete?.sede_id) {
+          status.textContent = 'Selecciona un atleta vinculado para ver su galería.';
+          return;
+        }
         const request = ++galleryRequest;
-        status.textContent = parentPortalPayload.galeria ? '' : 'Cargando galería…';
+        status.textContent = 'Cargando galería…';
         try {
-          const response = await fetch('/api/data?key=portal_gallery', { cache: 'no-store' });
+          const params = new URLSearchParams({ key: 'portal_gallery', sede_id: athlete.sede_id });
+          const response = await fetch(`/api/data?${params}`, { cache: 'no-store' });
           if (!response.ok) throw new Error();
           const images = await response.json();
           if (request !== galleryRequest || !gallery.isConnected) return;
-          parentPortalPayload.galeria = images;
           grid.innerHTML = renderGallery(images);
           status.textContent = '';
         } catch {
@@ -854,7 +857,7 @@ export function attachEvents(){
       if (menuToggle && parentNav) menuToggle.onclick = () => { const open = parentSidebar.classList.toggle('menu-open'); menuToggle.setAttribute('aria-expanded', String(open)); };
       activateSection('resumen');
     };
-    const showAthlete = athlete => { panel.innerHTML = athlete ? renderParentAthlete(athlete).replace(/(<p>[^<]*?)\s·\s*[^<]+(<\/p>)/, '$1$2') : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>'; wireParentMenu(); };
+    const showAthlete = athlete => { panel.innerHTML = athlete ? renderParentAthlete(athlete).replace(/(<p>[^<]*?)\s·\s*[^<]+(<\/p>)/, '$1$2') : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>'; wireParentMenu(athlete); };
     showAthlete(payload.athletes[0]);
     selector.onchange = () => showAthlete(parentPortalPayload.athletes[Number(selector.value)]);
   };

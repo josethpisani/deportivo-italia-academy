@@ -306,9 +306,15 @@ export default async function handler(req, res) {
       return Array.isArray(rows[0]?.gallery) ? rows[0].gallery : [];
     }
 
-    async function getParentGallery() {
+    async function parentCanViewGallery(parent, sedeId) {
+      if (!parent || typeof sedeId !== "string" || !sedeId) return false;
+      const rows = await sql`SELECT 1 FROM parent_athletes WHERE parent_id = ${parent.id} AND sede_id = ${sedeId} LIMIT 1`;
+      return rows.length > 0;
+    }
+
+    async function getParentGallery(sedeId) {
       return (await getGallery())
-        .filter(image => image?.url && image.portal_visible !== false)
+        .filter(image => image?.url && image.sede_id === sedeId && image.portal_visible !== false)
         .map(({ url, tipo, descripcion, categoria, fecha }) => ({ url, tipo, descripcion: descripcion || '', categoria: categoria || 'General', fecha: fecha || '' }));
     }
 
@@ -322,26 +328,30 @@ export default async function handler(req, res) {
     }
 
     if (req.query.key === "portal_gallery" && req.method === "GET") {
-      if (!(await getParentSession())) return res.status(401).json({ error: "Sesión no válida" });
       res.setHeader("Cache-Control", "private, no-store");
-      return res.status(200).json(await getParentGallery());
+      const parent = await getParentSession();
+      if (!parent) return res.status(401).json({ error: "Sesión no válida" });
+      if (!await parentCanViewGallery(parent, sede_id)) return res.status(403).json({ error: "No tienes acceso a la galería de esta sede." });
+      return res.status(200).json(await getParentGallery(sede_id));
     }
 
     if (req.query.key === "gallery_video" && ["GET", "HEAD"].includes(req.method)) {
       const { id } = req.query;
       const staff = await getStaffSession();
-      if (!staff && !(await getParentSession())) return res.status(401).end();
+      const parent = staff ? null : await getParentSession();
+      if (!staff && !parent) return res.status(401).end();
       if (!/^[a-f0-9]{32}$/.test(id || "")) return res.status(404).end();
       const rows = await sql`
-        SELECT m.value FROM app_data m
+        SELECT m.value, item->>'sede_id' AS gallery_sede FROM app_data m
         JOIN app_data site ON site.key = 'siteContent'
+        CROSS JOIN LATERAL jsonb_array_elements(COALESCE(site.value->'galeria', '[]'::jsonb)) AS item
         WHERE m.key = ${"gallery_video:" + id}
-          AND EXISTS (
-            SELECT 1 FROM jsonb_array_elements(COALESCE(site.value->'galeria', '[]'::jsonb)) AS item
-            WHERE item->>'id' = ${id} AND (${Boolean(staff)} OR item->'portal_visible' IS DISTINCT FROM 'false'::jsonb)
-          )
+          AND item->>'id' = ${id}
+          AND (${Boolean(staff)} OR item->'portal_visible' IS DISTINCT FROM 'false'::jsonb)
       `;
       if (!rows.length) return res.status(404).end();
+      const videoSede = rows[0].gallery_sede;
+      if (staff ? staff.sede_id !== videoSede : !await parentCanViewGallery(parent, videoSede)) return res.status(403).end();
       const { mime, video } = rows[0].value;
       const bytes = Buffer.from(video, "base64");
       res.setHeader("Content-Type", mime);
@@ -364,7 +374,8 @@ export default async function handler(req, res) {
     }
 
     if (req.body?.key === "gallery" && req.method === "POST") {
-      if (!await isAdmin()) return res.status(403).json({ error: "Acceso de administrador requerido." });
+      const staff = await getStaffSession();
+      if (staff?.role !== "admin") return res.status(403).json({ error: "Acceso de administrador requerido." });
       const { image, action, id: deleteId, url: deleteUrl } = req.body;
       if (action === "delete") {
         const byId = typeof deleteId === "string" && /^[a-f0-9]{32}$/.test(deleteId);
@@ -376,14 +387,19 @@ export default async function handler(req, res) {
             SET value = jsonb_set(site.value, '{galeria}', (
               SELECT COALESCE(jsonb_agg(item ORDER BY position), '[]'::jsonb)
               FROM jsonb_array_elements(COALESCE(site.value->'galeria', '[]'::jsonb)) WITH ORDINALITY AS entries(item, position)
-              WHERE (CASE WHEN ${byId} THEN item->>'id' WHEN NOT (item ? 'id') THEN item->>'url' END) IS DISTINCT FROM ${match}
+              WHERE item->>'sede_id' IS DISTINCT FROM ${staff.sede_id}
+                 OR (CASE WHEN ${byId} THEN item->>'id' WHEN NOT (item ? 'id') THEN item->>'url' END) IS DISTINCT FROM ${match}
             )), updated_at = NOW()
-            WHERE key = 'siteContent'
+            WHERE key = 'siteContent' AND EXISTS (
+              SELECT 1 FROM jsonb_array_elements(COALESCE(site.value->'galeria', '[]'::jsonb)) AS item
+              WHERE item->>'sede_id' = ${staff.sede_id}
+                AND (CASE WHEN ${byId} THEN item->>'id' WHEN NOT (item ? 'id') THEN item->>'url' END) = ${match}
+            )
             RETURNING key
           )
           DELETE FROM app_data WHERE key = ${byId ? "gallery_video:" + match : null} AND EXISTS (SELECT 1 FROM updated)
         `;
-        return res.status(200).json({ gallery: await getGallery() });
+        return res.status(200).json({ gallery: (await getGallery()).filter(item => item?.sede_id === staff.sede_id) });
       }
       const id = randomBytes(16).toString("hex");
       const isVideo = image?.tipo === "video";
@@ -401,7 +417,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "La foto o el enlace no tienen un formato válido." });
       }
       const categoria = galleryCategories.includes(image.categoria) ? image.categoria : "General";
-      const entry = { id, url, tipo: isVideo ? "video" : "imagen", descripcion: String(image.descripcion || "").slice(0, 500), categoria, fecha: new Date().toISOString().slice(0, 10), portal_visible: true };
+      const entry = { id, url, sede_id: staff.sede_id, tipo: isVideo ? "video" : "imagen", descripcion: String(image.descripcion || "").slice(0, 500), categoria, fecha: new Date().toISOString().slice(0, 10), portal_visible: true };
       const rows = await sql`
         WITH video_upload AS (
           INSERT INTO app_data (key, value)
@@ -416,7 +432,7 @@ export default async function handler(req, res) {
           updated_at = NOW()
         RETURNING value->'galeria' AS gallery
       `;
-      return res.status(201).json({ gallery: rows[0].gallery });
+      return res.status(201).json({ gallery: rows[0].gallery.filter(item => item?.sede_id === staff.sede_id) });
     }
 
     if (req.method === "GET" && req.query.key === "portal_me") {
@@ -720,7 +736,10 @@ export default async function handler(req, res) {
         if (key === "siteContent") {
           const { galeria, ...content } = rows[0].value || {};
           res.setHeader("Cache-Control", "private, no-store");
-          return res.status(200).json(staff?.role === "admin" ? { ...content, galeria } : content);
+          return res.status(200).json(staff?.role === "admin"
+            ? { ...content,
+              galeria: (Array.isArray(galeria) ? galeria : []).filter(item => item?.sede_id === staff.sede_id) }
+            : content);
         }
         
         // If sede_id specified, filter the array
@@ -899,8 +918,8 @@ export default async function handler(req, res) {
 
       // Site content is global; operational data is isolated by sede.
       if (key === "siteContent") {
-        if (Object.hasOwn(value || {}, "galeria") && !(await getStaffSession())) {
-          return res.status(401).json({ error: "Sesión STAFF requerida" });
+        if (Object.hasOwn(value || {}, "galeria")) {
+          return res.status(400).json({ error: "Usa el panel de Galería para administrar los archivos." });
         }
         await sql`
           INSERT INTO app_data (key, value, updated_at)
