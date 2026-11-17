@@ -758,7 +758,7 @@ export function attachEvents(){
   let parentPortalPayload = null;
   const renderGallery = items => galleryGroups(items).map(([category, entries]) => `
     <section class="gallery-category"><h4>${escapeHtml(category)}</h4><div class="portal-gallery-grid">
-      ${entries.map(({ item }) => `<figure class="portal-gallery-item">${galleryMedia(item)}<figcaption>${escapeHtml(item.descripcion || (item.tipo === 'video' ? 'Video' : 'Foto'))}<small>${escapeHtml(item.fecha || '')}</small></figcaption></figure>`).join('')}
+      ${entries.map(({ item, index }) => `<figure class="portal-gallery-item">${item.tipo === 'video' ? galleryMedia(item) : `<button type="button" class="portal-gallery-open" data-gallery-photo="${index}" aria-label="Ampliar foto: ${escapeHtml(item.descripcion || category)}">${galleryMedia(item)}</button>`}<figcaption>${escapeHtml(item.descripcion || (item.tipo === 'video' ? 'Video' : 'Foto'))}<small>${escapeHtml(item.fecha || '')}</small></figcaption></figure>`).join('')}
     </div></section>`).join('') || '<p class="portal-empty">Todavía no hay fotos ni videos publicados.</p>';
   const formatPortalDate = (value) => value ? new Date(`${value}T12:00:00`).toLocaleDateString('es-PA', { day: '2-digit', month: 'long', year: 'numeric' }) : 'No registrada';
   const renderParentAthlete = (athlete) => {
@@ -813,6 +813,48 @@ export function attachEvents(){
       const gallery = panel.querySelector('[data-parent-gallery]');
       const grid = gallery.querySelector('[data-gallery-content]');
       const status = gallery.querySelector('[role="status"]');
+      gallery.insertAdjacentHTML('beforeend', `<dialog class="portal-photo-viewer" aria-label="Visor de fotos">
+        <div class="portal-photo-frame">
+          <button type="button" class="portal-photo-close" aria-label="Cerrar visor" autofocus>×</button>
+          <button type="button" class="portal-photo-previous" aria-label="Foto anterior">‹</button>
+          <img alt="">
+          <button type="button" class="portal-photo-next" aria-label="Foto siguiente">›</button>
+          <p class="portal-photo-caption" aria-live="polite"></p>
+        </div>
+      </dialog>`);
+      const viewer = gallery.querySelector('dialog');
+      const photo = viewer.querySelector('img');
+      const caption = viewer.querySelector('.portal-photo-caption');
+      const previous = viewer.querySelector('.portal-photo-previous');
+      const next = viewer.querySelector('.portal-photo-next');
+      let photos = [];
+      let currentPhoto = 0;
+      const showPhoto = position => {
+        if (!photos.length) return;
+        currentPhoto = (position + photos.length) % photos.length;
+        const { item } = photos[currentPhoto];
+        photo.src = item.url;
+        photo.alt = item.descripcion || item.categoria || 'Foto de la galería';
+        caption.textContent = [item.descripcion, `${currentPhoto + 1} de ${photos.length}`].filter(Boolean).join(' · ');
+        previous.disabled = next.disabled = photos.length < 2;
+      };
+      previous.onclick = () => showPhoto(currentPhoto - 1);
+      next.onclick = () => showPhoto(currentPhoto + 1);
+      viewer.querySelector('.portal-photo-close').onclick = () => viewer.close();
+      viewer.addEventListener('click', event => { if (event.target === viewer) viewer.close(); });
+      viewer.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        showPhoto(currentPhoto + (event.key === 'ArrowLeft' ? -1 : 1));
+      });
+      grid.addEventListener('click', event => {
+        const button = event.target.closest('[data-gallery-photo]');
+        if (!button) return;
+        const position = photos.findIndex(entry => entry.index === Number(button.dataset.galleryPhoto));
+        if (position < 0) return;
+        showPhoto(position);
+        viewer.showModal();
+      });
       grid.addEventListener('error', event => {
         if (event.target.matches('img, video')) event.target.replaceWith(document.createTextNode('Archivo no disponible'));
       }, true);
@@ -830,6 +872,7 @@ export function attachEvents(){
           if (!response.ok) throw new Error();
           const images = await response.json();
           if (request !== galleryRequest || !gallery.isConnected) return;
+          photos = galleryGroups(images).flatMap(([, entries]) => entries.filter(({ item }) => item.tipo !== 'video' && item.url));
           grid.innerHTML = renderGallery(images);
           status.textContent = '';
         } catch {
