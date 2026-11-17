@@ -67,7 +67,10 @@ export function renderHome(){
       ${statPill(ic.users,"Atletas activos",totalAthletes,"var(--pitch)")}
     </div>
     <section aria-labelledby="home-trials-title">
-      <h2 id="home-trials-title" class="dia-title" style="font-size:16px;margin:0 0 12px;">Pruebas de ingreso pendientes y confirmadas</h2>
+      <h2 id="home-trials-title" class="dia-title home-trials-title">
+        <span class="home-trials-icon" aria-hidden="true">${ic.clipboard}</span>
+        <span>PRUEBAS DE INGRESO PENDIENTES Y CONFIRMADAS</span>
+      </h2>
       <div id="home-trials" aria-live="polite"><p class="empty-msg">Cargando pruebas…</p></div>
     </section>
     <h2 class="dia-title" style="font-size:16px;margin:26px 0 12px;">Atletas por categoría</h2>
