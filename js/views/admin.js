@@ -25,20 +25,29 @@ export function renderAdmin(){
   },0);
   const pendientes = yearAthletes.filter(a=>!a.becado && a.matricula.estado==="pendiente").length;
 
+  const settingsTabs = [
+    {key:"config",label:"Configuración de costos"},
+    {key:"sedes",label:"Gestión de sedes"},
+    {key:"site",label:"Configuración del sitio"},
+    {key:"portal",label:"Portal de padres"},
+  ];
+  const inSettings = settingsTabs.some(tab => tab.key === state.adminTab);
+  const tabButton = tab => `<button type="button" class="admin-tab ${state.adminTab === tab.key ? "active" : ""}" data-admintab="${tab.key}" ${state.adminTab === tab.key ? 'aria-current="true"' : ""}>${tab.label}</button>`;
   const tabs = [
-    {key:"config",label:"Configuración"},
     {key:"atletas",label:"Todos los atletas"},
     {key:"matriculas",label:"Pagos de matrícula"},
     {key:"mensualidades",label:"Mensualidades"},
     {key:"uniformes",label:"Pagos de uniformes"},
     {key:"torneos",label:"Torneos y pagos"},
-    {key:"sedes",label:"Gestión de sedes"},
-    {key:"site",label:"Configuración del sitio"},
     {key:"news",label:"Noticias"},
     {key:"pruebas",label:"Pruebas de Ingreso"},
     {key:"inscripciones",label:"Solicitudes de inscripción"},
-    {key:"portal",label:"Portal de padres"},
-  ].map(t=>`<button class="admin-tab ${state.adminTab===t.key?"active":""}" data-admintab="${t.key}">${t.label}</button>`).join("");
+  ].map(tabButton).join("");
+  const settingsMenu = `
+    <details class="admin-settings-menu" ${inSettings ? "open" : ""}>
+      <summary class="admin-tab"><span aria-hidden="true">${ic.settings}</span> Configuración <span class="admin-settings-chevron" aria-hidden="true">${ic.chevronDown}</span></summary>
+      <div class="admin-settings-tabs">${settingsTabs.map(tabButton).join("")}</div>
+    </details>`;
 
   let body = "";
   if(state.adminTab==="config"){
@@ -430,12 +439,12 @@ export function renderAdmin(){
   return `
     <h1 class="page-title dia-title">Panel Administrativo</h1>
     <p class="page-sub">Control de atletas, matrículas y torneos</p>
-    <div class="admin-layout"><aside class="admin-sidebar"><div class="admin-sidebar-title">Secciones</div><div class="admin-tabs">${tabs}</div></aside><main class="admin-content"><div class="stats-row">
+    <div class="admin-layout"><aside class="admin-sidebar"><div class="admin-sidebar-title">Secciones</div><div class="admin-tabs">${tabs}${settingsMenu}</div></aside><main class="admin-content">${inSettings ? "" : `<div class="stats-row">
       ${statPill(ic.users,"Total atletas", yearAthletes.length,"var(--pitch)")}
       ${statPill(ic.card,"Ingresos matrícula", "$"+totalIngresos,"var(--green)")}
       ${statPill(ic.trophy,"Ingresos torneos", "$"+torneoIngresos,"var(--red)")}
       ${statPill(ic.alert,"Matrículas pendientes", pendientes,"var(--red)")}
-    </div>
+    </div>`}
     ${adminCategoryFilter}
     ${state.adminTab==="matriculas" ? `<div class="charts-row"><div class="chart-card"><h4>Matrículas: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMatricula"></canvas></div></div></div>` : state.adminTab==="mensualidades" ? `<div class="charts-row"><div class="chart-card"><h4>Mensualidades: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMensualidades"></canvas></div></div></div>` : state.adminTab==="uniformes" ? `<div class="charts-row"><div class="chart-card"><h4>Uniformes: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminUniformes"></canvas></div></div></div>` : state.adminTab==="torneos" ? `<div class="charts-row"><div class="chart-card"><h4>Recaudación por torneo ($)</h4><div class="chart-wrap short"><canvas id="chartAdminTorneos"></canvas></div></div><div class="chart-card"><h4>Inscritos a torneos por categoría</h4><div class="chart-wrap short"><canvas id="chartAdminCatTorneos"></canvas></div></div></div>` : ""}
     ${body}</main></div>

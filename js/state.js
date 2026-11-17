@@ -25,7 +25,7 @@ export const state = {
   selectedId: null,
   athleteReadOnly: true,
   search: "",
-  adminTab: "config",
+  adminTab: "atletas",
   news: [],
   newsEditingId: null,
   adminCategory: "Todos",
