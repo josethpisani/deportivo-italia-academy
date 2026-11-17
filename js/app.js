@@ -3,7 +3,7 @@ import { state } from "./state.js";
 import { loadNews, renderNews } from "./news.js";
 import { loadData, setRenderCallbacks, loadSedes, setCurrentSede, loadSiteContent } from "./api.js";
 import { renderSidebar, renderSaveStatus } from "./views/sidebar.js";
-import { renderHome } from "./views/home.js";
+import { loadHomeTrials, renderHome } from "./views/home.js";
 import { renderAthleteList, renderAthleteDetail } from "./views/athletes.js";
 import { renderAttendanceTab } from "./views/attendance.js";
 import { renderAdmin } from "./views/admin.js";
@@ -89,7 +89,10 @@ function render(){
   attachEvents();
 
   // Draw charts for admin views
-  if(state.view==="home") drawHomeCharts();
+  if(state.view==="home") {
+    drawHomeCharts();
+    void loadHomeTrials(document.getElementById("home-trials"), state.staffYear);
+  }
   else if(state.view==="atleta-list") drawAthListChart();
   else if(state.view==="atleta-detail") drawAthDetailChart();
   else if(state.view==="asistencia") drawRegChart();

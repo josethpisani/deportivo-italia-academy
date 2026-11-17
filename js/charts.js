@@ -45,14 +45,6 @@ export function drawHomeCharts(){
     options: doughnutOpts("Atletas por categoría")
   });
 
-  const pagado = yearAthletes.filter(a=>a.matricula.estado==="pagado").length;
-  const pendiente = yearAthletes.length - pagado;
-  makeChart("chartHomeMatricula", {
-    type:"doughnut",
-    data:{ labels:["Pagado","Pendiente"], datasets:[{ data:[pagado,pendiente], backgroundColor:[C.green, C.red] }] },
-    options: doughnutOpts("Estado de matrícula")
-  });
-
   const catAttend = CATEGORIES.map(c=>{
     const list = yearAthletes.filter(a=>a.categoria===c);
     if(!list.length) return 0;

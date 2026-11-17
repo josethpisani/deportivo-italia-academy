@@ -8,21 +8,6 @@ export function renderHome(){
   const yearAthletes = staffYearAthletes(state.athletes, state.staffYear);
   const yearTorneos = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear));
   const totalAthletes = yearAthletes.length;
-  const matriculasPendientes = yearAthletes.filter(a=>a.matricula.estado==="pendiente").length;
-
-  const hoy = new Date();
-  const cy = hoy.getFullYear();
-  const cm = hoy.getMonth()+1;
-  const monthsUpToNow = [];
-  const lastM = state.staffYear === cy ? cm : 12;
-  for(let m=1;m<=lastM;m++){
-    monthsUpToNow.push(`${state.staffYear}-${String(m).padStart(2,"0")}`);
-  }
-  const mensualidadesPendientes = yearAthletes.reduce((sum,a)=>{
-    const ms = a.mensualidades||{};
-    return sum + monthsUpToNow.filter(mes=>!ms[mes] || ms[mes].estado!=="pagado").length;
-  },0);
-
   const catCards = CATEGORIES.map(cat=>{
     const count = yearAthletes.filter(a=>a.categoria===cat).length;
     return `<button class="cat-card" data-goto-cat="${cat}">
@@ -80,18 +65,53 @@ export function renderHome(){
     <p class="page-sub">Deportivo Italia Academy — temporada ${state.staffYear}</p>
     <div class="stats-row">
       ${statPill(ic.users,"Atletas activos",totalAthletes,"var(--pitch)")}
-      ${statPill(ic.alert,"Matrículas pendientes",matriculasPendientes,"var(--red)")}
-      ${statPill(ic.dollar,"Mensualidades pendientes",mensualidadesPendientes,"var(--red)")}
     </div>
-    <h2 class="dia-title" style="font-size:16px;margin:0 0 12px;">Atletas por categoría</h2>
+    <section aria-labelledby="home-trials-title">
+      <h2 id="home-trials-title" class="dia-title" style="font-size:16px;margin:0 0 12px;">Pruebas de ingreso pendientes y confirmadas</h2>
+      <div id="home-trials" aria-live="polite"><p class="empty-msg">Cargando pruebas…</p></div>
+    </section>
+    <h2 class="dia-title" style="font-size:16px;margin:26px 0 12px;">Atletas por categoría</h2>
     <div class="cat-grid">${catCards}</div>
 
     <h2 class="dia-title" style="font-size:16px;margin:26px 0 12px;">Indicadores generales</h2>
     <div class="charts-row">
       <div class="chart-card"><h4>Atletas por categoría</h4><div class="chart-wrap"><canvas id="chartHomeCat"></canvas></div></div>
-      <div class="chart-card small"><h4>Estado de matrícula</h4><div class="chart-wrap"><canvas id="chartHomeMatricula"></canvas></div></div>
       <div class="chart-card small"><h4>Asistencia promedio (entrenamientos)</h4><div class="chart-wrap"><canvas id="chartHomeAsistencia"></canvas></div></div>
     </div>
     ${torneosResumen}
   `;
+}
+
+const trialDateFormat = new Intl.DateTimeFormat("es-PA", {
+  day: "numeric", month: "short", year: "numeric", timeZone: "UTC"
+});
+
+export async function loadHomeTrials(container, year) {
+  try {
+    const response = await fetch(`/api/data?key=trial_summary&year=${year}`);
+    if (!response.ok) throw new Error("No se pudieron cargar las pruebas.");
+    const trials = await response.json();
+    if (!container.isConnected) return;
+    if (!trials.length) {
+      container.innerHTML = '<p class="empty-msg">No hay pruebas pendientes ni confirmadas para este año.</p>';
+      return;
+    }
+
+    const rows = trials.map(trial => `
+      <tr>
+        <td>${escapeHtml(trial.athlete_name)}</td>
+        <td>${escapeHtml(trial.category || "—")}</td>
+        <td>${trialDateFormat.format(new Date(trial.date))}</td>
+        <td>${escapeHtml(trial.time || "—")}</td>
+        <td>${trial.status === "confirmada" ? badge("Confirmada", "good") : badge("Pendiente", "warn")}</td>
+      </tr>`).join("");
+
+    container.innerHTML = `
+      <div class="table-wrap"><table aria-labelledby="home-trials-title">
+        <thead><tr><th>Atleta</th><th>Categoría</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`;
+  } catch {
+    if (container.isConnected) container.innerHTML = '<p class="empty-msg">No se pudieron cargar las pruebas. Vuelve a abrir el Resumen para reintentar.</p>';
+  }
 }

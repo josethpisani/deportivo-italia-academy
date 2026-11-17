@@ -596,7 +596,7 @@ export default async function handler(req, res) {
         if (!staff) return res.status(401).json({ error: "Sesión STAFF requerida." });
         if (sede_id && sede_id !== staff.sede_id) return res.status(403).end();
         if (key === "trial_requests" && staff.role !== "admin") return res.status(403).end();
-        if (key && !["athletes", "torneos", "config", "trial_requests"].includes(key)) return res.status(404).end();
+        if (key && !["athletes", "torneos", "config", "trial_requests", "trial_summary"].includes(key)) return res.status(404).end();
       }
 
       // Special endpoint: get all sedes
@@ -611,6 +611,25 @@ export default async function handler(req, res) {
         if (!id) return res.status(400).json({ error: "Missing sede id" });
         const rows = await sql`SELECT * FROM sedes WHERE id = ${id}`;
         return res.status(200).json(rows[0] || null);
+      }
+
+      if (key === "trial_summary") {
+        const year = Number(req.query.year);
+        if (!Number.isInteger(year) || year < 2026 || year > 9998) {
+          return res.status(400).json({ error: "Año inválido." });
+        }
+        const rows = await sql`
+          SELECT athlete_name, COALESCE(NULLIF(category, ''), REPLACE(age_category, '_', '/')) AS category,
+                 COALESCE(test_date, preferred_date)::text AS date,
+                 COALESCE(NULLIF(test_time, ''), preferred_time_slot) AS time, status
+          FROM trial_requests
+          WHERE sede_id = ${staff.sede_id}
+            AND status IN ('pendiente', 'confirmada')
+            AND COALESCE(test_date, preferred_date) >= make_date(${year}, 1, 1)
+            AND COALESCE(test_date, preferred_date) < make_date(${year + 1}, 1, 1)
+          ORDER BY date, time, athlete_name
+        `;
+        return res.status(200).json(rows);
       }
 
       // Special endpoint: get trial requests
