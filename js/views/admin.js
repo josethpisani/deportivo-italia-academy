@@ -13,7 +13,11 @@ export function renderAdmin(){
   const yearTorneos = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear));
   const categoryFilteredTabs = ["atletas", "matriculas", "mensualidades", "uniformes", "torneos"];
   const adminAthletes = state.adminCategory === "Todos" ? yearAthletes : yearAthletes.filter(a => a.categoria === state.adminCategory);
-  const adminCategoryFilter = categoryFilteredTabs.includes(state.adminTab) ? `<div class="filters admin-category-filter"><span class="admin-filter-label">Categoría</span>${["Todos", ...CATEGORIES].map(category => `<button class="chip ${state.adminCategory === category ? "active" : ""}" data-admincat="${category}">${category}</button>`).join("")}<span class="admin-filter-label admin-view-label">Vista</span><button class="view-toggle-btn ${state.adminViewMode === "grid" ? "active" : ""}" data-adminview="grid">${ic.grid} Cuadrícula</button><button class="view-toggle-btn ${state.adminViewMode === "list" ? "active" : ""}" data-adminview="list">${ic.list} Lista</button></div>` : "";
+  const viewOptions = `<span class="admin-filter-label admin-view-label">Vista</span>${[
+    ["grid", "Cuadrícula", ic.grid],
+    ["list", "Lista", ic.list]
+  ].map(([mode, label, icon]) => `<button type="button" class="view-toggle-btn ${state.adminViewMode === mode ? "active" : ""}" data-adminview="${mode}" aria-pressed="${state.adminViewMode === mode}">${icon} ${label}</button>`).join("")}`;
+  const adminCategoryFilter = categoryFilteredTabs.includes(state.adminTab) ? `<div class="filters admin-category-filter"><span class="admin-filter-label">Categoría</span>${["Todos", ...CATEGORIES].map(category => `<button class="chip ${state.adminCategory === category ? "active" : ""}" data-admincat="${category}">${category}</button>`).join("")}${viewOptions}</div>` : "";
   const totalMensualidadesMes = yearAthletes.filter(a=>!a.becado).filter(a=>{
     const m = a.mensualidades && a.mensualidades[state.mensualMonth];
     return m && m.estado==="pagado";
@@ -29,6 +33,7 @@ export function renderAdmin(){
     {key:"config",label:"Configuración de costos"},
     {key:"sedes",label:"Gestión de sedes"},
     {key:"site",label:"Configuración del sitio"},
+    {key:"galeria",label:"Galería de imágenes"},
     {key:"portal",label:"Portal de padres"},
   ];
   const inSettings = settingsTabs.some(tab => tab.key === state.adminTab);
@@ -308,13 +313,17 @@ export function renderAdmin(){
         </div>
       </div>
 
-      <div class="site-config-section" style="margin-top:32px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <h3 class="dia-title" style="margin:0;">Galería de Imágenes</h3>
+    `;
+  } else if(state.adminTab==="galeria"){
+    body = `
+      <section class="site-config-section">
+        <div class="gallery-admin-toolbar">
+          <h3 class="dia-title">Galería de imágenes</h3>
           <button class="btn-primary" id="btnAddGaleria">${ic.plus} Agregar foto o video</button>
         </div>
+        <div class="filters gallery-admin-views" role="group" aria-label="Vista de la galería">${viewOptions}</div>
         ${renderGaleriaAdmin()}
-      </div>
+      </section>
     `;
   } else if(state.adminTab==="portal"){
     const accounts = state.parentAccounts || [];
@@ -466,10 +475,10 @@ function renderGaleriaAdmin() {
   }
   return galleryGroups(galeria).map(([category, entries]) => `
     <section class="gallery-category"><h4>${escapeHtml(category)}</h4>
-    <div class="galeria-admin-grid">
+    <div class="galeria-admin-grid${state.adminViewMode === "list" ? " galeria-admin-list" : ""}">
       ${entries.map(({ item: img, index: idx }) => `
         <div class="galeria-admin-item">
-          ${galleryMedia(img)}
+          <div class="galeria-admin-preview">${galleryMedia(img)}</div>
           <div class="galeria-admin-overlay">
             <button class="btn-delete-galeria" data-delete-galeria="${idx}" aria-label="Eliminar archivo">${ic.x}</button>
           </div>
