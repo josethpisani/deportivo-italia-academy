@@ -793,11 +793,13 @@ export function attachEvents(){
     if (!dashboardView) return;
     parentPortalPayload = payload;
     loginView.style.display = 'none'; activationView.style.display = 'none'; dashboardView.style.display = 'block';
+    dashboardView.classList.add('portal-is-open');
     const parentSidebar = dashboardView.querySelector('.portal-sidebar');
     const parentNav = dashboardView.querySelector('.portal-nav');
     if (parentSidebar && parentNav && !document.getElementById('parentMenuToggle')) {
       parentNav.id = 'parentPortalNav';
-      parentSidebar.insertAdjacentHTML('afterbegin', '<button type="button" id="parentMenuToggle" class="portal-menu-toggle" aria-expanded="false" aria-controls="parentPortalNav">☰ <span>Menú</span></button>');
+      parentNav.setAttribute('aria-label', 'Secciones del Portal de padres');
+      parentSidebar.insertAdjacentHTML('beforeend', `<button type="button" id="parentMenuToggle" class="portal-menu-toggle" aria-expanded="false" aria-controls="parentPortalNav"><span data-current-portal-section>Inicio</span><span aria-hidden="true">${ic.chevronDown}</span></button>`);
     }
     document.getElementById('parentWelcome').textContent = `Hola, ${payload.parent.full_name}`;
     document.getElementById('parentRepresentativePanel').innerHTML = `<div><span class="portal-eyebrow">Panel del representante</span><h2>${escapeHtml(payload.parent.full_name || 'Representante')}</h2><p>${escapeHtml(payload.parent.email || '')}</p></div><div class="portal-representative-count"><strong>${payload.athletes.length}</strong><span>atleta${payload.athletes.length === 1 ? '' : 's'} vinculado${payload.athletes.length === 1 ? '' : 's'}</span></div>`;
@@ -809,6 +811,10 @@ export function attachEvents(){
     const wireParentMenu = athlete => {
       const menuToggle = document.getElementById('parentMenuToggle');
       const parentNav = document.getElementById('parentPortalNav');
+      const setMenuOpen = open => {
+        parentSidebar?.classList.toggle('menu-open', open);
+        menuToggle?.setAttribute('aria-expanded', String(open));
+      };
       panel.insertAdjacentHTML('beforeend', '<section class="portal-info-section" data-parent-gallery><h3>Galería de la sede</h3><div data-gallery-content></div><p role="status"></p></section>');
       const gallery = panel.querySelector('[data-parent-gallery]');
       const grid = gallery.querySelector('[data-gallery-content]');
@@ -892,12 +898,31 @@ export function attachEvents(){
         const selected = sectionName === 'resumen' ? [findSection('información del atleta')] : (Array.isArray(targets[sectionName]) ? targets[sectionName] : [targets[sectionName]]);
         selected.filter(Boolean).forEach(section => { section.style.display = ''; });
         if (sectionName === 'galeria') void refreshGallery();
-        document.querySelectorAll('[data-portal-section]').forEach(item => item.classList.toggle('active', item.dataset.portalSection === sectionName));
-        if (parentSidebar) parentSidebar.classList.remove('menu-open');
-        if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+        parentNav?.querySelectorAll('[data-portal-section]').forEach(item => {
+          const active = item.dataset.portalSection === sectionName;
+          item.classList.toggle('active', active);
+          if (active) item.setAttribute('aria-current', 'true');
+          else item.removeAttribute('aria-current');
+          if (active && menuToggle) menuToggle.querySelector('[data-current-portal-section]').textContent = item.textContent.trim();
+        });
+        setMenuOpen(false);
       };
-      document.querySelectorAll('[data-portal-section]').forEach(button => { button.onclick = () => activateSection(button.dataset.portalSection); });
-      if (menuToggle && parentNav) menuToggle.onclick = () => { const open = parentSidebar.classList.toggle('menu-open'); menuToggle.setAttribute('aria-expanded', String(open)); };
+      parentNav?.querySelectorAll('[data-portal-section]').forEach(button => { button.onclick = () => {
+        activateSection(button.dataset.portalSection);
+        menuToggle?.focus({ preventScroll: true });
+        dashboardView.scrollIntoView({ block: 'start' });
+      }; });
+      if (menuToggle && parentNav) {
+        menuToggle.onclick = () => setMenuOpen(menuToggle.getAttribute('aria-expanded') !== 'true');
+        parentSidebar.onkeydown = event => {
+          if (event.key !== 'Escape' || menuToggle.getAttribute('aria-expanded') !== 'true') return;
+          setMenuOpen(false);
+          menuToggle.focus();
+        };
+        dashboardView.onclick = event => {
+          if (!parentSidebar.contains(event.target)) setMenuOpen(false);
+        };
+      }
       activateSection('resumen');
     };
     const showAthlete = athlete => { panel.innerHTML = athlete ? renderParentAthlete(athlete).replace(/(<p>[^<]*?)\s·\s*[^<]+(<\/p>)/, '$1$2') : '<p class="portal-empty">No hay atletas vinculados a esta cuenta. Contacta a la administración.</p>'; wireParentMenu(athlete); };
