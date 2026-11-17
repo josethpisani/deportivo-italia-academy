@@ -7,7 +7,7 @@ import { ic } from "./icons.js";
 import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo, updateAthleteCosts, setUniformePago } from "./mutations.js";
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from "./modals.js";
 import { dayNameFromDate, escapeHtml } from "./utils.js";
-import { saveSede, updateSede, saveSiteContent, deleteGalleryItem, createTrialRequest, getTrialRequests } from "./api.js";
+import { loadData, saveSede, updateSede, saveSiteContent, deleteGalleryItem, createTrialRequest, getTrialRequests } from "./api.js";
 
 // Estado local del flujo público de práctica de prueba.
 let trialModalOpen = false;
@@ -703,9 +703,20 @@ export function attachEvents(){
   document.querySelectorAll('[data-parent-code]').forEach(btn => btn.onclick = async () => { const result = await parentAdminRequest({ action: 'regenerate_code', id: btn.dataset.parentCode }); if (result.success) alert(`Nuevo código de activación: ${result.activation_code}`); else alert(result.error || 'No se pudo generar el código.'); });
   document.querySelectorAll('[data-registration-accept]').forEach(btn => btn.onclick = async () => {
     if (!confirm('¿Aceptar la inscripción? Se creará el atleta y se vinculará al representante.')) return;
+    btn.disabled = true;
     const result = await registrationAdminRequest({ action: 'accept', request_id: btn.dataset.registrationAccept });
-    if (!result.success) alert(result.error || 'No se pudo aceptar la inscripción.');
-    else { alert(result.activation_code ? `Inscripción aceptada. Código de activación del representante: ${result.activation_code}` : 'Inscripción aceptada y atleta creado.'); await loadAdminRegistrationRequests(); }
+    if (!result.success) {
+      btn.disabled = false;
+      alert(result.error || 'No se pudo aceptar la inscripción.');
+      return;
+    }
+    const message = result.activation_code
+      ? `Inscripción aceptada. Entrega este código al representante para activar su acceso: ${result.activation_code}`
+      : result.parent_status === 'activo'
+        ? 'Inscripción aceptada. El atleta ya está vinculado a la cuenta activa del representante.'
+        : 'Inscripción aceptada. El atleta quedó vinculado. Puedes gestionar el acceso del representante en Configuración → Portal de padres.';
+    alert(message);
+    await Promise.all([loadData(), loadAdminRegistrationRequests()]);
   });
   document.querySelectorAll('[data-registration-decline]').forEach(btn => btn.onclick = async () => {
     if (!confirm('¿Declinar esta inscripción?')) return;

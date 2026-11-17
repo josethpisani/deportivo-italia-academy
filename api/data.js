@@ -518,16 +518,21 @@ export default async function handler(req, res) {
       if (requestIndex < 0) return res.status(404).json({ error: "Solicitud no encontrada" });
       const request = requests[requestIndex];
       const updateRequest = async (updated) => {
-        await sql`UPDATE app_data
+        return sql`UPDATE app_data
           SET value = (SELECT jsonb_agg(
             CASE WHEN entry->>'id' = ${String(request.id)} AND entry->>'sede_id' = ${staffSession.sede_id}
               THEN ${JSON.stringify(updated)}::jsonb ELSE entry END ORDER BY ord
           ) FROM jsonb_array_elements(app_data.value) WITH ORDINALITY AS items(entry, ord)),
           updated_at = NOW()
-          WHERE key = 'registration_requests'`;
+          WHERE key = 'registration_requests' AND EXISTS (
+            SELECT 1 FROM jsonb_array_elements(app_data.value) AS items(entry)
+            WHERE entry->>'id' = ${String(request.id)} AND entry->>'sede_id' = ${staffSession.sede_id}
+              AND entry->>'status' = 'pendiente'
+          ) RETURNING key`;
       };
       if (action === "decline") {
-        await updateRequest({ ...request, status: "declinada", decline_reason: String(reason || ""), updated_at: new Date().toISOString() });
+        const rows = await updateRequest({ ...request, status: "declinada", decline_reason: String(reason || ""), updated_at: new Date().toISOString() });
+        if (!rows.length) return res.status(409).json({ error: "La solicitud ya fue procesada." });
         return res.status(200).json({ success: true, status: "declinada" });
       }
       if (action !== "accept") return res.status(400).json({ error: "Acción de inscripción inválida" });
@@ -535,25 +540,62 @@ export default async function handler(req, res) {
       const athleteRows = await sql`SELECT value FROM app_data WHERE key = 'athletes'`;
       const athletes = Array.isArray(athleteRows[0]?.value) ? athleteRows[0].value : [];
       const existingAthlete = athletes.find(item => item.sede_id === staffSession.sede_id && String(item.registration_request_id || '') === String(request.id));
-      if (existingAthlete) return res.status(409).json({ error: "La solicitud ya tiene un atleta creado" });
+
       const nameParts = String(request.athlete_name || "Jugador").trim().split(/\s+/);
+      const category = String(request.category || "U8").toUpperCase();
+      const configKey = `config:${staffSession.sede_id}`;
+      const [settings] = await sql`SELECT value FROM app_data WHERE key = ${configKey}
+        OR (key = 'config' AND (sede_id IS NULL OR sede_id = ${staffSession.sede_id}))
+        ORDER BY (key = ${configKey}) DESC LIMIT 1`;
       const athlete = {
         id: `ath_${randomBytes(8).toString('hex')}`, registration_request_id: request.id, sede_id: staffSession.sede_id,
-        nombre: nameParts.shift() || "Jugador", apellido: nameParts.join(" ") || "Sin apellido", categoria: String(request.category || "U8").toUpperCase(), edad: Number(request.athlete_age),
-        fechaNacimiento: "", representante: request.representative_name || "", telefono: request.phone || "", direccion: "", fechaIngreso: new Date().toISOString().slice(0, 10),
-        matricula: { estado: "pendiente", monto: 0, fecha: new Date().toISOString().slice(0, 10) }, mensualidades: {}, torneos: [], asistenciaEntrenamiento: {}, asistenciaJuegos: {}, observaciones: request.notes || "", estadisticas: {}, statsGenerales: { goles: 0, asistencias: 0, tarjetasAmarillas: 0, tarjetasRojas: 0, partidosJugados: 0, entrenamientosAsistidos: 0, entrenamientosTotales: 0 }, evaluaciones: []
+        nombre: nameParts.shift() || "Jugador", apellido: nameParts.join(" ") || "Sin apellido", categoria: category, edad: Number(request.athlete_age),
+        fechaNacimiento: request.birth_date || "", representante: request.representative_name || "", telefono: request.phone || "", direccion: request.address || "", fechaIngreso: new Date().toISOString().slice(0, 10),
+        matricula: { estado: "pendiente", monto: settings?.value?.[category]?.matricula ?? 35, fecha: new Date().toISOString().slice(0, 10) }, mensualidades: {}, torneos: [], asistenciaEntrenamiento: {}, asistenciaJuegos: {}, observaciones: request.notes || "", estadisticas: {}, statsGenerales: { goles: 0, asistencias: 0, tarjetasAmarillas: 0, tarjetasRojas: 0, partidosJugados: 0, entrenamientosAsistidos: 0, entrenamientosTotales: 0 }, evaluaciones: []
       };
-      await sql`INSERT INTO app_data (key, value, sede_id, updated_at) VALUES ('athletes', ${JSON.stringify([athlete])}, ${staffSession.sede_id}, NOW()) ON CONFLICT (key) DO UPDATE SET value = app_data.value::jsonb || EXCLUDED.value::jsonb, updated_at = NOW()`;
+      const athleteId = existingAthlete?.id || athlete.id;
       const normalizedEmail = String(request.email || "").trim().toLowerCase();
-      let parent = (await sql`SELECT id, status FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} LIMIT 1`)[0];
-      let activationCode = null;
-      if (!parent) {
-        activationCode = createActivationCode();
-        parent = (await sql`INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at) VALUES (${normalizedEmail}, ${request.representative_name || "Representante"}, 'pendiente', ${hashToken(activationCode)}, NULL) RETURNING id, status`)[0];
-      }
-      await sql`INSERT INTO parent_athletes (parent_id, athlete_id, sede_id) VALUES (${parent.id}, ${athlete.id}, ${staffSession.sede_id}) ON CONFLICT DO NOTHING`;
-      await updateRequest({ ...request, status: "aceptada", athlete_id: athlete.id, parent_id: parent.id, updated_at: new Date().toISOString() });
-      return res.status(200).json({ success: true, status: "aceptada", athlete_id: athlete.id, activation_code: activationCode });
+      if (!normalizedEmail) return res.status(400).json({ error: "La solicitud debe tener el correo del representante." });
+      const activationCode = createActivationCode();
+      const activationHash = hashToken(activationCode);
+      const accepted = { ...request, status: "aceptada", athlete_id: athleteId, updated_at: new Date().toISOString() };
+      const [result] = await sql`
+        WITH accepted_request AS (
+          UPDATE app_data
+          SET value = (
+            SELECT jsonb_agg(CASE WHEN entry->>'id' = ${String(request.id)} AND entry->>'sede_id' = ${staffSession.sede_id}
+              THEN ${JSON.stringify(accepted)}::jsonb ELSE entry END ORDER BY ord)
+            FROM jsonb_array_elements(app_data.value) WITH ORDINALITY AS items(entry, ord)
+          ), updated_at = NOW()
+          WHERE key = 'registration_requests' AND EXISTS (
+            SELECT 1 FROM jsonb_array_elements(app_data.value) AS items(entry)
+            WHERE entry->>'id' = ${String(request.id)} AND entry->>'sede_id' = ${staffSession.sede_id}
+              AND entry->>'status' IN ('pendiente', 'declinada')
+          )
+          RETURNING key
+        ), saved_athlete AS (
+          INSERT INTO app_data (key, value, sede_id, updated_at)
+          SELECT 'athletes', ${JSON.stringify([athlete])}::jsonb, ${staffSession.sede_id}, NOW()
+          FROM accepted_request WHERE ${!existingAthlete}
+          ON CONFLICT (key) DO UPDATE SET value = app_data.value || EXCLUDED.value, updated_at = NOW()
+        ), parent AS (
+          INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at)
+          SELECT ${normalizedEmail}, ${request.representative_name || "Representante"}, 'pendiente', ${activationHash}, NULL
+          FROM accepted_request WHERE TRUE
+          ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+          RETURNING id, status, activation_code_hash = ${activationHash} AS created
+        ), athlete_link AS (
+          INSERT INTO parent_athletes (parent_id, athlete_id, sede_id)
+          SELECT id, ${athleteId}, ${staffSession.sede_id} FROM parent
+          ON CONFLICT DO NOTHING
+        )
+        SELECT status, created FROM parent
+      `;
+      if (!result) return res.status(409).json({ error: "La solicitud ya fue procesada." });
+      return res.status(200).json({
+        success: true, status: "aceptada", athlete_id: athleteId,
+        parent_status: result.status, activation_code: result.created ? activationCode : null
+      });
     }
 
     if (req.method === "POST" && req.body?.key === "parent_admin") {
