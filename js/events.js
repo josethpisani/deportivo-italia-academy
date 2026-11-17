@@ -684,7 +684,7 @@ export function attachEvents(){
     e.preventDefault(); const value = Object.fromEntries(new FormData(parentAccountForm).entries());
     const result = await parentAdminRequest({ action: 'create', ...value });
     const message = document.getElementById('parentAccountMessage');
-    if (result.success) { parentAccountForm.reset(); if (message) message.textContent = `Cuenta creada. Código de activación: ${result.activation_code}`; await loadParentAccounts(); }
+    if (result.success) { parentAccountForm.reset(); if (message) message.textContent = `Cuenta registrada. Habilita el primer acceso para generar el enlace.`; await loadParentAccounts(); }
     else if (message) message.textContent = result.error || 'No se pudo crear la cuenta.';
   };
   document.querySelectorAll('[data-parent-link]').forEach(btn => btn.onclick = async () => {
@@ -700,7 +700,35 @@ export function attachEvents(){
     if (!result.success) alert(result.error || 'No se pudo desvincular.'); else await loadParentAccounts();
   });
   document.querySelectorAll('[data-parent-status]').forEach(btn => btn.onclick = async () => { const [id, status] = btn.dataset.parentStatus.split('|'); const result = await parentAdminRequest({ action: 'status', id, status }); if (!result.success) alert(result.error || 'No se pudo cambiar el estado.'); else await loadParentAccounts(); });
-  document.querySelectorAll('[data-parent-code]').forEach(btn => btn.onclick = async () => { const result = await parentAdminRequest({ action: 'regenerate_code', id: btn.dataset.parentCode }); if (result.success) alert(`Nuevo código de activación: ${result.activation_code}`); else alert(result.error || 'No se pudo generar el código.'); });
+  document.querySelectorAll('[data-parent-enable]').forEach(btn => btn.onclick = async () => {
+    btn.disabled = true;
+    const result = await parentAdminRequest({ action: 'enable_first_access', id: btn.dataset.parentEnable });
+    if (!result.success) {
+      btn.disabled = false;
+      alert(result.error || 'No se pudo habilitar el primer acceso.');
+      return;
+    }
+    if (state.view !== 'admin' || state.adminTab !== 'portal') return;
+    await loadParentAccounts();
+    const panel = document.getElementById('parentAccessResult');
+    const input = document.getElementById('parentAccessLink');
+    if (!panel || !input) return;
+    const url = new URL('/portal-padres', window.location.origin);
+    url.hash = new URLSearchParams({ primer_acceso: result.activation_token });
+    input.value = url.href;
+    panel.hidden = false;
+    input.focus();
+    input.select();
+    document.getElementById('copyParentAccess').onclick = async () => {
+      input.select();
+      try {
+        await navigator.clipboard.writeText(input.value);
+        document.getElementById('copyParentAccess').textContent = 'Enlace copiado';
+      } catch {
+        input.focus();
+      }
+    };
+  });
   document.querySelectorAll('[data-registration-accept]').forEach(btn => btn.onclick = async () => {
     if (!confirm('¿Aceptar la inscripción? Se creará el atleta y se vinculará al representante.')) return;
     btn.disabled = true;
@@ -710,12 +738,9 @@ export function attachEvents(){
       alert(result.error || 'No se pudo aceptar la inscripción.');
       return;
     }
-    const message = result.activation_code
-      ? `Inscripción aceptada. Entrega este código al representante para activar su acceso: ${result.activation_code}`
-      : result.parent_status === 'activo'
-        ? 'Inscripción aceptada. El atleta ya está vinculado a la cuenta activa del representante.'
-        : 'Inscripción aceptada. El atleta quedó vinculado. Puedes gestionar el acceso del representante en Configuración → Portal de padres.';
-    alert(message);
+    alert(result.parent_status === 'activo'
+      ? 'Inscripción aceptada. El atleta quedó vinculado a la cuenta del representante.'
+      : 'Inscripción aceptada. Habilita el primer acceso en Configuración → Portal de padres.');
     await Promise.all([loadData(), loadAdminRegistrationRequests()]);
   });
   document.querySelectorAll('[data-registration-decline]').forEach(btn => btn.onclick = async () => {
@@ -837,11 +862,37 @@ export function attachEvents(){
     e.preventDefault(); const data = Object.fromEntries(new FormData(parentLoginForm).entries());
     try { const res = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ key: 'portal', action: 'login', ...data }) }); const result = await res.json(); if (!res.ok) throw new Error(result.error); renderParentDashboard(result); } catch (err) { showPortalMessage('parentLoginMessage', err.message || 'No se pudo iniciar sesión.'); }
   };
+  let activationToken = parentActivationForm
+    ? new URLSearchParams(window.location.hash.slice(1)).get('primer_acceso')
+    : null;
+  const showActivation = () => {
+    loginView.style.display = 'none';
+    activationView.style.display = 'block';
+    parentActivationForm.style.display = activationToken ? '' : 'none';
+  };
+  if (activationToken) showActivation();
   if (parentActivationForm) parentActivationForm.onsubmit = async (e) => {
     e.preventDefault(); const data = Object.fromEntries(new FormData(parentActivationForm).entries());
-    try { const res = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'portal', action: 'activate', ...data }) }); const result = await res.json(); if (!res.ok) throw new Error(result.error); showPortalMessage('parentActivationMessage', result.message); parentActivationForm.reset(); } catch (err) { showPortalMessage('parentActivationMessage', err.message || 'No se pudo activar la cuenta.'); }
+    try {
+      const res = await fetch('/api/data', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'portal', action: 'activate', activation_code: activationToken, ...data })
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+      parentActivationForm.reset();
+      activationToken = null;
+      window.history.replaceState({}, '', '/portal-padres');
+      activationView.style.display = 'none';
+      loginView.style.display = 'block';
+      parentLoginForm.elements.email.value = data.email;
+      showPortalMessage('parentLoginMessage', result.message);
+      parentLoginForm.elements.password.focus();
+    } catch (err) {
+      showPortalMessage('parentActivationMessage', err.message || 'No se pudo activar la cuenta.');
+    }
   };
-  document.getElementById('showParentActivation')?.addEventListener('click', () => { loginView.style.display = 'none'; activationView.style.display = 'block'; });
+  document.getElementById('showParentActivation')?.addEventListener('click', showActivation);
   document.getElementById('showParentLogin')?.addEventListener('click', () => { activationView.style.display = 'none'; loginView.style.display = 'block'; });
   document.getElementById('parentLogout')?.addEventListener('click', async () => { await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ key: 'portal', action: 'logout' }) }); window.location.reload(); });
 }

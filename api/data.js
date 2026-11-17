@@ -8,11 +8,6 @@ import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypt
 
 function hashToken(token) { return createHash("sha256").update(token).digest("hex"); }
 function hashPassword(password, salt = randomBytes(16).toString("hex")) { return `scrypt$${salt}$${scryptSync(password, salt, 64).toString("hex")}`; }
-function createActivationCode() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = randomBytes(8);
-  return `DIA-${Array.from(bytes, byte => alphabet[byte % alphabet.length]).join("")}`;
-}
 function verifyPassword(password, stored) {
   const [, salt, expected] = String(stored || "").split("$");
   if (!salt || !/^[a-f0-9]{128}$/.test(expected || "")) return false;
@@ -432,7 +427,7 @@ export default async function handler(req, res) {
 
     if (req.method === "GET" && req.query.key === "parent_admin") {
       if (!await isAdmin()) return res.status(403).json({ error: "Acceso de administrador requerido." });
-      const accounts = await sql`SELECT id, email, full_name, status, last_login_at, created_at FROM parent_accounts ORDER BY created_at DESC`;
+      const accounts = await sql`SELECT id, email, full_name, status, password_hash IS NOT NULL AS has_password, last_login_at, created_at FROM parent_accounts ORDER BY created_at DESC`;
       const links = await sql`SELECT parent_id, athlete_id, sede_id FROM parent_athletes ORDER BY created_at`;
       return res.status(200).json(accounts.map(account => ({ ...account, links: links.filter(link => String(link.parent_id) === String(account.id)) })));
     }
@@ -444,7 +439,7 @@ export default async function handler(req, res) {
         if (!normalizedEmail || !password) return res.status(400).json({ error: "Correo y contraseña son obligatorios" });
         const rows = await sql`SELECT * FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} LIMIT 1`;
         const parent = rows[0];
-        if (!parent || parent.status !== "activo") return res.status(401).json({ error: "La cuenta no está activa o no existe" });
+        if (!parent || parent.status !== "activo" || !parent.password_hash) return res.status(401).json({ error: "La cuenta no está activa o no existe" });
         if (parent.locked_until && new Date(parent.locked_until) > new Date()) return res.status(429).json({ error: "Cuenta bloqueada temporalmente" });
         if (!verifyPassword(password, parent.password_hash)) {
           const attempts = Number(parent.failed_attempts || 0) + 1;
@@ -459,12 +454,21 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, parent: { id: parent.id, email: parent.email, full_name: parent.full_name }, ...(await getParentPortalData(parent.id)) });
       }
       if (action === "activate") {
-        if (!normalizedEmail || !activation_code || !password || !full_name) return res.status(400).json({ error: "Datos de activación incompletos" });
-        const rows = await sql`SELECT * FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} AND status = 'pendiente' LIMIT 1`;
-        const parent = rows[0];
-        if (!parent || !parent.activation_code_hash || hashToken(String(activation_code).trim().toUpperCase()) !== parent.activation_code_hash) return res.status(401).json({ error: "Código de activación inválido o ya utilizado" });
-        await sql`UPDATE parent_accounts SET full_name = ${String(full_name).trim()}, password_hash = ${hashPassword(password)}, status = 'activo', activation_code_hash = NULL, activation_expires_at = NULL, updated_at = NOW() WHERE id = ${parent.id}`;
-        return res.status(200).json({ success: true, message: "Cuenta activada. Ya puedes iniciar sesión." });
+        if (!normalizedEmail || typeof activation_code !== "string" || !/^[a-f0-9]{64}$/.test(activation_code) ||
+            typeof password !== "string" || password.length < 8 || password.length > 128) {
+          return res.status(400).json({ error: "Usa el enlace de primer acceso y una contraseña de 8 a 128 caracteres." });
+        }
+        const tokenHash = hashToken(activation_code);
+        const [parent] = await sql`SELECT id FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail}
+          AND status = 'activo' AND password_hash IS NULL AND activation_code_hash = ${tokenHash}
+          AND activation_expires_at > NOW() LIMIT 1`;
+        if (!parent) return res.status(401).json({ error: "El enlace no es válido, ya se usó o venció." });
+        const rows = await sql`UPDATE parent_accounts SET password_hash = ${hashPassword(password)},
+          activation_code_hash = NULL, activation_expires_at = NULL, failed_attempts = 0, locked_until = NULL, updated_at = NOW()
+          WHERE id = ${parent.id} AND status = 'activo' AND password_hash IS NULL
+            AND activation_code_hash = ${tokenHash} AND activation_expires_at > NOW() RETURNING id`;
+        if (!rows.length) return res.status(401).json({ error: "El enlace no es válido, ya se usó o venció." });
+        return res.status(200).json({ success: true, message: "Contraseña creada. Ya puedes iniciar sesión." });
       }
       if (action === "logout") {
         const rawToken = readCookie(req, "dia_parent_session");
@@ -556,8 +560,6 @@ export default async function handler(req, res) {
       const athleteId = existingAthlete?.id || athlete.id;
       const normalizedEmail = String(request.email || "").trim().toLowerCase();
       if (!normalizedEmail) return res.status(400).json({ error: "La solicitud debe tener el correo del representante." });
-      const activationCode = createActivationCode();
-      const activationHash = hashToken(activationCode);
       const accepted = { ...request, status: "aceptada", athlete_id: athleteId, updated_at: new Date().toISOString() };
       const [result] = await sql`
         WITH accepted_request AS (
@@ -579,22 +581,22 @@ export default async function handler(req, res) {
           FROM accepted_request WHERE ${!existingAthlete}
           ON CONFLICT (key) DO UPDATE SET value = app_data.value || EXCLUDED.value, updated_at = NOW()
         ), parent AS (
-          INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at)
-          SELECT ${normalizedEmail}, ${request.representative_name || "Representante"}, 'pendiente', ${activationHash}, NULL
+          INSERT INTO parent_accounts (email, full_name, status)
+          SELECT ${normalizedEmail}, ${request.representative_name || "Representante"}, 'pendiente'
           FROM accepted_request WHERE TRUE
           ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
-          RETURNING id, status, activation_code_hash = ${activationHash} AS created
+          RETURNING id, status
         ), athlete_link AS (
           INSERT INTO parent_athletes (parent_id, athlete_id, sede_id)
           SELECT id, ${athleteId}, ${staffSession.sede_id} FROM parent
           ON CONFLICT DO NOTHING
         )
-        SELECT status, created FROM parent
+        SELECT status FROM parent
       `;
       if (!result) return res.status(409).json({ error: "La solicitud ya fue procesada." });
       return res.status(200).json({
         success: true, status: "aceptada", athlete_id: athleteId,
-        parent_status: result.status, activation_code: result.created ? activationCode : null
+        parent_status: result.status
       });
     }
 
@@ -604,11 +606,10 @@ export default async function handler(req, res) {
       if (action === "create") {
         const normalizedEmail = String(email || "").trim().toLowerCase();
         if (!normalizedEmail || !full_name) return res.status(400).json({ error: "Nombre y correo son obligatorios" });
-        const code = createActivationCode();
         const existing = await sql`SELECT id FROM parent_accounts WHERE LOWER(email) = ${normalizedEmail} LIMIT 1`;
         if (existing.length) return res.status(409).json({ error: "Ya existe una cuenta con ese correo" });
-        const created = await sql`INSERT INTO parent_accounts (email, full_name, status, activation_code_hash, activation_expires_at) VALUES (${normalizedEmail}, ${String(full_name).trim()}, 'pendiente', ${hashToken(code)}, NULL) RETURNING id, email, full_name, status, created_at`;
-        return res.status(201).json({ success: true, account: created[0], activation_code: code });
+        const created = await sql`INSERT INTO parent_accounts (email, full_name, status) VALUES (${normalizedEmail}, ${String(full_name).trim()}, 'pendiente') RETURNING id, email, full_name, status, created_at`;
+        return res.status(201).json({ success: true, account: created[0] });
       }
       if (action === "link") {
         if (!id || !athlete_id || !linkSedeId) return res.status(400).json({ error: "Representante, atleta y sede son obligatorios" });
@@ -624,10 +625,13 @@ export default async function handler(req, res) {
         await sql`UPDATE parent_accounts SET status = ${req.body.status}, updated_at = NOW() WHERE id = ${id}`;
         return res.status(200).json({ success: true });
       }
-      if (action === "regenerate_code") {
-        const code = createActivationCode();
-        await sql`UPDATE parent_accounts SET status = 'pendiente', activation_code_hash = ${hashToken(code)}, activation_expires_at = NULL, updated_at = NOW() WHERE id = ${id}`;
-        return res.status(200).json({ success: true, activation_code: code });
+      if (action === "enable_first_access") {
+        const token = randomBytes(32).toString("hex");
+        const rows = await sql`UPDATE parent_accounts SET status = 'activo', activation_code_hash = ${hashToken(token)},
+          activation_expires_at = NOW() + INTERVAL '48 hours', updated_at = NOW()
+          WHERE id = ${id} AND password_hash IS NULL RETURNING id`;
+        if (!rows.length) return res.status(409).json({ error: "La cuenta ya tiene contraseña o no existe." });
+        return res.status(200).json({ success: true, activation_token: token });
       }
       return res.status(400).json({ error: "Acción administrativa inválida" });
     }
