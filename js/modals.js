@@ -518,12 +518,12 @@ export function openAddGaleriaModal(){
   const html = `
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal">
-        <div class="mh"><h3 class="dia-title">Agregar foto o video</h3><button id="modalClose">${ic.x}</button></div>
+        <div class="mh"><h3 class="dia-title">Agregar fotos o video</h3><button id="modalClose">${ic.x}</button></div>
         <label for="g_file">Examinar archivos</label>
-        <input id="g_file" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.mp4,.webm" aria-describedby="g_formats">
-        <p id="g_formats">JPG, PNG o WebP hasta 20 MB. MP4 o WebM hasta ${galleryVideoMaxLabel}.</p>
+        <input id="g_file" type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,.mp4,.webm" aria-describedby="g_formats">
+        <p id="g_formats">Varias fotos JPG, PNG o WebP de hasta 20 MB cada una, o un video MP4 o WebM de hasta ${galleryVideoMaxLabel}.</p>
         <label for="g_url">O enlace directo a la imagen</label><input id="g_url" type="url" placeholder="https://...">
-        <label>Descripción</label><input id="g_desc" placeholder="Descripción de la imagen">
+        <label for="g_desc">Descripción para todos los archivos</label><input id="g_desc" placeholder="Descripción opcional">
         <label>Categoría</label>
         <select id="g_categoria">
           ${galleryCategories.map(category => `<option>${category}</option>`).join("")}
@@ -533,18 +533,35 @@ export function openAddGaleriaModal(){
       </div>
     </div>`;
   document.getElementById("app").insertAdjacentHTML("beforeend", html);
-  document.getElementById("modalClose").onclick = closeModal;
-  document.getElementById("modalOverlay").addEventListener("click", e=>{ if(e.target.id==="modalOverlay") closeModal(); });
   const file = document.getElementById("g_file");
   const link = document.getElementById("g_url");
   const save = document.getElementById("g_save");
   const status = document.getElementById("g_status");
   let saving = false;
-  const updateButton = () => { save.disabled = saving || !(file.files.length || link.value.trim()); };
-  file.onchange = updateButton;
+  let pendingFiles = [];
+  let galleryChanged = false;
+  const dismiss = () => {
+    if (saving) return;
+    closeModal();
+    if (galleryChanged) window.__render?.();
+  };
+  document.getElementById("modalClose").onclick = dismiss;
+  document.getElementById("modalOverlay").addEventListener("click", e => { if (e.target.id === "modalOverlay") dismiss(); });
+  const updateButton = () => { save.disabled = saving || !(pendingFiles.length || link.value.trim()); };
+  file.onchange = () => {
+    pendingFiles = Array.from(file.files);
+    status.textContent = pendingFiles.length ? `${pendingFiles.length} archivo(s) seleccionado(s).` : "";
+    updateButton();
+  };
   link.oninput = updateButton;
   save.onclick = async () => {
+    const isVideo = selected => /\.(mp4|webm)$/i.test(selected.name);
+    if (pendingFiles.length > 1 && pendingFiles.some(isVideo)) {
+      status.textContent = "Selecciona varias fotos o carga el video por separado.";
+      return;
+    }
     saving = true;
+    file.disabled = link.disabled = true;
     updateButton();
     status.textContent = "Guardando archivo…";
     const newImage = {
@@ -553,8 +570,30 @@ export function openAddGaleriaModal(){
     };
     try {
       const url = link.value.trim();
-      const selected = file.files[0];
-      if (selected && /\.(mp4|webm)$/i.test(selected.name)) {
+      if (pendingFiles.length && !pendingFiles.some(isVideo)) {
+        const files = pendingFiles;
+        const failed = [];
+        const errors = [];
+        for (const [index, selected] of files.entries()) {
+          status.textContent = `Publicando foto ${index + 1} de ${files.length}…`;
+          try {
+            const imageUrl = await imageData(selected);
+            await addGalleryImage({ ...newImage, url: imageUrl });
+            galleryChanged = true;
+          } catch (error) {
+            failed.push(selected);
+            errors.push(`${selected.name}: ${error.message}`);
+          }
+        }
+        pendingFiles = failed;
+        file.value = "";
+        if (!failed.length) link.value = "";
+        status.textContent = `Fotos publicadas: ${files.length - failed.length} de ${files.length}.`;
+        if (failed.length) status.textContent += ` ${errors.join(" · ")} Pulsa Publicar para reintentar las pendientes.`;
+        return;
+      }
+      const selected = pendingFiles[0];
+      if (selected) {
         if (!selected.size || selected.size > galleryVideoMaxBytes) {
           throw new Error(`Selecciona un video de hasta ${galleryVideoMaxLabel}.`);
         }
@@ -566,8 +605,6 @@ export function openAddGaleriaModal(){
           reader.onerror = () => reject(new Error("No se pudo leer el video."));
           reader.readAsDataURL(selected);
         });
-      } else if (selected) {
-        newImage.url = await imageData(selected);
       } else {
         if (!/^https:\/\//i.test(url) || !link.validity.valid) {
           throw new Error("Selecciona un archivo o pega un enlace HTTPS a la imagen.");
@@ -584,6 +621,7 @@ export function openAddGaleriaModal(){
       status.textContent = error.message;
     } finally {
       saving = false;
+      file.disabled = link.disabled = false;
       updateButton();
     }
   };
