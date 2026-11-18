@@ -1,3 +1,4 @@
+import { tournamentStats } from "../tournament-stats.js";
 import { state } from "../state.js";
 import { CATEGORIES, TRAINING_DAYS } from "../constants.js";
 import { ic } from "../icons.js";
@@ -130,7 +131,7 @@ export function renderAthleteDetail(){
   let statsHtml = "";
   if(torneosInscritos.length){
     const statsRows = torneosInscritos.map(t=>{
-      const st = (a.estadisticas && a.estadisticas[t.id]) || {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0};
+      const st = tournamentStats(a, t);
       return `<tr>
         <td style="font-weight:600;">${escapeHtml(t.nombre)}</td>
         <td style="text-align:center;">${t.fecha}</td>

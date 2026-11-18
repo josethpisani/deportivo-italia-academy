@@ -1,3 +1,4 @@
+import { tournamentStats } from "./tournament-stats.js";
 import { state } from "./state.js";
 import { CATEGORIES } from "./constants.js";
 import { ic } from "./icons.js";
@@ -224,7 +225,7 @@ export function openTorneoStatsModal(torneoId){
   const elegibles = state.athletes.filter(a=>a.torneos.some(x=>x.torneoId===torneoId));
 
   const rows = elegibles.map(a=>{
-    const stats = (a.estadisticas && a.estadisticas[torneoId]) || {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0};
+    const stats = tournamentStats(a, t);
     return `<tr>
       <td style="font-weight:600;">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</td>
       <td><input type="number" min="0" class="st-input" data-st="${a.id}|goles" value="${stats.goles}"></td>

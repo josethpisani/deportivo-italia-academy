@@ -3,7 +3,8 @@ import { uid, todayISO } from "./utils.js";
 import { makeAthlete } from "./seed.js";
 import { saveAthletes, saveTorneos, saveConfig } from "./api.js";
 import { closeModal } from "./modals.js";
-import { attendanceGamesForYear, isTournamentAthlete } from "./game-attendance.js";
+import { attendanceGamesForYear, isTournamentAthlete, gameAttendanceKey } from "./game-attendance.js";
+import { tournamentStats } from "./tournament-stats.js";
 
 export function updateAthlete(id, patch){
   const a = state.athletes.find(x=>x.id===id);
@@ -23,6 +24,11 @@ export function toggleAttendance(athleteId, type, dateKey, status){
       estado: status, fecha: entry.game.fecha,
       tipo: `${entry.tournament.nombre} · vs. ${entry.game.rival}`
     };
+    a.juegosStats ??= {};
+    a.juegosStats[entry.tournament.id] ??= {};
+    a.juegosStats[entry.tournament.id][entry.game.id] ??= {};
+    a.estadisticas ??= {};
+    a.estadisticas[entry.tournament.id] = tournamentStats(a, entry.tournament);
     saveAthletes();
     window.__render?.();
     return;
@@ -149,15 +155,13 @@ export function updateJuego(torneoId, juegoId, patch){
 }
 
 export function recomputeTorneoStats(torneoId){
+  const tournament = state.torneos.find(t => t.id === torneoId);
+  if (!tournament) return;
   state.athletes.forEach(a=>{
     const games = a.juegosStats && a.juegosStats[torneoId];
     if(!games) return;
     const totals = { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0 };
-    const played = Object.keys(games).filter(gid=>{
-      const s = games[gid];
-      return (s.goles||0)+(s.asistencias||0)+(s.tarjetasAmarillas||0)+(s.tarjetasRojas||0) > 0;
-    });
-    totals.partidosJugados = played.length;
+    totals.partidosJugados = tournamentStats(a, tournament).partidosJugados;
     Object.values(games).forEach(s=>{
       totals.goles += s.goles||0;
       totals.asistencias += s.asistencias||0;
@@ -188,6 +192,7 @@ export function deleteJuego(torneoId, juegoId){
   t.juegos = (t.juegos||[]).filter(j=>j.id!==juegoId);
   state.athletes.forEach(a=>{
     if(a.juegosStats && a.juegosStats[torneoId]) delete a.juegosStats[torneoId][juegoId];
+    if(a.asistenciaJuegos) delete a.asistenciaJuegos[gameAttendanceKey(torneoId, juegoId)];
   });
   recomputeTorneoStats(torneoId);
   saveTorneos();

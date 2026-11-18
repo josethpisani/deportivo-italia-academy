@@ -1,3 +1,4 @@
+import { tournamentStats } from "../tournament-stats.js";
 import { state } from "../state.js";
 import { ic } from "../icons.js";
 import { escapeHtml, computeTorneoTeamStats, matchesStaffYear } from "../utils.js";
@@ -62,7 +63,7 @@ export function renderTorneoDetail(){
   }).join("") || '<p class="empty-msg">Aún no hay juegos registrados. Agrega el primer juego con el botón superior.</p>';
 
   const statRows = inscritos.map(a=>{
-    const st = (a.estadisticas && a.estadisticas[t.id]) || {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0};
+    const st = tournamentStats(a, t);
     return `<tr>
       <td style="font-weight:600;">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</td>
       <td style="text-align:center;">${st.partidosJugados||0}</td>

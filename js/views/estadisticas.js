@@ -1,3 +1,4 @@
+import { tournamentStats } from "../tournament-stats.js";
 import { state } from "../state.js";
 import { CATEGORIES } from "../constants.js";
 import { ic } from "../icons.js";
@@ -18,7 +19,12 @@ export function renderEstadisticas(){
   const selectedAthlete = state.statsAthleteId ? filtered.find(a=>a.id===state.statsAthleteId) : null;
 
   let playerGrid = filtered.map(a=>{
-    const sg = a.statsGenerales || {};
+    const sg = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear))
+      .map(t => tournamentStats(a, t))
+      .reduce((total, stats) => ({
+        goles: total.goles + Number(stats.goles || 0),
+        asistencias: total.asistencias + Number(stats.asistencias || 0)
+      }), { goles: 0, asistencias: 0 });
     const totalGoles = sg.goles||0;
     return `<button class="ath-card ${state.statsAthleteId===a.id?"selected":""}" data-statsplayer="${a.id}">
       <div class="top">
@@ -43,7 +49,7 @@ export function renderEstadisticas(){
   const a = selectedAthlete;
   if(!a.statsGenerales) a.statsGenerales = { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0, entrenamientosAsistidos:0, entrenamientosTotales:0 };
   const yearTorneoIds = new Set(state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear)).map(t => t.id));
-  const anio = Object.entries(a.estadisticas || {}).filter(([torneoId]) => yearTorneoIds.has(torneoId)).reduce((acc,[,st]) => ({
+  const anio = state.torneos.filter(t => yearTorneoIds.has(t.id)).map(t => tournamentStats(a, t)).reduce((acc,st) => ({
     goles: acc.goles + (st.goles||0), asistencias: acc.asistencias + (st.asistencias||0), tarjetasAmarillas: acc.tarjetasAmarillas + (st.tarjetasAmarillas||0), tarjetasRojas: acc.tarjetasRojas + (st.tarjetasRojas||0), partidosJugados: acc.partidosJugados + (st.partidosJugados||0)
   }), {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0});
   const yearTraining = staffYearRecord(a.asistenciaEntrenamiento, state.staffYear);
@@ -89,7 +95,7 @@ export function renderEstadisticas(){
   let torneosStatsHtml = "";
   if(torneosInscritos.length){
     const rows = torneosInscritos.map(t=>{
-      const st = (a.estadisticas && a.estadisticas[t.id]) || {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0};
+      const st = tournamentStats(a, t);
       return `<tr>
         <td style="font-weight:600;">${escapeHtml(t.nombre)}</td>
         <td style="text-align:center;">${t.fecha}</td>
@@ -150,8 +156,8 @@ export function renderEstadisticas(){
 
     <div class="section"><h3 class="dia-title">Asistencia a entrenamientos</h3>
       <div class="stats-row">
-        ${statPill(ic.check,"Presentes",trainPresent+"/"+Object.keys(a.asistenciaEntrenamiento).length,"var(--green)")}
-        ${statPill(ic.trend,"Tasa",attendanceRate(a.asistenciaEntrenamiento)+"%","var(--pitch)")}
+        ${statPill(ic.check,"Presentes",trainPresent+"/"+Object.keys(yearTraining).length,"var(--green)")}
+        ${statPill(ic.trend,"Tasa",attendanceRate(yearTraining)+"%","var(--pitch)")}
       </div>
     </div>
 
