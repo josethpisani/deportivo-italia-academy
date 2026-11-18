@@ -3,6 +3,7 @@ import { CATEGORIES } from "../constants.js";
 import { ic } from "../icons.js";
 import { escapeHtml, attendanceRate, sumTorneoStats, staffYearAthletes, matchesStaffYear, staffYearRecord } from "../utils.js";
 import { statPill, badge, initials } from "../render-helpers.js";
+import { gameAttendanceHistory } from "../game-attendance.js";
 
 export function renderEstadisticas(){
   const filtered = staffYearAthletes(state.athletes, state.staffYear).filter(a=>{
@@ -46,7 +47,9 @@ export function renderEstadisticas(){
     goles: acc.goles + (st.goles||0), asistencias: acc.asistencias + (st.asistencias||0), tarjetasAmarillas: acc.tarjetasAmarillas + (st.tarjetasAmarillas||0), tarjetasRojas: acc.tarjetasRojas + (st.tarjetasRojas||0), partidosJugados: acc.partidosJugados + (st.partidosJugados||0)
   }), {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0});
   const yearTraining = staffYearRecord(a.asistenciaEntrenamiento, state.staffYear);
-  const yearGames = staffYearRecord(a.asistenciaJuegos, state.staffYear);
+  const yearGames = Object.fromEntries(gameAttendanceHistory(a, state.torneos)
+    .filter(({ date }) => matchesStaffYear(date, state.staffYear))
+    .map(({ key, status }) => [key, status]));
   const sg = {
     goles: anio.goles,
     asistencias: anio.asistencias,
@@ -154,8 +157,8 @@ export function renderEstadisticas(){
 
     <div class="section"><h3 class="dia-title">Asistencia a juegos</h3>
       <div class="stats-row">
-        ${statPill(ic.check,"Presentes",gamePresent+"/"+Object.keys(a.asistenciaJuegos).length,"var(--green)")}
-        ${statPill(ic.trend,"Tasa",attendanceRate(a.asistenciaJuegos)+"%","var(--pitch)")}
+        ${statPill(ic.check,"Presentes",gamePresent+"/"+Object.keys(yearGames).length,"var(--green)")}
+        ${statPill(ic.trend,"Tasa",attendanceRate(yearGames)+"%","var(--pitch)")}
       </div>
     </div>
 

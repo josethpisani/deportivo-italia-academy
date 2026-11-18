@@ -2,6 +2,7 @@ import { state } from "../state.js";
 import { ic } from "../icons.js";
 import { escapeHtml, computeTorneoTeamStats, matchesStaffYear } from "../utils.js";
 import { statPill, badge } from "../render-helpers.js";
+import { gameAttendanceKey } from "../game-attendance.js";
 
 export function renderTorneos(){
   const cards = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear)).map(t=>{
@@ -52,6 +53,7 @@ export function renderTorneoDetail(){
       </div>
       ${marcador}
       <div class="juego-actions">
+        <button class="btn-outline" data-game-attendance="${escapeHtml(gameAttendanceKey(t.id, j.id))}">${ic.clipboard} Asistencia</button>
         <button class="btn-outline" data-juego-stats="${j.id}">${ic.activity} Estadísticas</button>
         <button class="btn-icon" data-edit-juego="${j.id}" title="Editar juego">${ic.pencil}</button>
         <button class="btn-icon red" data-del-juego="${j.id}" title="Eliminar juego">${ic.x}</button>

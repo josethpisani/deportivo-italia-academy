@@ -31,6 +31,7 @@ export const state = {
   adminCategory: "Todos",
   adminViewMode: "grid",
   regTipo: "training",
+  regGameKey: "",
   regDate: new Date().toISOString().slice(0,10),
   regCategory: "Todos",
   athViewMode: "grid",

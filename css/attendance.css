@@ -1,6 +1,6 @@
 /* ATTENDANCE REG */
 .reg-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px;background:#fff;border:1px solid var(--chalk-dim);border-radius:10px;padding:14px 16px;}
-.reg-field{display:flex;flex-direction:column;gap:4px;}
+.reg-field{display:flex;flex-direction:column;gap:4px;min-width:0;max-width:100%;}
 .reg-field label{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
 .reg-field select,.reg-field input{padding:8px 10px;border-radius:7px;border:1px solid var(--chalk-dim);font-size:13px;}
 .reg-hint{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;}

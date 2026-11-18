@@ -4,6 +4,7 @@ import { ic } from "../icons.js";
 import { escapeHtml, attendanceRate, lastNDates, staffYearAthletes, matchesStaffYear, staffYearRecord } from "../utils.js";
 import { statPill, badge } from "../render-helpers.js";
 import { athletePhoto } from "../athlete-photo.js";
+import { gameAttendanceHistory } from "../game-attendance.js";
 
 function attendGrid(sessions, record, athleteId, type){
   const readOnly = state.athleteReadOnly;
@@ -103,10 +104,12 @@ export function renderAthleteDetail(){
   let trainingSessions = [];
   TRAINING_DAYS.forEach(day => { trainingSessions = trainingSessions.concat(lastNDates(3, day)); });
   trainingSessions.sort();
-  const gameSessions = lastNDates(6, "weekend");
+  const gameSessions = gameAttendanceHistory(a, state.torneos)
+    .filter(({ date }) => matchesStaffYear(date, state.staffYear))
+    .sort((a, b) => b.date.localeCompare(a.date));
 
   const yearTraining = staffYearRecord(a.asistenciaEntrenamiento, state.staffYear);
-  const yearGames = staffYearRecord(a.asistenciaJuegos, state.staffYear);
+  const yearGames = Object.fromEntries(gameSessions.map(({ key, status }) => [key, status]));
   const trainRate = attendanceRate(yearTraining);
   const gameRate = attendanceRate(yearGames);
   const trainPresent = Object.values(yearTraining).filter(v=>v==="presente").length;
@@ -198,7 +201,11 @@ export function renderAthleteDetail(){
     </div>
 
     <div class="section"><h3 class="dia-title">Asistencia a juegos (fin de semana)</h3>
-      ${attendGrid(gameSessions, a.asistenciaJuegos, a.id, "game")}
+      ${gameSessions.length ? `<div class="attend-grid">${gameSessions.map(({date, label, status}) => `
+        <div class="attend-cell">
+          <div class="day">${escapeHtml(label)}</div><div class="date">${escapeHtml(date)}</div>
+          <div class="readonly-status ${status === "presente" ? "present" : status === "ausente" ? "absent" : "unmarked"}">${escapeHtml(status === "presente" ? "Presente" : status === "ausente" ? "Ausente" : status)}</div>
+        </div>`).join("")}</div>` : '<p class="empty-msg">Sin asistencia a juegos registrada para este año.</p>'}
     </div>
 
     <div class="section"><h3 class="dia-title">Torneos</h3>${torneosHtml}</div>

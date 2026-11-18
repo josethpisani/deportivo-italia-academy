@@ -3,6 +3,7 @@ import { uid, todayISO } from "./utils.js";
 import { makeAthlete } from "./seed.js";
 import { saveAthletes, saveTorneos, saveConfig } from "./api.js";
 import { closeModal } from "./modals.js";
+import { attendanceGamesForYear, isTournamentAthlete } from "./game-attendance.js";
 
 export function updateAthlete(id, patch){
   const a = state.athletes.find(x=>x.id===id);
@@ -12,7 +13,23 @@ export function updateAthlete(id, patch){
 
 export function toggleAttendance(athleteId, type, dateKey, status){
   const a = state.athletes.find(x=>x.id===athleteId);
-  const field = type==="training" ? "asistenciaEntrenamiento" : "asistenciaJuegos";
+  if (!a || !dateKey || !["presente", "ausente"].includes(status)) return;
+  if (type === "game") {
+    const entry = attendanceGamesForYear().find(game => game.key === dateKey);
+    if (!entry || !isTournamentAthlete(a, entry.tournament)) return;
+    a.asistenciaJuegos ??= {};
+    if (a.asistenciaJuegos[dateKey]?.estado === status) delete a.asistenciaJuegos[dateKey];
+    else a.asistenciaJuegos[dateKey] = {
+      estado: status, fecha: entry.game.fecha,
+      tipo: `${entry.tournament.nombre} · vs. ${entry.game.rival}`
+    };
+    saveAthletes();
+    window.__render?.();
+    return;
+  }
+  if (type !== "training") return;
+  const field = "asistenciaEntrenamiento";
+  a[field] ??= {};
   if(a[field][dateKey]===status) delete a[field][dateKey];
   else a[field][dateKey] = status;
   if(!a.statsGenerales) a.statsGenerales = { goles:0, asistencias:0, tarjetasAmarillas:0, tarjetasRojas:0, partidosJugados:0, entrenamientosAsistidos:0, entrenamientosTotales:0 };

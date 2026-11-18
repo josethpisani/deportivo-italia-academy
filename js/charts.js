@@ -1,6 +1,6 @@
 import { state } from "./state.js";
 import { CATEGORIES } from "./constants.js";
-import { attendanceRate, dayNameFromDate, computeTorneoTeamStats, staffYearAthletes, matchesStaffYear, staffYearRecord } from "./utils.js";
+import { attendanceRate, computeTorneoTeamStats, staffYearAthletes, matchesStaffYear, staffYearRecord } from "./utils.js";
 
 const C = { pitch:"#0E4C86", green:"#1FA855", red:"#C23B33", grayBg:"#E1E8EF", ink:"#162233", orange:"#E8922D", purple:"#7B4FD4", teal:"#2BA5AD" };
 const CAT_COLORS = ["#0E4C86","#1FA855","#E8922D","#C23B33","#7B4FD4"];
@@ -164,17 +164,13 @@ export function drawAdminCharts(){
 }
 
 export function drawRegChart(){
-  const dayName = state.regDate ? dayNameFromDate(state.regDate) : "";
-  const dateKey = state.regDate ? `${state.regDate}|${dayName}` : "";
-  const field = state.regTipo==="training" ? "asistenciaEntrenamiento" : "asistenciaJuegos";
-  const presData = CATEGORIES.map(c=> state.athletes.filter(a=>a.categoria===c && a[field][dateKey]==="presente").length);
-  const ausData = CATEGORIES.map(c=> state.athletes.filter(a=>a.categoria===c && a[field][dateKey]==="ausente").length);
-  const totalPres = presData.reduce((s,v)=>s+v,0);
-  const totalAus = ausData.reduce((s,v)=>s+v,0);
+  const chart = document.getElementById("chartRegDay");
+  if (!chart) return;
+  const counts = [Number(chart.dataset.presentes), Number(chart.dataset.ausentes)];
   makeChart("chartRegDay", {
     type:"doughnut",
-    data: doughnutData(["Presentes","Ausentes"], [totalPres,totalAus], [C.green,C.red], "Sin registros del día"),
-    options: doughnutOpts("Asistencia del día")
+    data: doughnutData(["Presentes","Ausentes"], counts, [C.green,C.red], "Sin registros"),
+    options: doughnutOpts("Asistencia")
   });
 }
 

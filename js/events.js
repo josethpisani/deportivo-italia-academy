@@ -7,6 +7,7 @@ import { ic } from "./icons.js";
 import { toggleAttendance, setMatricula, setTorneoEnrollment, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, deleteJuego, deleteTorneo, updateAthleteCosts, setUniformePago } from "./mutations.js";
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from "./modals.js";
 import { dayNameFromDate, escapeHtml } from "./utils.js";
+import { gameAttendanceHistory } from "./game-attendance.js";
 import { loadData, saveSede, updateSede, saveSiteContent, deleteGalleryItem, createTrialRequest, getTrialRequests } from "./api.js";
 
 // Estado local del flujo público de práctica de prueba.
@@ -205,14 +206,19 @@ export function attachEvents(){
   if(regTipoSelect) regTipoSelect.onchange = (e)=>{ state.regTipo = e.target.value; if(window.__render) window.__render(); };
   const regDateInput = document.getElementById("regDateInput");
   if(regDateInput) regDateInput.onchange = (e)=>{ state.regDate = e.target.value; if(window.__render) window.__render(); };
+  const regGameSelect = document.getElementById("regGameSelect");
+  if (regGameSelect) regGameSelect.onchange = () => {
+    state.regGameKey = regGameSelect.value;
+    window.__render?.();
+  };
   document.querySelectorAll("[data-regcat]").forEach(btn=>{
     btn.onclick = ()=>{ state.regCategory = btn.dataset.regcat; if(window.__render) window.__render(); };
   });
   document.querySelectorAll("[data-regattend]").forEach(btn=>{
     btn.onclick = ()=>{
       const [athleteId, status] = btn.dataset.regattend.split("|");
-      const dayName = dayNameFromDate(state.regDate);
-      const dateKey = `${state.regDate}|${dayName}`;
+      const dateKey = state.regTipo === "game" ? state.regGameKey :
+        state.regDate && `${state.regDate}|${dayNameFromDate(state.regDate)}`;
       toggleAttendance(athleteId, state.regTipo, dateKey, status);
     };
   });
@@ -311,6 +317,15 @@ export function attachEvents(){
   if(btnBackTorneo) btnBackTorneo.onclick = ()=>{ state.view="torneos"; state.torneoId=null; if(window.__render) window.__render(); };
   const btnAddJuego = document.getElementById("btnAddJuego");
   if(btnAddJuego) btnAddJuego.onclick = ()=> openJuegoModal(state.torneoId);
+  document.querySelectorAll("[data-game-attendance]").forEach(btn => {
+    btn.onclick = () => {
+      state.regGameKey = btn.dataset.gameAttendance;
+      state.regTipo = "game";
+      state.regCategory = "Todos";
+      state.view = "asistencia";
+      window.__render?.();
+    };
+  });
   document.querySelectorAll("[data-edit-juego]").forEach(btn=>{
     btn.onclick = ()=> openJuegoModal(state.torneoId, btn.dataset.editJuego);
   });
@@ -810,11 +825,13 @@ export function attachEvents(){
     if (athlete.becado) athlete = { ...athlete, matricula: { ...(athlete.matricula || {}), estado: 'Becado', monto: 0 } };
     const esc = value => escapeHtml(value === null || value === undefined ? '' : String(value));
     const payments = athlete.becado ? [['Becado', { estado: 'Becado', monto: 0 }]] : (athlete.mensualidades && typeof athlete.mensualidades === 'object' ? Object.entries(athlete.mensualidades) : []);
-    const training = Object.entries(athlete.asistenciaEntrenamiento || {});
-    const games = Object.entries(athlete.asistenciaJuegos || {});
-    const attendance = [...training, ...games];
-    const present = attendance.filter(([, value]) => ['presente', 'asistio', 'asistió'].includes(String(value?.estado || value).toLowerCase())).length;
-    const absences = attendance.filter(([, value]) => ['ausente', 'no_asistio', 'no asistió'].includes(String(value?.estado || value).toLowerCase())).length;
+    const training = Object.entries(athlete.asistenciaEntrenamiento || {}).map(([key, value]) => ({
+      date: key.split("|")[0], label: value?.tipo || "Entrenamiento", status: value?.estado || value
+    }));
+    const games = gameAttendanceHistory(athlete, parentPortalPayload?.torneos || []);
+    const attendance = [...training, ...games].sort((a, b) => b.date.localeCompare(a.date));
+    const present = attendance.filter(({ status }) => ['presente', 'asistio', 'asistió'].includes(String(status).toLowerCase())).length;
+    const absences = attendance.filter(({ status }) => ['ausente', 'no_asistio', 'no asistió'].includes(String(status).toLowerCase())).length;
     const tournaments = Array.isArray(athlete.torneos) ? athlete.torneos : [];
     const torneos = (parentPortalPayload?.torneos || []).map(torneo => ({ ...torneo, monto: athlete.pagosTorneos?.[torneo.id]?.monto ?? torneo.monto }));
     const legacyStats = athlete.statsGenerales || {};
@@ -823,7 +840,7 @@ export function attachEvents(){
     const stats = hasTournamentStats ? { ...tournamentTotals, entrenamientosAsistidos: legacyStats.entrenamientosAsistidos || 0, entrenamientosTotales: legacyStats.entrenamientosTotales || 0 } : legacyStats;
     const uniformsSource = athlete.becado ? { Becado: { estado: 'Becado', monto: 0 } } : (athlete.uniformes || athlete.pagosUniformes || athlete.pagoUniforme || {});
     const uniforms = Array.isArray(uniformsSource) ? uniformsSource.map((item, index) => [item.concepto || item.nombre || `Uniforme ${index + 1}`, item]) : Object.entries(uniformsSource || {});
-    const attendanceRows = attendance.map(([date, value]) => `<tr><td>${esc(date)}</td><td>${esc(value?.tipo || (training.some(([key]) => key === date) ? 'Entrenamiento' : 'Partido'))}</td><td><span class="portal-status ${String(value?.estado || value).toLowerCase().includes('aus') ? 'negative' : ''}">${esc(value?.estado || value || 'Sin registro')}</span></td></tr>`).join('') || '<tr><td colspan="3">No hay asistencias registradas.</td></tr>';
+    const attendanceRows = attendance.map(({ date, label, status }) => `<tr><td>${esc(date)}</td><td>${esc(label)}</td><td><span class="portal-status ${String(status).toLowerCase().includes('aus') ? 'negative' : ''}">${esc(status || 'Sin registro')}</span></td></tr>`).join('') || '<tr><td colspan="3">No hay asistencias registradas.</td></tr>';
     const tournamentRows = tournaments.map(entry => { const torneo = torneos.find(item => String(item.id) === String(entry.torneoId)); const tournamentStats = athlete.estadisticas?.[entry.torneoId] || {}; return `<tr><td>${esc(torneo?.nombre || entry.torneoId || 'Torneo')}</td><td>${esc(torneo?.fecha || entry.fecha || '—')}</td><td>${esc(athlete.becado ? 'Becado' : torneo?.monto == null ? '—' : `$${torneo.monto}`)}</td><td>${esc(`${tournamentStats.goles || 0} goles · ${tournamentStats.asistencias || 0} asistencias`)}</td></tr>`; }).join('') || '<tr><td colspan="4">No participa en torneos registrados.</td></tr>';
     const evaluations = (Array.isArray(athlete.evaluaciones) ? athlete.evaluaciones : Object.values(athlete.evaluaciones || {})).map(ev => ({ ...ev, observaciones: ev.observaciones || ev.observacion || ev.notas || '' }));
     const evaluationGroups = evaluations.reduce((groups, ev) => { const period = ev.periodo || String(ev.fecha || 'Sin mes').slice(0,7); (groups[period] ||= []).push(ev); return groups; }, {});
