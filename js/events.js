@@ -211,6 +211,13 @@ export function attachEvents(){
     state.regGameKey = regGameSelect.value;
     window.__render?.();
   };
+  const regTournamentCategory = document.getElementById("regTournamentCategory");
+  if (regTournamentCategory) regTournamentCategory.onchange = () => {
+    state.regTournamentCategory = regTournamentCategory.value;
+    state.regGameKey = "";
+    window.__render?.();
+    document.getElementById("regGameSelect")?.focus();
+  };
   document.querySelectorAll("[data-regcat]").forEach(btn=>{
     btn.onclick = ()=>{ state.regCategory = btn.dataset.regcat; if(window.__render) window.__render(); };
   });
@@ -320,6 +327,7 @@ export function attachEvents(){
   document.querySelectorAll("[data-game-attendance]").forEach(btn => {
     btn.onclick = () => {
       state.regGameKey = btn.dataset.gameAttendance;
+      state.regTournamentCategory = "";
       state.regTipo = "game";
       state.regCategory = "Todos";
       state.view = "asistencia";

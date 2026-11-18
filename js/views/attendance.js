@@ -8,7 +8,12 @@ import { attendanceGamesForYear, isTournamentAthlete } from "../game-attendance.
 export function renderAttendanceTab(){
   const dayName = state.regDate ? dayNameFromDate(state.regDate) : "";
   const isTraining = state.regTipo === "training";
-  const games = isTraining ? [] : attendanceGamesForYear();
+  const calendar = isTraining ? [] : attendanceGamesForYear();
+  const categoryOf = tournament => tournament.categoria?.trim() || "Sin categoría";
+  const categories = [...new Set(calendar.map(({ tournament }) => categoryOf(tournament)))]
+    .sort((a, b) => a.localeCompare(b, "es", { numeric: true }));
+  const category = categories.includes(state.regTournamentCategory) ? state.regTournamentCategory : "";
+  const games = category ? calendar.filter(({ tournament }) => categoryOf(tournament) === category) : calendar;
   const selected = games.find(({ key }) => key === state.regGameKey);
   const roster = isTraining ? staffYearAthletes(state.athletes, state.staffYear) :
     selected ? state.athletes.filter(a => isTournamentAthlete(a, selected.tournament)) : [];
@@ -50,16 +55,22 @@ export function renderAttendanceTab(){
         <input type="date" id="regDateInput" value="${state.regDate}">
       </div>
       ${state.regDate ? `<div class="reg-hint">${TRAINING_DAYS.includes(dayName) ? ic.check + " " + dayName : ic.alert + " " + dayName + " · No es día de entrenamiento"}</div>` : ""}` :
-      `<div class="reg-field"><label for="regGameSelect">Juego del calendario</label>
+      `<div class="reg-field"><label for="regTournamentCategory">Categoría del torneo</label>
+        <select id="regTournamentCategory" ${categories.length ? "" : "disabled"}>
+          <option value="">Todas las categorías</option>
+          ${categories.map(item => `<option value="${escapeHtml(item)}" ${item === category ? "selected" : ""}>${escapeHtml(item)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="reg-field"><label for="regGameSelect">Juego del calendario</label>
         <select id="regGameSelect" ${games.length ? "" : "disabled"}>
           <option value="">Seleccionar juego</option>
-          ${games.map(({ tournament, game, key }) => `<option value="${escapeHtml(key)}" ${key === selected?.key ? "selected" : ""}>${escapeHtml(game.fecha || "Sin fecha")} · ${escapeHtml(tournament.nombre)} · vs. ${escapeHtml(game.rival)}</option>`).join("")}
+          ${games.map(({ tournament, game, key }) => `<option value="${escapeHtml(key)}" ${key === selected?.key ? "selected" : ""}>${escapeHtml(categoryOf(tournament))} · ${escapeHtml(game.fecha || "Sin fecha")} · ${escapeHtml(tournament.nombre)} · vs. ${escapeHtml(game.rival)}</option>`).join("")}
         </select>
       </div>`}
     </div>
 
     ${!isTraining && !selected ? `<p class="empty-msg">${games.length ? "Selecciona un juego para registrar la asistencia." : "No hay juegos en el calendario de este año."}</p>` : `
-    <div class="filters">${catChips}</div>
+    <div class="filters" role="group" aria-label="Categoría del atleta">${catChips}</div>
 
     <div class="reg-summary">
       ${statPill(ic.check,"Presentes",presentes,"var(--green)")}
