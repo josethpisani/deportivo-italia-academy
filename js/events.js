@@ -4,7 +4,7 @@ import { athletePhoto } from "./athlete-photo.js";
 import { galleryGroups, galleryMedia } from "./gallery.js";
 import { CONTACT_EMAIL } from "./constants.js";
 import { ic } from "./icons.js";
-import { toggleAttendance, setMatricula, setTorneoPago, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, toggleTorneoAtleta, setTorneoEnrollAll, deleteJuego, deleteTorneo, updateAthleteCosts, setUniformePago } from "./mutations.js";
+import { toggleAttendance, setMatricula, setTorneoEnrollment, saveObservaciones, setMensualidad, markAllMensualidades, saveStatsGenerales, saveObservacionesStats, saveEvaluacion, deleteEvaluacion, deleteAthlete, deleteJuego, deleteTorneo, updateAthleteCosts, setUniformePago } from "./mutations.js";
 import { openAddAthleteModal, openAddTorneoModal, openEditAthleteModal, openEditTorneoModal, openTorneoStatsModal, openConfigModal, openEditAthleteCostsModal, openJuegoModal, openJuegoStatsModal, openAddSedeModal, openEditSedeModal, openAddGaleriaModal } from "./modals.js";
 import { dayNameFromDate, escapeHtml } from "./utils.js";
 import { loadData, saveSede, updateSede, saveSiteContent, deleteGalleryItem, createTrialRequest, getTrialRequests } from "./api.js";
@@ -117,8 +117,10 @@ export function attachEvents(){
   document.querySelectorAll("[data-edit-torneo]").forEach(btn=>{
     btn.onclick = ()=> openEditTorneoModal(btn.dataset.editTorneo);
   });
-  document.querySelectorAll("[data-stats-torneo]").forEach(btn=>{
-    btn.onclick = ()=> openTorneoStatsModal(btn.dataset.statsTorneo);
+  document.querySelectorAll("[data-delete-tournament]").forEach(btn => {
+    btn.onclick = () => {
+      if (confirm("¿Eliminar este torneo? Se desasociará de todos los atletas.")) deleteTorneo(btn.dataset.deleteTournament);
+    };
   });
   document.querySelectorAll("[data-attend]").forEach(btn=>{
     btn.onclick = ()=>{
@@ -170,10 +172,17 @@ export function attachEvents(){
       setMatricula(id, estado);
     };
   });
-  document.querySelectorAll("[data-torneopago]").forEach(btn=>{
+  document.querySelectorAll("[data-remove-tournament-athlete]").forEach(btn=>{
     btn.onclick = ()=>{
-      const [athleteId, torneoId, flag] = btn.dataset.torneopago.split("|");
-      setTorneoPago(athleteId, torneoId, flag==="1");
+      const { removeTournamentAthlete: athleteId, tournamentId: torneoId } = btn.dataset;
+      if (confirm("¿Quitar al atleta de este torneo?")) setTorneoEnrollment(athleteId, torneoId, false);
+    };
+  });
+  document.querySelectorAll("[data-enroll-tournament]").forEach(form => {
+    form.onsubmit = event => {
+      event.preventDefault();
+      const athleteId = form.elements.athleteId.value;
+      if (athleteId) setTorneoEnrollment(athleteId, form.dataset.enrollTournament, true);
     };
   });
   const btnViewGrid = document.getElementById("btnViewGrid");
@@ -300,17 +309,6 @@ export function attachEvents(){
   });
   const btnBackTorneo = document.getElementById("btnBackTorneo");
   if(btnBackTorneo) btnBackTorneo.onclick = ()=>{ state.view="torneos"; state.torneoId=null; if(window.__render) window.__render(); };
-  const btnEditTorneo = document.getElementById("btnEditTorneo");
-  if(btnEditTorneo) btnEditTorneo.onclick = ()=> openEditTorneoModal(state.torneoId);
-  const btnDeleteTorneo = document.getElementById("btnDeleteTorneo");
-  if(btnDeleteTorneo) btnDeleteTorneo.onclick = ()=>{
-    if(confirm("¿Eliminar este torneo? Se desasociará de todos los atletas.")){
-      const id = state.torneoId;
-      state.view = "torneos";
-      state.torneoId = null;
-      deleteTorneo(id);
-    }
-  };
   const btnAddJuego = document.getElementById("btnAddJuego");
   if(btnAddJuego) btnAddJuego.onclick = ()=> openJuegoModal(state.torneoId);
   document.querySelectorAll("[data-edit-juego]").forEach(btn=>{
@@ -325,12 +323,6 @@ export function attachEvents(){
   });
   document.querySelectorAll("[data-juego-stats]").forEach(btn=>{
     btn.onclick = ()=> openJuegoStatsModal(state.torneoId, btn.dataset.juegoStats);
-  });
-  document.querySelectorAll("[data-tor-enroll]").forEach(btn=>{
-    btn.onclick = ()=> toggleTorneoAtleta(btn.dataset.torEnroll, state.torneoId);
-  });
-  document.querySelectorAll("[data-tor-enrollall]").forEach(btn=>{
-    btn.onclick = ()=> setTorneoEnrollAll(state.torneoId, btn.dataset.torEnrollall, btn.dataset.all!=="1");
   });
   document.querySelectorAll("[data-torstats]").forEach(btn=>{
     btn.onclick = ()=> openTorneoStatsModal(state.torneoId);

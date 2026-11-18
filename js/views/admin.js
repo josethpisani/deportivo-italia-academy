@@ -31,14 +31,14 @@ export function renderAdmin(){
     ["grid", "Cuadrícula", ic.grid],
     ["list", "Lista", ic.list]
   ].map(([mode, label, icon]) => `<button type="button" class="view-toggle-btn ${state.adminViewMode === mode ? "active" : ""}" data-adminview="${mode}" aria-pressed="${state.adminViewMode === mode}">${icon} ${label}</button>`).join("")}`;
-  const adminCategoryFilter = categoryFilteredTabs.includes(state.adminTab) ? `<div class="filters admin-category-filter"><span class="admin-filter-label">Categoría</span>${["Todos", ...CATEGORIES].map(category => `<button class="chip ${state.adminCategory === category ? "active" : ""}" data-admincat="${category}">${category}</button>`).join("")}${viewOptions}</div>` : "";
+  const adminCategoryFilter = categoryFilteredTabs.includes(state.adminTab) ? `<div class="filters admin-category-filter"><span class="admin-filter-label">Categoría${state.adminTab === "torneos" ? " del reporte" : ""}</span>${["Todos", ...CATEGORIES].map(category => `<button class="chip ${state.adminCategory === category ? "active" : ""}" data-admincat="${category}">${category}</button>`).join("")}${state.adminTab === "torneos" ? "" : viewOptions}</div>` : "";
   const totalMensualidadesMes = yearAthletes.filter(a=>!a.becado).filter(a=>{
     const m = a.mensualidades && a.mensualidades[state.mensualMonth];
     return m && m.estado==="pagado";
   }).reduce((s,a)=>s+((a.mensualidades[state.mensualMonth]||{}).monto||0),0);
   const totalIngresos = yearAthletes.filter(a=>!a.becado && a.matricula.estado==="pagado").reduce((s,a)=>s+a.matricula.monto,0) + totalMensualidadesMes;
   const torneoIngresos = yearTorneos.reduce((sum,t)=>{
-    const pagantes = yearAthletes.filter(a=>!a.becado && a.torneos.some(at=>at.torneoId===t.id));
+    const pagantes = state.athletes.filter(a=>!a.becado && a.torneos.some(at=>at.torneoId===t.id));
     return pagantes.reduce((total,a)=>total + Number(a.pagosTorneos?.[t.id]?.monto ?? t.monto ?? 0), sum);
   },0);
   const pendientes = yearAthletes.filter(a=>!a.becado && a.matricula.estado==="pendiente").length;
@@ -171,21 +171,32 @@ export function renderAdmin(){
     body = `<div class="config-info"><p>${ic.alert} Configura el monto y el estado del uniforme por atleta. El representante solo podrá consultar esta información.</p></div><div class="mat-grid ${state.adminViewMode === "list" ? "admin-list-view" : ""}">${cards}</div>`;
   } else if(state.adminTab==="torneos"){
     let torneosHtml = yearTorneos.map(t=>{
-      const elegibles = adminAthletes;
-      const inscritos = elegibles.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
+      const inscritos = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
+      const disponibles = state.athletes.filter(a=>!a.torneos.some(at=>at.torneoId===t.id));
+      const tournamentId = escapeHtml(t.id);
 
-      const chips = elegibles.map(a=>{
-        const inscrito = a.torneos.some(at=>at.torneoId===t.id);
+      const rows = inscritos.map(a=>{
         const nombre = `${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}`;
         const monto = a.pagosTorneos?.[t.id]?.monto ?? t.monto ?? 0;
-        return `<div class="admin-tournament-athlete">
-          <button type="button" class="pay-chip ${inscrito?"paid":""}" data-torneopago="${escapeHtml(a.id)}|${escapeHtml(t.id)}|${inscrito?0:1}" aria-pressed="${inscrito}">
-            ${inscrito?ic.check:ic.clock} <span>${nombre} <span class="pay-cat">${escapeHtml(a.categoria)}</span></span>
-          </button>
+        return `<li class="admin-tournament-athlete">
+          <strong>${nombre} <span class="pay-cat">${escapeHtml(a.categoria)}</span></strong>
           <span>${a.becado ? badge("Becado","good") : `$${escapeHtml(monto)}`}</span>
-          <button type="button" class="btn-outline" data-edit-costs="${escapeHtml(a.id)}" data-cost-type="torneo" data-cost-tournament="${escapeHtml(t.id)}" aria-label="Costo y beca de ${nombre}">${ic.pencil} Costo y beca</button>
-        </div>`;
+          <div class="admin-tournament-actions">
+            <button type="button" class="btn-outline" data-edit-costs="${escapeHtml(a.id)}" data-cost-type="torneo" data-cost-tournament="${tournamentId}" aria-label="Costo y beca de ${nombre}">${ic.pencil} Costo y beca</button>
+            <button type="button" class="btn-outline" data-remove-tournament-athlete="${escapeHtml(a.id)}" data-tournament-id="${tournamentId}" aria-label="Quitar a ${nombre} del torneo">Quitar</button>
+          </div>
+        </li>`;
       }).join("");
+      const enrollment = disponibles.length ? `<form class="admin-tournament-enrollment" data-enroll-tournament="${tournamentId}">
+        <label for="enroll-${tournamentId}">Agregar atleta</label>
+        <div class="admin-tournament-actions">
+          <select id="enroll-${tournamentId}" name="athleteId" required>
+            <option value="">Seleccionar atleta</option>
+            ${disponibles.map(a=>`<option value="${escapeHtml(a.id)}">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)} · ${escapeHtml(a.categoria)}</option>`).join("")}
+          </select>
+          <button type="submit" class="btn-primary">${ic.plus} Inscribir</button>
+        </div>
+      </form>` : "";
 
       const statsSummary = inscritos.length > 0 ? (() => {
         let totalGoles = 0, totalAsist = 0;
@@ -204,14 +215,15 @@ export function renderAdmin(){
             ${t.descripcion ? `<div class="tor-desc">${escapeHtml(t.descripcion)}</div>` : ""}
           </div>
           <div class="tor-actions-top">
-            ${badge(inscritos.length+"/"+elegibles.length+" inscritos","warn")}
+            ${badge(inscritos.length+" inscritos","warn")}
             <button class="btn-icon" data-edit-torneo="${t.id}" title="Editar torneo">${ic.pencil}</button>
-            <button class="btn-icon green" data-stats-torneo="${t.id}" title="Cargar estadísticas">${ic.activity}</button>
+            <button class="btn-icon red" data-delete-tournament="${tournamentId}" title="Eliminar torneo">${ic.x}</button>
           </div>
         </div>
         ${statsSummary}
-        <div class="pay-chips-label">Atletas (toca para marcar pago):</div>
-        <div class="pay-chips ${state.adminViewMode === "list" ? "admin-pay-list" : ""}">${chips}</div>
+        <h3 class="admin-tournament-roster-title">Atletas inscritos</h3>
+        ${rows ? `<ul class="admin-tournament-roster">${rows}</ul>` : '<p class="empty-msg">Aún no hay atletas inscritos.</p>'}
+        ${enrollment}
       </div>`;
     }).join("");
     if(!yearTorneos.length){

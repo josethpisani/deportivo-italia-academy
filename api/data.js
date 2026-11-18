@@ -844,7 +844,7 @@ export default async function handler(req, res) {
                     THEN existing.item || COALESCE((
                       SELECT jsonb_object_agg(field, data)
                       FROM jsonb_each(incoming.item) AS fields(field, data)
-                      WHERE field IN ('asistenciaEntrenamiento', 'asistenciaJuegos', 'torneos', 'estadisticas', 'statsGenerales', 'evaluaciones', 'observaciones')
+                      WHERE field IN ('asistenciaEntrenamiento', 'asistenciaJuegos', 'juegosStats', 'estadisticas', 'statsGenerales', 'evaluaciones', 'observaciones')
                     ), '{}'::jsonb)
                     ELSE existing.item END ORDER BY existing.position
                 ), '[]'::jsonb)

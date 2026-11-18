@@ -73,28 +73,12 @@ export function setMatricula(athleteId, estado){
   if(window.__render) window.__render();
 }
 
-export function setTorneoPago(athleteId, torneoId, pagado){
+export function setTorneoEnrollment(athleteId, torneoId, enrolled){
   const a = state.athletes.find(x=>x.id===athleteId);
-  a.torneos = a.torneos.filter(t=>t.torneoId!==torneoId);
-  if(pagado) a.torneos.push({ torneoId, fecha: todayISO() });
-  saveAthletes();
-  if(window.__render) window.__render();
-}
-
-export function toggleTorneoAtleta(athleteId, torneoId){
-  const a = state.athletes.find(x=>x.id===athleteId);
-  const exists = a.torneos.some(t=>t.torneoId===torneoId);
-  if(exists) a.torneos = a.torneos.filter(t=>t.torneoId!==torneoId);
-  else a.torneos.push({ torneoId, fecha: todayISO() });
-  saveAthletes();
-  if(window.__render) window.__render();
-}
-
-export function setTorneoEnrollAll(torneoId, categoria, enroll){
-  state.athletes.filter(a=>a.categoria===categoria).forEach(a=>{
-    a.torneos = a.torneos.filter(t=>t.torneoId!==torneoId);
-    if(enroll) a.torneos.push({ torneoId, fecha: todayISO() });
-  });
+  if (!a || !state.torneos.some(t => t.id === torneoId)) return;
+  if (a.torneos.some(t => t.torneoId === torneoId) === enrolled) return;
+  if(enrolled) a.torneos.push({ torneoId, fecha: todayISO() });
+  else a.torneos = a.torneos.filter(t => t.torneoId !== torneoId);
   saveAthletes();
   if(window.__render) window.__render();
 }

@@ -2,7 +2,6 @@ import { state } from "../state.js";
 import { ic } from "../icons.js";
 import { escapeHtml, computeTorneoTeamStats, matchesStaffYear } from "../utils.js";
 import { statPill, badge } from "../render-helpers.js";
-import { CATEGORIES } from "../constants.js";
 
 export function renderTorneos(){
   const cards = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear)).map(t=>{
@@ -13,7 +12,7 @@ export function renderTorneos(){
       <div class="head">
         <div>
           <div class="tname dia-title">${escapeHtml(t.nombre)}</div>
-          <div class="tmeta"><span>${ic.cal} ${t.fecha}</span><span>Categoría ${t.categoria}</span><span>$${t.monto} por atleta</span></div>
+          <div class="tmeta"><span>${ic.cal} ${t.fecha}</span><span>Categoría ${t.categoria}</span></div>
         </div>
         ${badge(inscritos.length+" inscritos", inscritos.length?"good":"bad")}
       </div>
@@ -30,10 +29,9 @@ export function renderTorneos(){
   return `
     <div class="toolbar">
       <h1 class="page-title dia-title" style="margin:0;">Torneos</h1>
-      <button class="btn-primary" id="btnAddTorneo">${ic.plus} Nuevo torneo</button>
     </div>
-    <p class="page-sub">Crea torneos, registra los juegos contra cada rival y lleva las estadísticas del equipo y de cada atleta.</p>
-    ${cards || '<p class="empty-msg">No hay torneos creados. Crea uno para comenzar.</p>'}
+    <p class="page-sub">Registra los juegos y las estadísticas del equipo y de los atletas inscritos.</p>
+    ${cards || '<p class="empty-msg">No hay torneos registrados para este año.</p>'}
   `;
 }
 
@@ -41,12 +39,11 @@ export function renderTorneoDetail(){
   const t = state.torneos.find(x=>x.id===state.torneoId);
   if(!t) return `<p>Torneo no encontrado.</p>`;
   const inscritos = state.athletes.filter(a=>a.torneos.some(at=>at.torneoId===t.id));
-  const elegibles = state.athletes;
   const team = computeTorneoTeamStats(t, state.staffYear);
 
   window.__torneoDetailData = { ganados: team.ganados, empatados: team.empatados, perdidos: team.perdidos, gf: team.gf, gc: team.gc };
 
-  const juegosHtml = (t.juegos||[]).map(j=>{
+  const juegosHtml = [...(t.juegos || [])].sort((a, b) => (a.fecha || "").localeCompare(b.fecha || "")).map(j=>{
     const marcador = j.estado==="jugado" ? `<span class="juego-marcador">${j.marcadorF} - ${j.marcadorC}</span>` : badge("Por jugar","warn");
     return `<div class="juego-row">
       <div class="juego-info">
@@ -61,26 +58,6 @@ export function renderTorneoDetail(){
       </div>
     </div>`;
   }).join("") || '<p class="empty-msg">Aún no hay juegos registrados. Agrega el primer juego con el botón superior.</p>';
-
-  const enrollGroups = CATEGORIES.map(c=>{
-    const list = state.athletes.filter(a=>a.categoria===c);
-    if(!list.length) return "";
-    const inscCount = list.filter(a=>a.torneos.some(at=>at.torneoId===t.id)).length;
-    const allIn = inscCount===list.length;
-    const chips = list.map(a=>{
-      const insc = a.torneos.some(at=>at.torneoId===t.id);
-      return `<button class="enroll-chip ${insc?"on":""}" data-tor-enroll="${a.id}">
-        ${insc?ic.check:ic.plus} ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</button>`;
-    }).join("");
-    return `<div class="enroll-group">
-      <div class="enroll-group-head">
-        <span class="enroll-group-name">${c}</span>
-        <span class="enroll-group-count">${inscCount}/${list.length} inscritos</span>
-        <button class="enroll-group-toggle" data-tor-enrollall="${c}" data-all="${allIn?"1":"0"}">${allIn?ic.x+" Quitar todos":ic.check+" Inscribir todos"}</button>
-      </div>
-      <div class="enroll-grid">${chips}</div>
-    </div>`;
-  }).join("");
 
   const statRows = inscritos.map(a=>{
     const st = (a.estadisticas && a.estadisticas[t.id]) || {goles:0,asistencias:0,tarjetasAmarillas:0,tarjetasRojas:0,partidosJugados:0};
@@ -100,9 +77,7 @@ export function renderTorneoDetail(){
       <div>
         <h1 class="dia-title">${escapeHtml(t.nombre)}</h1>
         <div class="badges-row">
-          ${badge(t.categoria,"neutral")}${badge(t.fecha,"neutral")}${badge("$"+t.monto+" por atleta","warn")}
-          <button class="btn-outline" id="btnEditTorneo">${ic.pencil} Editar</button>
-          <button class="btn-outline" id="btnDeleteTorneo" style="color:var(--red);border-color:var(--red);">${ic.x} Eliminar</button>
+          ${badge(t.categoria,"neutral")}${badge(t.fecha,"neutral")}
           <button class="btn-outline" data-torstats="${t.id}">${ic.activity} Stats del torneo</button>
         </div>
         ${t.descripcion ? `<p class="page-sub" style="margin:8px 0 0;">${escapeHtml(t.descripcion)}</p>` : ""}
@@ -129,17 +104,12 @@ export function renderTorneoDetail(){
 
     <div class="section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-        <h3 class="dia-title" style="margin:0;">Juegos del torneo</h3>
+        <h3 class="dia-title" style="margin:0;">Calendario de juegos</h3>
         <button class="btn-primary" id="btnAddJuego">${ic.plus} Agregar juego</button>
       </div>
       ${juegosHtml}
     </div>
 
-    <div class="section">
-      <h3 class="dia-title">Atletas inscritos (${inscritos.length}/${elegibles.length})</h3>
-      <p class="page-sub" style="margin:0 0 10px;">Elige atletas de cualquier categoría; todos juegan juntos en el mismo equipo. Toca cada atleta para inscribirlo o quitarlo del torneo.</p>
-      ${enrollGroups || '<p class="empty-msg">No hay atletas registrados.</p>'}
-    </div>
 
     <div class="section">
       <h3 class="dia-title">Estadísticas personales — ${escapeHtml(t.nombre)}</h3>
