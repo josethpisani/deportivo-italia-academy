@@ -8,7 +8,6 @@ import { renderNews } from "../news.js";
 const sponsors = [
   { name: "Sportza", logo: "patrocinante-sportza.png" },
   { name: "La Parmigiana", logo: "patrocinante-parmigiana.png" },
-  { name: "La Parmigiana, 40 años", logo: "patrocinante-parmigiana-40.png" },
   { name: "CR Pizza & Cucina", logo: "patrocinante-cr.png" },
 ];
 
@@ -377,7 +376,7 @@ export function renderPublicHome() {
       <section id="patrocinantes" class="section-sponsors" aria-labelledby="sponsors-title">
         <div class="container">
           <header class="section-header">
-            <h2 class="dia-title" id="sponsors-title">Nuestros Patrocinantes</h2>
+            <h2 class="dia-title" id="sponsors-title">Nuestros Patrocinadores</h2>
           </header>
           <ul class="sponsor-grid">
             ${sponsors.map(({ name, logo }) => `<li><img src="/img/${escapeHtml(logo)}" alt="${escapeHtml(name)}" loading="lazy" decoding="async"></li>`).join("")}
