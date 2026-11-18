@@ -48,7 +48,7 @@ export function renderAdmin(){
     {key:"sedes",label:"Gestión de sedes"},
     {key:"site",label:"Configuración del sitio"},
     {key:"galeria",label:"Galería de imágenes"},
-    {key:"portal",label:"Portal de padres"},
+    {key:"portal",label:"Portal de Padres"},
   ];
   const inSettings = settingsTabs.some(tab => tab.key === state.adminTab);
   const tabButton = tab => `<button type="button" class="admin-tab ${state.adminTab === tab.key ? "active" : ""}" data-admintab="${tab.key}" ${state.adminTab === tab.key ? 'aria-current="true"' : ""}>${tab.label}</button>`;

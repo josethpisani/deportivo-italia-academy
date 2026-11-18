@@ -43,7 +43,7 @@ export function renderPublicHome() {
           <div class="hero-ctas">
             <a href="#nosotros" class="btn-hero btn-hero-primary">${ic.users} ${escapeHtml(c.ctaPrimary || "Conoce nuestra academia")}</a>
             <a href="/acceso" class="btn-hero btn-hero-secondary">${ic.shield} ${escapeHtml(c.ctaSecondary === "Acceder al sistema" ? "Sistema Staff" : (c.ctaSecondary || "Sistema Staff"))}</a>
-            <a href="/portal-padres" class="btn-hero btn-hero-secondary">${ic.users} Portal de padres</a>
+            <a href="/portal-padres" class="btn-hero btn-hero-secondary">${ic.users} Portal de Padres</a>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Práctica de prueba</button>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu entrenamiento de prueba</button>
             <button type="button" class="btn-hero btn-hero-trial" id="btnTrialRequest">${ic.calendar} Solicita tu entrenamiento de prueba</button>
@@ -128,7 +128,7 @@ export function renderPublicHome() {
     <div class="public-site academy-watermark">
       <nav class="public-portal-shortcuts" aria-label="Accesos a los portales">
         <a href="/acceso">${ic.shield} Sistema Staff</a>
-        <a href="/portal-padres">${ic.users} Portal de padres</a>
+        <a href="/portal-padres">${ic.users} Portal de Padres</a>
       </nav>
       <!-- Hero Section -->
       <section class="hero-section">
@@ -403,7 +403,7 @@ export function renderPublicHome() {
                 <li><a href="#nosotros">Nosotros</a></li>
                 <li><a href="#sedes">Sedes</a></li>
                 <li><a href="/acceso">Sistema Staff</a></li>
-                <li><a href="/portal-padres">Portal de padres</a></li>
+                <li><a href="/portal-padres">Portal de Padres</a></li>
               </ul>
             </div>
             <div class="footer-links">

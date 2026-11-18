@@ -1,1 +1,33 @@
-.portal-evaluation-month{display:grid;gap:10px}.portal-evaluation-month h4{margin:8px 0 0;color:#168b59;text-transform:capitalize;font-size:15px}.portal-evaluation-details{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid #eef2f7}.portal-evaluation-details span{display:flex;justify-content:space-between;gap:8px;margin:0;padding:5px 7px;background:#f8fafc;border-radius:6px}.portal-evaluation-details b{color:#123e6b}@media(max-width:700px){.portal-evaluation-details{grid-template-columns:1fr}}
+.portal-evaluation-month{display:grid;gap:14px;min-width:0}
+.portal-evaluation-month>h4{margin:14px 0 0;padding:10px 14px;border-left:4px solid #1479b8;border-radius:0 10px 10px 0;background:#edf5fc;color:#123e6b;text-transform:capitalize;font-size:16px}
+.portal-evaluation{display:block;min-width:0;overflow:hidden;padding:0;border:1px solid #dce5ef;border-radius:18px;background:#fff;box-shadow:0 8px 24px #123e6b0b}
+.portal-evaluation-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px;background:linear-gradient(120deg,#0e4c86,#186b9c);color:white}
+.portal-evaluation-heading>div:first-child{min-width:0}
+.portal-evaluation-heading strong{color:white;font-size:17px;line-height:1.4;overflow-wrap:anywhere}
+.portal-evaluation-heading span{color:#e1effb;font-size:12px}
+.portal-evaluation-score{flex-shrink:0;text-align:center;border:1px solid #ffffff55;border-radius:12px;background:#ffffff17;padding:9px 13px}
+.portal-evaluation-score span{margin:0 0 3px}
+.portal-evaluation-score b{font-size:27px;color:#fff}
+.portal-evaluation-score small{font-size:12px;font-weight:500}
+.portal-evaluation-breakdown{padding:16px 20px}
+.portal-evaluation-breakdown summary{display:list-item;cursor:pointer;color:#123e6b;font-weight:700;line-height:1.5}
+.portal-evaluation-breakdown summary span{display:inline;margin-left:8px;color:#64748b;font-size:12px;font-weight:400}
+.portal-evaluation-breakdown summary:focus-visible{outline:2px solid #1479b8;outline-offset:5px;border-radius:4px}
+.portal-evaluation-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.portal-evaluation-skill{--skill-color:#12629c;--skill-bg:#eef6fd;padding:12px;border-radius:12px;border:1px solid #e5ebf2;background:var(--skill-bg);min-width:0}
+.portal-evaluation-skill.skill-tone-1{--skill-color:#137b60;--skill-bg:#effaf5}
+.portal-evaluation-skill.skill-tone-2{--skill-color:#7853ae;--skill-bg:#f7f2fd}
+.portal-evaluation-skill.skill-tone-3{--skill-color:#9e6014;--skill-bg:#fff8eb}
+.portal-evaluation-skill.skill-tone-4{--skill-color:#b34567;--skill-bg:#fff2f6}
+.portal-evaluation-skill>div{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.portal-evaluation-skill strong{color:#253c53;font-size:13px;font-weight:600;overflow-wrap:anywhere;line-height:1.5}
+.portal-evaluation-skill b{color:var(--skill-color);font-size:16px;white-space:nowrap}
+.portal-evaluation-skill small{font-size:11px;font-weight:500}
+.portal-evaluation-skill meter{display:block;width:100%;height:9px;margin-top:12px;border:0;border-radius:10px;background:#dfe7ee;appearance:none}
+.portal-evaluation-skill meter::-webkit-meter-bar{background:#dfe7ee;border:0;border-radius:10px}
+.portal-evaluation-skill meter::-webkit-meter-optimum-value{background:var(--skill-color);border-radius:10px}
+.portal-evaluation-skill meter::-moz-meter-bar{background:var(--skill-color);border-radius:10px}
+.portal-evaluation-notes{margin:0 20px 20px;padding:14px 16px;background:#f5f8fc;border-left:3px solid #637fb2;border-radius:10px}
+.portal-evaluation-notes h5{margin:0 0 7px;color:#123e6b;font-size:13px}
+.portal-evaluation-notes p{margin:0;color:#475569;font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:600px){.portal-evaluation-heading{padding:16px;gap:10px;align-items:flex-start}.portal-evaluation-heading strong{font-size:15px}.portal-evaluation-score{padding:8px}.portal-evaluation-score b{font-size:23px}.portal-evaluation-details{grid-template-columns:1fr}.portal-evaluation-breakdown{padding:14px 16px}.portal-evaluation-notes{margin:0 16px 16px}}
