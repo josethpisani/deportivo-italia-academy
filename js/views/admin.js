@@ -12,15 +12,18 @@ export function renderAdmin(){
   const yearAthletes = staffYearAthletes(state.athletes, state.staffYear);
   const yearTorneos = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear));
   const categoryFilteredTabs = ["atletas", "matriculas", "mensualidades", "uniformes", "torneos"];
-  const reportLinks = categoryFilteredTabs.includes(state.adminTab) ? `<div class="filters admin-category-filter" aria-label="Exportar reporte">
+  const reportLinks = categoryFilteredTabs.includes(state.adminTab) ? `<details class="admin-report">
+    <summary class="admin-report-trigger">${ic.download} Descargar reporte <span aria-hidden="true">${ic.chevronDown}</span></summary>
+    <div class="admin-report-options" role="group" aria-label="Formato del reporte">
     ${[["xlsx", "Excel"], ["pdf", "PDF"]].map(([format, label]) => {
       const params = new URLSearchParams({
         key: "admin_report", report: state.adminTab, format, year: state.staffYear,
         category: state.adminCategory, month: state.mensualMonth,
       });
-      return `<a class="btn-secondary" href="/api/data?${escapeHtml(params)}" download>${ic.download} Descargar ${label}</a>`;
+      return `<a href="/api/data?${escapeHtml(params)}" download>${ic.download} Descargar ${label}</a>`;
     }).join("")}
-  </div>` : "";
+    </div>
+  </details>` : "";
   const adminAthletes = state.adminCategory === "Todos" ? yearAthletes : yearAthletes.filter(a => a.categoria === state.adminCategory);
   const viewOptions = `<span class="admin-filter-label admin-view-label">Vista</span>${[
     ["grid", "Cuadrícula", ic.grid],

@@ -29,6 +29,28 @@
 .admin-content{min-width:0}
 .admin-view-label{margin-left:auto}.view-toggle-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid var(--chalk-dim);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer}.view-toggle-btn.active{background:var(--pitch);color:#fff}.admin-list-view{grid-template-columns:1fr}.admin-list-view .mat-card{min-width:0}.admin-list-view .btns{flex-wrap:wrap}.admin-athlete-card .info{overflow-wrap:anywhere}
 .admin-category-filter{align-items:center;padding:10px 12px;border:1px solid var(--chalk-dim);border-radius:10px;background:#fff}
+.admin-report { position: relative; width: fit-content; max-width: 100%; margin: 0 0 14px auto; }
+.admin-report-trigger {
+  display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 8px 14px;
+  border-radius: 9px; list-style: none; background: #0b2049; color: #fff;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.admin-report-trigger::-webkit-details-marker { display: none; }
+.admin-report-trigger:hover, .admin-report[open] .admin-report-trigger { background: #117950; }
+.admin-report-trigger span { display: flex; }
+.admin-report[open] .admin-report-trigger span { transform: rotate(180deg); }
+.admin-report-options {
+  position: absolute; z-index: 5; top: calc(100% + 6px); right: 0; min-width: 100%;
+  padding: 5px; border: 1px solid var(--chalk-dim); border-radius: 9px; background: #fff;
+  box-shadow: 0 8px 20px rgba(11,32,73,.14);
+}
+.admin-report-options a {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 10px;
+  border-radius: 6px; color: #0b2049; font-size: 13px; font-weight: 700; text-decoration: none;
+}
+.admin-report-options a:hover { background: #e9f5ef; }
+.admin-report :is(summary, a):focus-visible { outline: 2px solid #117950; outline-offset: 2px; }
+.admin-report svg { width: 16px; height: 16px; flex: none; }
 .admin-filter-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-right:4px}
 .admin-menu-toggle{display:none}
 .admin-tabs{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;padding-bottom:2px;}
