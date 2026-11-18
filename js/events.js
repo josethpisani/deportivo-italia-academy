@@ -87,7 +87,7 @@ export function attachEvents(){
     window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
   };
   document.querySelectorAll("[data-nav]").forEach(btn=>{
-    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view === "admin") state.staffYear = new Date().getFullYear(); if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(state.view!=="evaluaciones"){ state.evalAthleteId=null; state.evalEditingId=null; } if(state.view!=="torneos" && state.view!=="torneo-detail") state.torneoId=null; if(window.__render) window.__render(); };
+    btn.onclick = ()=>{ state.view = btn.dataset.nav; if(state.view === "admin") { state.staffYear = new Date().getFullYear(); state.mensualMonth = `${state.staffYear}-${state.mensualMonth.slice(5)}`; } if(state.view!=="atleta-detail") state.selectedId=null; if(state.view!=="estadisticas") state.statsAthleteId=null; if(state.view!=="evaluaciones"){ state.evalAthleteId=null; state.evalEditingId=null; } if(state.view!=="torneos" && state.view!=="torneo-detail") state.torneoId=null; if(window.__render) window.__render(); };
   });
   document.querySelectorAll("[data-goto-cat]").forEach(btn=>{
     btn.onclick = ()=>{ state.activeCategory = btn.dataset.gotoCat; state.view="atleta-list"; if(window.__render) window.__render(); };
@@ -148,7 +148,12 @@ export function attachEvents(){
     btn.onclick = () => { state.adminViewMode = btn.dataset.adminview; if (window.__render) window.__render(); };
   });
   const staffYearSelect = document.getElementById('staffYearSelect');
-  if (staffYearSelect) staffYearSelect.onchange = () => { state.staffYear = Number(staffYearSelect.value); if (state.view === 'asistencia') state.regDate = `${state.staffYear}-01-05`; if (window.__render) window.__render(); };
+  if (staffYearSelect) staffYearSelect.onchange = () => {
+    state.staffYear = Number(staffYearSelect.value);
+    state.mensualMonth = `${state.staffYear}-${state.mensualMonth.slice(5)}`;
+    if (state.view === 'asistencia') state.regDate = `${state.staffYear}-01-05`;
+    if (window.__render) window.__render();
+  };
   const adminSidebar = document.querySelector('.admin-sidebar');
   const adminTabs = document.querySelector('.admin-sidebar .admin-tabs');
   if (adminSidebar && adminTabs && !document.getElementById('adminMenuToggle')) {
@@ -435,9 +440,30 @@ export function attachEvents(){
     const button = enrollmentForm.querySelector('button[type="submit"]');
     if (button) { button.disabled = true; button.textContent = 'Enviando...'; }
     try {
-      const res = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'registration_requests', value: data, sede_id: data.sede_id }) });
+      const documentFields = ['athlete_document', 'representative_document'];
+      const [athleteDocument, representativeDocument] = documentFields.map(field => {
+        const file = formData.get(field);
+        if (!(file instanceof File) || !file.size || file.size > 2_000_000 ||
+            !['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
+          throw new Error('Adjunta ambas cédulas en PDF, JPG o PNG, con un máximo de 2 MB por archivo.');
+        }
+        delete data[field];
+        return file;
+      });
+      const header = new TextEncoder().encode(JSON.stringify({
+        value: data,
+        athleteSize: athleteDocument.size,
+        representativeSize: representativeDocument.size,
+        athleteType: athleteDocument.type,
+        representativeType: representativeDocument.type,
+      }));
+      const headerSize = new DataView(new ArrayBuffer(4));
+      headerSize.setUint32(0, header.byteLength);
+      const body = new Blob([headerSize, header, athleteDocument, representativeDocument], { type: 'application/octet-stream' });
+      const res = await fetch('/api/data?key=registration_upload', { method: 'POST', body });
       const result = await res.json();
       if (!res.ok || !result.success) throw new Error(result.error || 'No se pudo enviar la solicitud');
+      enrollmentForm.reset();
       enrollmentForm.style.display = 'none';
       document.getElementById('enrollmentSuccess').style.display = 'block';
       document.getElementById('enrollmentConfirmation').textContent = `Solicitud ${result.id} recibida para ${data.athlete_name}. Te contactaremos pronto.`;

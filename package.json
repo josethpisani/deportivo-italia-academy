@@ -9,7 +9,10 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.4",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.9"
   },
   "engines": {
     "node": "24.x"

@@ -5,6 +5,8 @@ import { neon } from "@neondatabase/serverless";
 import { registrationFields } from "../js/registration-fields.js";
 import { galleryCategories, galleryVideoMaxBytes, galleryVideoMaxLabel } from "../js/gallery.js";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { parseIdentityDocument, identityDocumentTypes, unpackRegistrationUpload } from "../lib/registration-documents.js";
+import { adminReport, reportFile } from "../lib/admin-reports.js";
 
 function hashToken(token) { return createHash("sha256").update(token).digest("hex"); }
 function hashPassword(password, salt = randomBytes(16).toString("hex")) { return `scrypt$${salt}$${scryptSync(password, salt, 64).toString("hex")}`; }
@@ -54,6 +56,16 @@ async function getDb() {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS registration_documents (
+      request_id TEXT NOT NULL,
+      sede_id TEXT NOT NULL REFERENCES sedes(id),
+      kind TEXT NOT NULL,
+      mime TEXT NOT NULL,
+      content BYTEA NOT NULL,
+      PRIMARY KEY (request_id, kind)
+    )
+  `;
   await sql`
     CREATE TABLE IF NOT EXISTS parent_accounts (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(), email TEXT NOT NULL UNIQUE, full_name TEXT NOT NULL,
@@ -191,6 +203,60 @@ export default async function handler(req, res) {
       return rows[0] || null;
     }
     const isAdmin = async () => (await getStaffSession())?.role === "admin";
+
+    if (["registration_document", "admin_report"].includes(req.query.key)) {
+      res.setHeader("Cache-Control", "private, no-store");
+      if (req.method !== "GET") return res.status(405).end();
+      const staff = await getStaffSession();
+      if (staff?.role !== "admin") return res.status(403).json({ error: "Acceso de administrador requerido." });
+
+      if (req.query.key === "registration_document") {
+        const { id, kind } = req.query;
+        if (typeof id !== "string" || !/^INS-[A-F0-9]{12}$/.test(id) || !["atleta", "representante"].includes(kind)) {
+          return res.status(400).end();
+        }
+        const [document] = await sql`
+          SELECT mime, encode(content, 'base64') AS data FROM registration_documents
+          WHERE sede_id = ${staff.sede_id} AND request_id = ${id} AND kind = ${kind}
+        `;
+        if (!document) return res.status(404).end();
+        const extension = identityDocumentTypes[document.mime];
+        if (!extension) return res.status(404).end();
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Content-Type", document.mime);
+        res.setHeader("Content-Disposition", `attachment; filename="${id}-cedula-${kind}.${extension}"`);
+        return res.end(Buffer.from(document.data, "base64"));
+      }
+
+      const { report, format, year, category, month } = req.query;
+      if (!["atletas", "matriculas", "mensualidades", "uniformes", "torneos"].includes(report) ||
+          !["xlsx", "pdf"].includes(format) || typeof year !== "string" || !/^20\d{2}$/.test(year) ||
+          typeof category !== "string" || (report === "mensualidades" &&
+          (typeof month !== "string" || !/^20\d{2}-(0[1-9]|1[0-2])$/.test(month) || !month.startsWith(year)))) {
+        return res.status(400).json({ error: "Revisa los filtros del reporte." });
+      }
+      const configKey = `config:${staff.sede_id}`;
+      const [rows, representatives, branches] = await Promise.all([
+        sql`SELECT key, value FROM app_data WHERE key IN ('athletes', 'torneos', 'config', ${configKey})
+          OR (key = 'registration_requests' AND ${report === "atletas"})`,
+        report === "atletas" ? sql`SELECT l.athlete_id, p.email, p.full_name FROM parent_athletes l
+          JOIN parent_accounts p ON p.id = l.parent_id WHERE l.sede_id = ${staff.sede_id}
+          ORDER BY p.full_name, p.email` : [],
+        sql`SELECT nombre FROM sedes WHERE id = ${staff.sede_id}`,
+      ]);
+      const data = Object.fromEntries(rows.map(row => [row.key, row.value]));
+      const result = adminReport({
+        report, year, category, month, sede: branches[0]?.nombre || staff.sede_id,
+        athletes: filterBySede(data.athletes || [], staff.sede_id),
+        tournaments: filterBySede(data.torneos || [], staff.sede_id),
+        registrations: (data.registration_requests || []).filter(item => item.sede_id === staff.sede_id),
+        config: data[configKey] || data.config || {}, representatives,
+      });
+      const file = await reportFile(result, format);
+      res.setHeader("Content-Type", format === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="${report}-${report === "mensualidades" ? month : year}.${format}"`);
+      return res.end(file);
+    }
 
     if (req.query.key === "athlete_photo" && ["GET", "POST"].includes(req.method)) {
       res.setHeader("Cache-Control", "private, no-store");
@@ -754,7 +820,9 @@ export default async function handler(req, res) {
 
     // ── POST ── Upsert data for a specific sede
     if (req.method === "POST") {
-      const { key, value, sede_id: bodySedeId } = req.body;
+      const body = req.query.key === "registration_upload" ? unpackRegistrationUpload(req.body) : req.body;
+      if (!body) return res.status(400).json({ error: "Revisa los datos y las cédulas adjuntas. El máximo es de 2 MB por archivo." });
+      const { key, value, sede_id: bodySedeId } = body;
       if (typeof key === "string" && key.startsWith("gallery_video:")) return res.status(404).end();
       const targetSedeId = bodySedeId || sede_id;
       
@@ -794,6 +862,11 @@ export default async function handler(req, res) {
       }
 
       if (key === "registration_requests") {
+        const athleteDocument = parseIdentityDocument(value?.athlete_document);
+        const representativeDocument = parseIdentityDocument(value?.representative_document);
+        if (!athleteDocument || !representativeDocument) {
+          return res.status(400).json({ error: "Adjunta ambas cédulas en PDF, JPG o PNG, con un máximo de 2 MB por archivo." });
+        }
         const branches = await sql`SELECT id FROM sedes WHERE id = ${targetSedeId || ""} AND estado = 'activa'`;
         if (!branches.length) return res.status(400).json({ error: "Selecciona una sede activa" });
         const age = Number(value?.athlete_age);
@@ -801,7 +874,7 @@ export default async function handler(req, res) {
         const request = {
           id: `INS-${randomBytes(6).toString("hex").toUpperCase()}`,
           sede_id: targetSedeId, status: "pendiente", created_at: new Date().toISOString(),
-          athlete_age: age, category
+          athlete_age: age, category, has_identity_documents: true
         };
         const fields = [
           ...registrationFields,
@@ -827,9 +900,20 @@ export default async function handler(req, res) {
             !/^(?:\+?507[\s-]?)?[2-9]\d{3}[\s-]?\d{4}$/.test(request.phone)) {
           return res.status(400).json({ error: "Revisa la edad, categoría, fecha de nacimiento, correo y teléfono" });
         }
-        await sql`INSERT INTO app_data (key, value, updated_at)
-          VALUES ('registration_requests', ${JSON.stringify([request])}, NOW())
-          ON CONFLICT (key) DO UPDATE SET value = app_data.value::jsonb || EXCLUDED.value::jsonb, updated_at = NOW()`;
+        await sql`
+          WITH saved_request AS (
+            INSERT INTO app_data (key, value, updated_at)
+            VALUES ('registration_requests', ${JSON.stringify([request])}, NOW())
+            ON CONFLICT (key) DO UPDATE SET value = app_data.value::jsonb || EXCLUDED.value::jsonb, updated_at = NOW()
+            RETURNING key
+          )
+          INSERT INTO registration_documents (request_id, sede_id, kind, mime, content)
+          SELECT ${request.id}, ${targetSedeId}, files.kind, files.mime, decode(files.data, 'base64')
+          FROM saved_request CROSS JOIN (VALUES
+            ('atleta', ${athleteDocument.mime}::text, ${athleteDocument.data}::text),
+            ('representante', ${representativeDocument.mime}::text, ${representativeDocument.data}::text)
+          ) AS files(kind, mime, data)
+        `;
         return res.status(201).json({ success: true, id: request.id });
       }
 

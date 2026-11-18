@@ -12,6 +12,15 @@ export function renderAdmin(){
   const yearAthletes = staffYearAthletes(state.athletes, state.staffYear);
   const yearTorneos = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear));
   const categoryFilteredTabs = ["atletas", "matriculas", "mensualidades", "uniformes", "torneos"];
+  const reportLinks = categoryFilteredTabs.includes(state.adminTab) ? `<div class="filters admin-category-filter" aria-label="Exportar reporte">
+    ${[["xlsx", "Excel"], ["pdf", "PDF"]].map(([format, label]) => {
+      const params = new URLSearchParams({
+        key: "admin_report", report: state.adminTab, format, year: state.staffYear,
+        category: state.adminCategory, month: state.mensualMonth,
+      });
+      return `<a class="btn-secondary" href="/api/data?${escapeHtml(params)}" download>${ic.download} Descargar ${label}</a>`;
+    }).join("")}
+  </div>` : "";
   const adminAthletes = state.adminCategory === "Todos" ? yearAthletes : yearAthletes.filter(a => a.categoria === state.adminCategory);
   const viewOptions = `<span class="admin-filter-label admin-view-label">Vista</span>${[
     ["grid", "Cuadrícula", ic.grid],
@@ -105,9 +114,9 @@ export function renderAdmin(){
     const mesActual = state.mensualMonth;
     const meses = [];
     for(let m=1;m<=12;m++){
-      const key = `2026-${String(m).padStart(2,"0")}`;
+      const key = `${state.staffYear}-${String(m).padStart(2,"0")}`;
       const label = ["","Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"][m];
-      meses.push({key,label:label+" 2026"});
+      meses.push({key,label:label+" "+state.staffYear});
     }
     const monthBtns = meses.map(m=>
       `<button class="chip ${state.mensualMonth===m.key?"active":""}" data-mensualmonth="${m.key}">${m.label}</button>`
@@ -455,6 +464,7 @@ export function renderAdmin(){
       ${statPill(ic.alert,"Matrículas pendientes", pendientes,"var(--red)")}
     </div>`}
     ${adminCategoryFilter}
+    ${reportLinks}
     ${state.adminTab==="matriculas" ? `<div class="charts-row"><div class="chart-card"><h4>Matrículas: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMatricula"></canvas></div></div></div>` : state.adminTab==="mensualidades" ? `<div class="charts-row"><div class="chart-card"><h4>Mensualidades: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminMensualidades"></canvas></div></div></div>` : state.adminTab==="uniformes" ? `<div class="charts-row"><div class="chart-card"><h4>Uniformes: pagado vs pendiente</h4><div class="chart-wrap short"><canvas id="chartAdminUniformes"></canvas></div></div></div>` : state.adminTab==="torneos" ? `<div class="charts-row"><div class="chart-card"><h4>Recaudación por torneo ($)</h4><div class="chart-wrap short"><canvas id="chartAdminTorneos"></canvas></div></div><div class="chart-card"><h4>Inscritos a torneos por categoría</h4><div class="chart-wrap short"><canvas id="chartAdminCatTorneos"></canvas></div></div></div>` : ""}
     ${body}</main></div>
   `;
@@ -462,8 +472,11 @@ export function renderAdmin(){
 
 function renderRegistrationDetails(request) {
   const answers = registrationFields.filter(([name]) => request[name]);
-  if (!answers.length) return "";
-  return `<details class="registration-details"><summary>Ver datos de inscripción</summary><dl>${answers.map(([name, label]) =>
+  const documents = request.has_identity_documents ? `<ul>${["atleta", "representante"].map(kind => {
+    const params = new URLSearchParams({ key: "registration_document", id: request.id, kind });
+    return `<li><a href="/api/data?${escapeHtml(params)}" download>Descargar cédula del ${kind}</a></li>`;
+  }).join("")}</ul>` : "<p>Sin cédulas adjuntas.</p>";
+  return `<details class="registration-details"><summary>Ver datos de inscripción</summary>${documents}<dl>${answers.map(([name, label]) =>
     `<dt>${label}</dt><dd>${escapeHtml(request[name])}</dd>`
   ).join("")}</dl></details>`;
 }
