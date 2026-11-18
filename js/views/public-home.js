@@ -192,8 +192,8 @@ export function renderPublicHome() {
             <div class="form-group"><label for="enrollNotes">Comentarios</label><textarea id="enrollNotes" name="notes" rows="3" placeholder="Horario preferido, experiencia u otra información"></textarea></div>
             <p id="enrollDocumentsHelp">Adjunta las dos cédulas en PDF, JPG o PNG. Máximo 2 MB por archivo.</p>
             <div class="form-row">
-              <div class="form-group"><label for="enrollAthleteDocument">Cédula del atleta *</label><input id="enrollAthleteDocument" name="athlete_document" type="file" accept="application/pdf,image/jpeg,image/png" aria-describedby="enrollDocumentsHelp" required></div>
-              <div class="form-group"><label for="enrollRepresentativeDocument">Cédula del representante *</label><input id="enrollRepresentativeDocument" name="representative_document" type="file" accept="application/pdf,image/jpeg,image/png" aria-describedby="enrollDocumentsHelp" required></div>
+              <div class="form-group"><label for="enrollAthleteDocument">Archivo de cédula del atleta *</label><input id="enrollAthleteDocument" name="athlete_document_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" aria-describedby="enrollDocumentsHelp" required></div>
+              <div class="form-group"><label for="enrollRepresentativeDocument">Archivo de cédula del representante *</label><input id="enrollRepresentativeDocument" name="representative_document_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" aria-describedby="enrollDocumentsHelp" required></div>
             </div>
             <button type="submit" class="btn-submit-trial">${ic.send} Enviar solicitud de inscripción</button>
           </form>

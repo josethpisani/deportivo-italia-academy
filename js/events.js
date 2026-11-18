@@ -440,13 +440,11 @@ export function attachEvents(){
     const button = enrollmentForm.querySelector('button[type="submit"]');
     if (button) { button.disabled = true; button.textContent = 'Enviando...'; }
     try {
-      const documentFields = ['athlete_document', 'representative_document'];
-      const [athleteDocument, representativeDocument] = documentFields.map(field => {
+      const documentFields = [['athlete_document_file', 'del atleta'], ['representative_document_file', 'del representante']];
+      const [athleteDocument, representativeDocument] = documentFields.map(([field, label]) => {
         const file = formData.get(field);
-        if (!(file instanceof File) || !file.size || file.size > 2_000_000 ||
-            !['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
-          throw new Error('Adjunta ambas cédulas en PDF, JPG o PNG, con un máximo de 2 MB por archivo.');
-        }
+        if (!(file instanceof File) || !file.size) throw new Error(`Adjunta la cédula ${label}.`);
+        if (file.size > 2_000_000) throw new Error(`La cédula ${label} supera el máximo de 2 MB.`);
         delete data[field];
         return file;
       });
@@ -454,8 +452,6 @@ export function attachEvents(){
         value: data,
         athleteSize: athleteDocument.size,
         representativeSize: representativeDocument.size,
-        athleteType: athleteDocument.type,
-        representativeType: representativeDocument.type,
       }));
       const headerSize = new DataView(new ArrayBuffer(4));
       headerSize.setUint32(0, header.byteLength);

@@ -5,7 +5,7 @@ import { neon } from "@neondatabase/serverless";
 import { registrationFields } from "../js/registration-fields.js";
 import { galleryCategories, galleryVideoMaxBytes, galleryVideoMaxLabel } from "../js/gallery.js";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-import { parseIdentityDocument, identityDocumentTypes, unpackRegistrationUpload } from "../lib/registration-documents.js";
+import { identityDocumentTypes, unpackRegistrationUpload } from "../lib/registration-documents.js";
 import { adminReport, reportFile } from "../lib/admin-reports.js";
 
 function hashToken(token) { return createHash("sha256").update(token).digest("hex"); }
@@ -862,11 +862,11 @@ export default async function handler(req, res) {
       }
 
       if (key === "registration_requests") {
-        const athleteDocument = parseIdentityDocument(value?.athlete_document);
-        const representativeDocument = parseIdentityDocument(value?.representative_document);
-        if (!athleteDocument || !representativeDocument) {
-          return res.status(400).json({ error: "Adjunta ambas cédulas en PDF, JPG o PNG, con un máximo de 2 MB por archivo." });
-        }
+        const isUpload = req.query.key === "registration_upload";
+        const athleteDocument = isUpload ? value.athlete_document_file : null;
+        const representativeDocument = isUpload ? value.representative_document_file : null;
+        if (!athleteDocument) return res.status(400).json({ error: "Adjunta la cédula del atleta en PDF, JPG o PNG." });
+        if (!representativeDocument) return res.status(400).json({ error: "Adjunta la cédula del representante en PDF, JPG o PNG." });
         const branches = await sql`SELECT id FROM sedes WHERE id = ${targetSedeId || ""} AND estado = 'activa'`;
         if (!branches.length) return res.status(400).json({ error: "Selecciona una sede activa" });
         const age = Number(value?.athlete_age);
