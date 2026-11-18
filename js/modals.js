@@ -267,7 +267,7 @@ export function openTorneoStatsModal(torneoId){
   }
 }
 
-export function openEditAthleteCostsModal(athleteId, costType){
+export function openEditAthleteCostsModal(athleteId, costType, tournamentId){
   closeModal();
   const a = state.athletes.find(x=>x.id===athleteId);
   if(!a) return;
@@ -277,13 +277,16 @@ export function openEditAthleteCostsModal(athleteId, costType){
     ["mensualidad", "Mensualidad", a._mensualidadMonto ?? catCfg.mensualidad ?? 20],
     ["uniforme", "Uniforme", a.uniformes?.monto ?? 0],
   ].filter(([key]) => !costType || key === costType);
-  const athleteTournaments = costType ? [] : (a.torneos || [])
+  const tournament = costType === "torneo" && state.torneos.find(t => String(t.id) === String(tournamentId));
+  if(costType === "torneo" && !tournament) return;
+  const athleteTournaments = tournament ? [tournament] : costType ? [] : (a.torneos || [])
     .map(link => state.torneos.find(t => String(t.id) === String(link.torneoId))).filter(Boolean);
+  const title = tournament?.nombre || fields[0]?.[1];
   const tournamentCostFields = athleteTournaments.map(torneo => `<div><label for="ac-torneo-${escapeHtml(torneo.id)}">${escapeHtml(torneo.nombre)} ($)</label><input id="ac-torneo-${escapeHtml(torneo.id)}" type="number" min="0" step="0.01" required data-ac-torneo="${escapeHtml(torneo.id)}" value="${escapeHtml(a.pagosTorneos?.[torneo.id]?.monto ?? torneo.monto ?? 0)}"></div>`).join('');
   const html = `
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal cost-modal">
-        <div class="mh"><h3 class="dia-title">${costType ? fields[0]?.[1] : "Costos"} · ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</h3><button id="modalClose">${ic.x}</button></div>
+        <div class="mh"><h3 class="dia-title">${escapeHtml(costType ? title : "Costos")} · ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</h3><button id="modalClose">${ic.x}</button></div>
         <form id="athleteCostForm">
         <div class="config-row">
           <div class="config-cat">${a.categoria}</div>

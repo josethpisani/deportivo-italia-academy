@@ -142,8 +142,8 @@ export function drawAdminCharts(){
 
   const torLabels = state.torneos.map(t=>t.nombre);
   const torData = state.torneos.map(t=>{
-      const inscritos = state.athletes.filter(a=>!a.becado && a.torneos.some(at=>at.torneoId===t.id)).length;
-    return inscritos * t.monto;
+    const inscritos = state.athletes.filter(a=>!a.becado && a.torneos.some(at=>at.torneoId===t.id));
+    return inscritos.reduce((total,a)=>total + Number(a.pagosTorneos?.[t.id]?.monto ?? t.monto ?? 0), 0);
   });
   if(torLabels.length){
     makeChart("chartAdminTorneos", {

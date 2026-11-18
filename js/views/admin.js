@@ -38,8 +38,8 @@ export function renderAdmin(){
   }).reduce((s,a)=>s+((a.mensualidades[state.mensualMonth]||{}).monto||0),0);
   const totalIngresos = yearAthletes.filter(a=>!a.becado && a.matricula.estado==="pagado").reduce((s,a)=>s+a.matricula.monto,0) + totalMensualidadesMes;
   const torneoIngresos = yearTorneos.reduce((sum,t)=>{
-    const pagantes = yearAthletes.filter(a=>!a.becado && a.torneos.some(at=>at.torneoId===t.id)).length;
-    return sum + pagantes*t.monto;
+    const pagantes = yearAthletes.filter(a=>!a.becado && a.torneos.some(at=>at.torneoId===t.id));
+    return pagantes.reduce((total,a)=>total + Number(a.pagosTorneos?.[t.id]?.monto ?? t.monto ?? 0), sum);
   },0);
   const pendientes = yearAthletes.filter(a=>!a.becado && a.matricula.estado==="pendiente").length;
 
@@ -176,8 +176,15 @@ export function renderAdmin(){
 
       const chips = elegibles.map(a=>{
         const inscrito = a.torneos.some(at=>at.torneoId===t.id);
-        return `<button class="pay-chip ${inscrito?"paid":""}" data-torneopago="${a.id}|${t.id}|${inscrito?0:1}">
-          ${inscrito?ic.check:ic.clock} ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)} <span class="pay-cat">${a.categoria}</span></button>`;
+        const nombre = `${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}`;
+        const monto = a.pagosTorneos?.[t.id]?.monto ?? t.monto ?? 0;
+        return `<div class="admin-tournament-athlete">
+          <button type="button" class="pay-chip ${inscrito?"paid":""}" data-torneopago="${escapeHtml(a.id)}|${escapeHtml(t.id)}|${inscrito?0:1}" aria-pressed="${inscrito}">
+            ${inscrito?ic.check:ic.clock} <span>${nombre} <span class="pay-cat">${escapeHtml(a.categoria)}</span></span>
+          </button>
+          <span>${a.becado ? badge("Becado","good") : `$${escapeHtml(monto)}`}</span>
+          <button type="button" class="btn-outline" data-edit-costs="${escapeHtml(a.id)}" data-cost-type="torneo" data-cost-tournament="${escapeHtml(t.id)}" aria-label="Costo y beca de ${nombre}">${ic.pencil} Costo y beca</button>
+        </div>`;
       }).join("");
 
       const statsSummary = inscritos.length > 0 ? (() => {
