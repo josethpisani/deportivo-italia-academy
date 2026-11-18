@@ -267,40 +267,50 @@ export function openTorneoStatsModal(torneoId){
   }
 }
 
-export function openEditAthleteCostsModal(athleteId){
+export function openEditAthleteCostsModal(athleteId, costType){
   closeModal();
   const a = state.athletes.find(x=>x.id===athleteId);
   if(!a) return;
   const catCfg = state.config[a.categoria] || {matricula:35, mensualidad:20};
-  const athleteTournaments = (a.torneos || []).map(link => ({ link, torneo: state.torneos.find(t => String(t.id) === String(link.torneoId)) })).filter(item => item.torneo);
-  const tournamentCostFields = athleteTournaments.map(({ link, torneo }) => `<div><label>${escapeHtml(torneo.nombre)} ($)</label><input type="number" min="0" data-ac-torneo="${escapeHtml(torneo.id)}" value="${a.pagosTorneos?.[torneo.id]?.monto ?? torneo.monto ?? 0}"></div>`).join('');
+  const fields = [
+    ["matricula", "Matrícula", a.matricula?.monto ?? catCfg.matricula ?? 35],
+    ["mensualidad", "Mensualidad", a._mensualidadMonto ?? catCfg.mensualidad ?? 20],
+    ["uniforme", "Uniforme", a.uniformes?.monto ?? 0],
+  ].filter(([key]) => !costType || key === costType);
+  const athleteTournaments = costType ? [] : (a.torneos || [])
+    .map(link => state.torneos.find(t => String(t.id) === String(link.torneoId))).filter(Boolean);
+  const tournamentCostFields = athleteTournaments.map(torneo => `<div><label for="ac-torneo-${escapeHtml(torneo.id)}">${escapeHtml(torneo.nombre)} ($)</label><input id="ac-torneo-${escapeHtml(torneo.id)}" type="number" min="0" step="0.01" required data-ac-torneo="${escapeHtml(torneo.id)}" value="${escapeHtml(a.pagosTorneos?.[torneo.id]?.monto ?? torneo.monto ?? 0)}"></div>`).join('');
   const html = `
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal cost-modal">
-        <div class="mh"><h3 class="dia-title">Costos — ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</h3><button id="modalClose">${ic.x}</button></div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Edita los costos individuales de este atleta (solo aplica a montos pendientes).</p>
+        <div class="mh"><h3 class="dia-title">${costType ? fields[0]?.[1] : "Costos"} · ${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</h3><button id="modalClose">${ic.x}</button></div>
+        <form id="athleteCostForm">
         <div class="config-row">
           <div class="config-cat">${a.categoria}</div>
           <div class="config-fields">
-            <div><label>Matrícula ($)</label><input type="number" min="0" id="ac_matricula" value="${a.matricula.monto}"></div>
-            <div><label>Mensualidad ($)</label><input type="number" min="0" id="ac_mensualidad" value="${a._mensualidadMonto || catCfg.mensualidad}"></div>
-            <div><label>Uniforme ($)</label><input type="number" min="0" id="ac_uniforme" value="${a.uniformes?.monto || 0}"></div>
+            ${fields.map(([key, label, amount]) => `<div><label for="ac_${key}">${label} ($)</label><input type="number" min="0" step="0.01" required id="ac_${key}" name="${key}" value="${escapeHtml(amount)}"></div>`).join("")}
             <label style="display:flex;align-items:center;gap:8px;grid-column:1/-1;"><input type="checkbox" id="ac_becado" ${a.becado ? "checked" : ""}> Atleta becado (no paga los costos)</label>
             ${tournamentCostFields}
           </div>
         </div>
-        <div class="config-info">
+        ${!costType || costType === "mensualidad" ? `<div class="config-info">
           <p>${ic.alert} La mensualidad se aplica a todos los meses pendientes del atleta.</p>
-        </div>
-        <button class="save-btn" id="ac_save">Guardar costos</button>
+        </div>` : ""}
+        <button type="submit" class="save-btn">Guardar</button>
+        </form>
       </div>
     </div>`;
   document.getElementById("app").insertAdjacentHTML("beforeend", html);
   document.getElementById("modalClose").onclick = closeModal;
   document.getElementById("modalOverlay").addEventListener("click", e=>{ if(e.target.id==="modalOverlay") closeModal(); });
-  document.getElementById("ac_save").onclick = ()=>{
-    const tournamentCosts = Object.fromEntries([...document.querySelectorAll('[data-ac-torneo]')].map(input => [input.dataset.acTorneo, input.value]));
-    updateAthleteCosts(athleteId, document.getElementById("ac_matricula").value, document.getElementById("ac_mensualidad").value, document.getElementById("ac_uniforme").value, undefined, tournamentCosts, document.getElementById("ac_becado").checked);
+  document.getElementById("athleteCostForm").onsubmit = event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const costs = Object.fromEntries(new FormData(form));
+    const tournamentCosts = Object.fromEntries([...form.querySelectorAll('[data-ac-torneo]')].map(input => [input.dataset.acTorneo, input.value]));
+    const becado = form.querySelector("#ac_becado").checked;
+    closeModal();
+    updateAthleteCosts(athleteId, { ...costs, tournamentCosts, becado });
   };
 }
 

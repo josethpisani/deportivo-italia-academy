@@ -225,7 +225,7 @@ export function attachEvents(){
   const btnInitMes = document.getElementById("btnInitMensualidades");
   if(btnInitMes) btnInitMes.onclick = ()=> markAllMensualidades(state.mensualMonth);
   document.querySelectorAll("[data-edit-costs]").forEach(btn=>{
-    btn.onclick = ()=> openEditAthleteCostsModal(btn.dataset.editCosts);
+    btn.onclick = ()=> openEditAthleteCostsModal(btn.dataset.editCosts, btn.dataset.costType);
   });
 
   document.querySelectorAll("[data-statscat]").forEach(btn=>{

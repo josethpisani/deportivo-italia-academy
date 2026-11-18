@@ -12,6 +12,8 @@ export function renderAdmin(){
   const yearAthletes = staffYearAthletes(state.athletes, state.staffYear);
   const yearTorneos = state.torneos.filter(t => matchesStaffYear(t.fecha || t.anio || t.year, state.staffYear));
   const categoryFilteredTabs = ["atletas", "matriculas", "mensualidades", "uniformes", "torneos"];
+  const costTypes = { matriculas: "matricula", mensualidades: "mensualidad", uniformes: "uniforme" };
+  const editCost = athlete => `<button type="button" class="btn-outline" data-edit-costs="${escapeHtml(athlete.id)}" data-cost-type="${costTypes[state.adminTab]}">${ic.pencil} Costo y beca</button>`;
   const reportLinks = categoryFilteredTabs.includes(state.adminTab) ? `<details class="admin-report">
     <summary class="admin-report-trigger">${ic.download} Descargar reporte <span aria-hidden="true">${ic.chevronDown}</span></summary>
     <div class="admin-report-options" role="group" aria-label="Formato del reporte">
@@ -109,8 +111,9 @@ export function renderAdmin(){
       <div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div>
       <div class="info">${a.becado ? "Becado" : `Monto: $${a.matricula.monto} · Última fecha: ${a.matricula.fecha}`}</div>
       <div class="btns">
-        <button class="bp ${a.matricula.estado==="pagado"?"on":""}" data-matricula="${a.id}|pagado">Pagado</button>
-        <button class="bd ${a.matricula.estado==="pendiente"?"on":""}" data-matricula="${a.id}|pendiente">Pendiente</button>
+        <button class="bp ${a.matricula.estado==="pagado"?"on":""}" ${a.becado ? "disabled" : ""} data-matricula="${a.id}|pagado">Pagado</button>
+        <button class="bd ${a.matricula.estado==="pendiente"?"on":""}" ${a.becado ? "disabled" : ""} data-matricula="${a.id}|pendiente">Pendiente</button>
+        ${editCost(a)}
       </div></div>`).join("");
     body = `<div class="mat-grid ${state.adminViewMode === "list" ? "admin-list-view" : ""}">${cards}</div>`;
   } else if(state.adminTab==="mensualidades"){
@@ -124,14 +127,14 @@ export function renderAdmin(){
     const monthBtns = meses.map(m=>
       `<button class="chip ${state.mensualMonth===m.key?"active":""}" data-mensualmonth="${m.key}">${m.label}</button>`
     ).join("");
-    const totalMensualidades = adminAthletes.filter(a=>{
+    const totalMensualidades = adminAthletes.filter(a=>!a.becado).filter(a=>{
       const m = a.mensualidades && a.mensualidades[mesActual];
       return m && m.estado==="pagado";
     }).reduce((s,a)=>{
       const m = a.mensualidades[mesActual];
       return s + (m ? m.monto : 0);
     },0);
-    const pendientesMes = adminAthletes.filter(a=>{
+    const pendientesMes = adminAthletes.filter(a=>!a.becado).filter(a=>{
       const m = a.mensualidades && a.mensualidades[mesActual];
       return !m || m.estado!=="pagado";
     }).length;
@@ -139,14 +142,15 @@ export function renderAdmin(){
       if(!a.mensualidades) a.mensualidades = {};
       const m = a.mensualidades[mesActual];
       const estado = m ? m.estado : "pendiente";
-      const monto = m ? m.monto : (a._mensualidadMonto || ((state.config[a.categoria] && state.config[a.categoria].mensualidad) || 20));
+      const monto = m?.monto ?? a._mensualidadMonto ?? state.config[a.categoria]?.mensualidad ?? 20;
       const fecha = m ? m.fecha : "—";
       return `<div class="mat-card">
         <div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${badge(a.categoria,"neutral")}</div>
         <div class="info">${a.becado ? "Becado" : `Monto: $${monto} · Última fecha: ${fecha}`}</div>
         <div class="btns">
-          <button class="bp ${estado==="pagado"?"on":""}" data-mensualidad="${a.id}|${mesActual}|1">Pagado</button>
-          <button class="bd ${estado==="pendiente"?"on":""}" data-mensualidad="${a.id}|${mesActual}|0">Pendiente</button>
+          <button class="bp ${estado==="pagado"?"on":""}" ${a.becado ? "disabled" : ""} data-mensualidad="${a.id}|${mesActual}|1">Pagado</button>
+          <button class="bd ${estado==="pendiente"?"on":""}" ${a.becado ? "disabled" : ""} data-mensualidad="${a.id}|${mesActual}|0">Pendiente</button>
+          ${editCost(a)}
         </div></div>`;
     }).join("");
     body = `
@@ -162,7 +166,7 @@ export function renderAdmin(){
   } else if(state.adminTab==="uniformes"){
     const cards = adminAthletes.map(a=>{
       const uniforme = a.uniformes || { monto:0, estado:"pendiente" };
-      return `<div class="mat-card"><div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${a.becado ? badge("Becado","good") : badge(a.categoria,"neutral")}</div><div class="info">${a.becado ? "Becado" : `Monto: $${uniforme.monto || 0} · Última fecha: ${uniforme.fecha || "—"}`}</div><div class="btns"><button class="bp ${uniforme.estado === "pagado" ? "on" : ""}" data-uniforme="${a.id}|pagado">Pagado</button><button class="bd ${uniforme.estado !== "pagado" ? "on" : ""}" data-uniforme="${a.id}|pendiente">Pendiente</button><button class="btn-outline" data-edit-costs="${a.id}">Editar monto</button></div></div>`;
+      return `<div class="mat-card"><div class="row1"><div class="name">${escapeHtml(a.nombre)} ${escapeHtml(a.apellido)}</div>${a.becado ? badge("Becado","good") : badge(a.categoria,"neutral")}</div><div class="info">${a.becado ? "Becado" : `Monto: $${uniforme.monto || 0} · Última fecha: ${uniforme.fecha || "—"}`}</div><div class="btns"><button class="bp ${uniforme.estado === "pagado" ? "on" : ""}" ${a.becado ? "disabled" : ""} data-uniforme="${a.id}|pagado">Pagado</button><button class="bd ${uniforme.estado !== "pagado" ? "on" : ""}" ${a.becado ? "disabled" : ""} data-uniforme="${a.id}|pendiente">Pendiente</button>${editCost(a)}</div></div>`;
     }).join("");
     body = `<div class="config-info"><p>${ic.alert} Configura el monto y el estado del uniforme por atleta. El representante solo podrá consultar esta información.</p></div><div class="mat-grid ${state.adminViewMode === "list" ? "admin-list-view" : ""}">${cards}</div>`;
   } else if(state.adminTab==="torneos"){
@@ -475,7 +479,7 @@ export function renderAdmin(){
   return `
     <h1 class="page-title dia-title">Panel Administrativo</h1>
     <p class="page-sub">Control de atletas, matrículas y torneos</p>
-    <div class="admin-layout"><aside class="admin-sidebar"><div class="admin-sidebar-title">Secciones</div><div class="admin-tabs">${tabs}${settingsMenu}</div></aside><main class="admin-content">${inSettings ? "" : `<div class="stats-row">
+    <div class="admin-layout"><aside class="admin-sidebar"><div class="admin-sidebar-title">Secciones</div><div class="admin-tabs">${tabs}${settingsMenu}</div></aside><main class="admin-content">${inSettings || costTypes[state.adminTab] ? "" : `<div class="stats-row">
       ${statPill(ic.users,"Total atletas", yearAthletes.length,"var(--pitch)")}
       ${statPill(ic.card,"Ingresos matrícula", "$"+totalIngresos,"var(--green)")}
       ${statPill(ic.trophy,"Ingresos torneos", "$"+torneoIngresos,"var(--red)")}
