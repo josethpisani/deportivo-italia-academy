@@ -751,6 +751,36 @@ export function attachEvents(){
       }
     };
   });
+  document.querySelectorAll('[data-registration-download]').forEach(button => button.onclick = async () => {
+    const status = button.closest('.registration-details').querySelector('.registration-download-status');
+    button.disabled = true;
+    status.textContent = 'Descargando cédula…';
+    try {
+      const response = await fetch(button.dataset.registrationDownload, { credentials: 'same-origin' });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'No se pudo descargar la cédula.');
+      }
+      const filename = response.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1];
+      const file = await response.blob();
+      if (!filename || !file.size || !['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
+        throw new Error('El servidor no devolvió un archivo válido.');
+      }
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      status.textContent = 'Descarga iniciada.';
+    } catch (error) {
+      status.textContent = error.message || 'No se pudo descargar la cédula.';
+    } finally {
+      button.disabled = false;
+    }
+  });
   document.querySelectorAll('[data-registration-accept]').forEach(btn => btn.onclick = async () => {
     if (!confirm('¿Aceptar la inscripción? Se creará el atleta y se vinculará al representante.')) return;
     btn.disabled = true;

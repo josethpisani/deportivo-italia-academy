@@ -343,8 +343,23 @@ export function renderAdmin(){
     body = `<div class="config-section"><h3 class="dia-title">Crear representante</h3><form id="parentAccountForm" class="config-fields-grid"><div><label>Nombre completo</label><input name="full_name" required></div><div><label>Correo electrónico</label><input name="email" type="email" required></div><button class="btn-primary" type="submit">${ic.plus} Crear cuenta</button><p id="parentAccountMessage" class="config-info" role="status"></p></form><div id="parentAccessResult" hidden><label for="parentAccessLink">Enlace de primer acceso</label><input id="parentAccessLink" type="url" readonly><button type="button" class="btn-outline" id="copyParentAccess">Copiar enlace</button></div></div><div class="table-wrap"><table><thead><tr><th>Representante</th><th>Correo</th><th>Estado</th><th>Atletas vinculados</th><th>Último acceso</th><th>Acciones</th></tr></thead><tbody>${accountRows || '<tr><td colspan="6" class="empty-msg">No hay representantes registrados.</td></tr>'}</tbody></table></div><div class="config-info"><p>${ic.alert} Habilita el primer acceso y envía el enlace generado al correo registrado del representante. El enlace vence en 48 horas.</p></div>`;
   } else if(state.adminTab==="inscripciones"){
     const requests = state.adminRegistrationRequests || [];
-    const rows = requests.map(r => `<tr><td>${escapeHtml(r.id || '')}</td><td>${escapeHtml(r.athlete_name || '')}</td><td>${escapeHtml(r.athlete_age || '')}</td><td>${escapeHtml(r.category || '')}</td><td>${escapeHtml(r.representative_name || '')}</td><td>${escapeHtml(r.phone || '')}</td><td>${escapeHtml(r.email || '')}</td><td>${badge(r.status || 'pendiente', r.status === 'aceptada' ? 'good' : r.status === 'declinada' ? 'bad' : 'warn')}</td><td>${escapeHtml(r.notes || r.decline_reason || '')} ${renderRegistrationDetails(r)}</td><td>${r.status === 'pendiente' ? `<button class="bp" data-registration-accept="${escapeHtml(r.id)}">${ic.check} Aceptar</button><button class="bd" data-registration-decline="${escapeHtml(r.id)}">${ic.x} Declinar</button>` : r.athlete_id ? `<span class="badge good">Atleta creado</span>` : ''}</td></tr>`).join('');
-    body = `<div class="table-wrap"><table><thead><tr><th>Solicitud</th><th>Jugador</th><th>Edad</th><th>Categoría</th><th>Representante</th><th>Teléfono</th><th>Correo</th><th>Estado</th><th>Comentarios</th><th>Acciones</th></tr></thead><tbody>${rows || '<tr><td colspan="10" class="empty-msg">No hay solicitudes de inscripción.</td></tr>'}</tbody></table></div>`;
+    const cards = requests.map(request => {
+      const status = request.status || "pendiente";
+      const id = escapeHtml(request.id || "");
+      const actions = status === "pendiente" ? `
+        <button type="button" class="bp" data-registration-accept="${id}">${ic.check} Aceptar</button>
+        <button type="button" class="bd" data-registration-decline="${id}">${ic.x} Declinar</button>
+      ` : request.athlete_id ? badge("Atleta creado", "good") : "";
+      return `<article class="mat-card registration-card">
+        <header class="registration-card-header">
+          <div><h3>${escapeHtml(request.athlete_name || "Atleta")}</h3><p>${id} · ${escapeHtml(request.category || "Sin categoría")}</p></div>
+          ${badge(status, status === "aceptada" ? "good" : status === "declinada" ? "bad" : "warn")}
+        </header>
+        ${renderRegistrationDetails(request)}
+        ${actions ? `<div class="btns">${actions}</div>` : ""}
+      </article>`;
+    }).join("");
+    body = `<div class="registration-list">${cards || '<p class="empty-msg">No hay solicitudes de inscripción.</p>'}</div>`;
   } else if(state.adminTab==="pruebas"){
     const requests = state.adminTrialRequests || [];
     const pendingCount = requests.filter(r => r.status === 'pendiente').length;
@@ -471,14 +486,23 @@ export function renderAdmin(){
 }
 
 function renderRegistrationDetails(request) {
-  const answers = registrationFields.filter(([name]) => request[name]);
-  const documents = request.has_identity_documents ? `<ul>${["atleta", "representante"].map(kind => {
+  const answers = [
+    ["athlete_age", "Edad"],
+    ["representative_name", "Representante"],
+    ["phone", "Teléfono"],
+    ["email", "Correo"],
+    ...registrationFields,
+    ["notes", "Comentarios"],
+    ["decline_reason", "Motivo de rechazo"],
+  ].filter(([name]) => request[name]);
+  const documents = request.has_identity_documents ? `<div class="registration-documents">${["atleta", "representante"].map(kind => {
     const params = new URLSearchParams({ key: "registration_document", id: request.id, kind });
-    return `<li><a href="/api/data?${escapeHtml(params)}" download>Descargar cédula del ${kind}</a></li>`;
-  }).join("")}</ul>` : "<p>Sin cédulas adjuntas.</p>";
-  return `<details class="registration-details"><summary>Ver datos de inscripción</summary>${documents}<dl>${answers.map(([name, label]) =>
-    `<dt>${label}</dt><dd>${escapeHtml(request[name])}</dd>`
-  ).join("")}</dl></details>`;
+    return `<button type="button" class="btn-outline" data-registration-download="/api/data?${escapeHtml(params)}">${ic.download} Cédula del ${kind}</button>`;
+  }).join("")}</div><p class="registration-download-status" role="status"></p>` : "<p>Sin cédulas adjuntas.</p>";
+  return `<details class="registration-details"><summary>Ver datos de inscripción</summary>
+    <dl>${answers.map(([name, label]) => `<div><dt>${label}</dt><dd>${escapeHtml(request[name])}</dd></div>`).join("")}</dl>
+    ${documents}
+  </details>`;
 }
 
 function renderGaleriaAdmin() {

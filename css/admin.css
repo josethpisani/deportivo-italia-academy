@@ -6,10 +6,20 @@
 }
 .news-form .news-check, .news-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .news-admin-list { margin-top: 16px; overflow-wrap: anywhere; }
-.registration-details{min-width:180px;max-width:320px;white-space:normal;overflow-wrap:anywhere}
-.registration-details summary{cursor:pointer}
-.registration-details dt{font-weight:700}
-.registration-details dd{margin:0 0 8px}
+.registration-list{display:grid;gap:12px}
+.registration-card{display:grid;gap:12px;min-width:0;overflow-wrap:anywhere}
+.registration-card-header,.registration-documents,.registration-card .btns{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.registration-card-header h3,.registration-card-header p{margin:0}
+.registration-card-header p{color:var(--muted);font-size:12px}
+.registration-details{padding-top:10px;border-top:1px solid var(--chalk-dim)}
+.registration-details summary{cursor:pointer;font-weight:700}
+.registration-details dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:8px;margin:12px 0}
+.registration-details dl div{padding:10px;background:var(--chalk-dim);border-radius:8px;min-width:0}
+.registration-details dt{font-size:12px;font-weight:700;color:var(--muted)}
+.registration-details dd{margin:3px 0 0;white-space:pre-wrap}
+.registration-documents,.registration-card .btns{justify-content:flex-start}
+.registration-download-status{margin:8px 0 0}
+.registration-download-status:empty{display:none}
 .admin-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}
 .admin-sidebar{position:sticky;top:18px;padding:16px 12px;border-radius:12px;background:#0b2049;color:#fff;box-shadow:0 8px 20px rgba(11,32,73,.12)}
 .admin-sidebar-title{padding:0 10px 12px;color:#8df0be;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}

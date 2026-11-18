@@ -213,19 +213,19 @@ export default async function handler(req, res) {
       if (req.query.key === "registration_document") {
         const { id, kind } = req.query;
         if (typeof id !== "string" || !/^INS-[A-F0-9]{12}$/.test(id) || !["atleta", "representante"].includes(kind)) {
-          return res.status(400).end();
+          return res.status(400).json({ error: "La referencia de la cédula no es válida." });
         }
         const [document] = await sql`
           SELECT mime, encode(content, 'base64') AS data FROM registration_documents
           WHERE sede_id = ${staff.sede_id} AND request_id = ${id} AND kind = ${kind}
         `;
-        if (!document) return res.status(404).end();
+        if (!document) return res.status(404).json({ error: "La cédula no está disponible en esta sede." });
         const extension = identityDocumentTypes[document.mime];
-        if (!extension) return res.status(404).end();
+        if (!extension) return res.status(404).json({ error: "El formato de la cédula archivada no es compatible." });
         res.setHeader("X-Content-Type-Options", "nosniff");
         res.setHeader("Content-Type", document.mime);
         res.setHeader("Content-Disposition", `attachment; filename="${id}-cedula-${kind}.${extension}"`);
-        return res.end(Buffer.from(document.data, "base64"));
+        return res.status(200).send(Buffer.from(document.data, "base64"));
       }
 
       const { report, format, year, category, month } = req.query;
