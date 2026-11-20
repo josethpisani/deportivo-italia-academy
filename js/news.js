@@ -28,7 +28,7 @@ const formatDate = value => new Intl.DateTimeFormat("es-PA", {
 }).format(new Date(value));
 
 export function renderNews() {
-  return `<section class="section-news" id="noticias" aria-labelledby="news-heading">
+  return `<section class="section-news" id="noticias" aria-labelledby="news-heading"${state.academyRevealed ? ' hidden style="display:none"' : ""}>
     <div class="container">
       <header class="section-header"><h2 id="news-heading" class="dia-title">Noticias de la Academia</h2></header>
       <div class="news-grid">${state.news.map((item, index) => {

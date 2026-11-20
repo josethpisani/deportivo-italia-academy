@@ -143,6 +143,7 @@ function setupGlobalEvents() {
 
     // Back to public home
     if (e.target.closest('.btn-back-home')) {
+      state.academyRevealed = false;
       state.view = 'public-home';
       setRoute('public-home');
       render();
@@ -187,6 +188,7 @@ async function refreshHomeNews() {
 // SPA Navigation helper
 function navigateTo(href) {
   if (href === '/' || href === '/index.html') {
+    state.academyRevealed = false;
     state.view = 'public-home';
     setRoute('public-home');
   } else if (href === '/acceso' || href === '/acceso/') {

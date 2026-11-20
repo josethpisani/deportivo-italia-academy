@@ -73,6 +73,11 @@ export function attachEvents(){
       link.onclick = (event) => {
         event.preventDefault();
         state.academyRevealed = true;
+        const newsSection = document.getElementById("noticias");
+        if (newsSection) {
+          newsSection.hidden = true;
+          newsSection.style.display = "none";
+        }
         academySection.hidden = false;
         if (academyWork) academyWork.hidden = false;
         academySection.scrollIntoView({ block: "start" });
