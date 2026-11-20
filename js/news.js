@@ -10,8 +10,8 @@ const savedCovers = {
   "https://www.instagram.com/reel/DWha0lQEUTZ/": "/img/noticia-reel-dwha0lqeutz.jpg"
 };
 
-async function requestNews(body) {
-  const response = await fetch(endpoint, body ? {
+async function requestNews(body, url = endpoint) {
+  const response = await fetch(url, body ? {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
   } : {});
   const result = await response.json();
@@ -19,8 +19,9 @@ async function requestNews(body) {
   return result;
 }
 
-export async function loadNews() {
-  state.news = await requestNews();
+export async function loadNews(publicList = false) {
+  const news = await requestNews(undefined, publicList ? endpoint + "&view=cards" : endpoint);
+  if (!publicList || state.view === "public-home") state.news = news;
 }
 
 const formatDate = value => new Intl.DateTimeFormat("es-PA", {

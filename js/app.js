@@ -171,7 +171,7 @@ function setupGlobalEvents() {
 let homeNewsRequest;
 async function refreshHomeNews() {
   if (state.view !== "public-home" || homeNewsRequest) return;
-  homeNewsRequest = loadNews();
+  homeNewsRequest = loadNews(true);
   try {
     await homeNewsRequest;
     if (state.view === "public-home") {

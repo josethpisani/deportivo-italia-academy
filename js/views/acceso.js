@@ -4,7 +4,7 @@ import { escapeHtml, sedeDisplayName } from "../utils.js";
 function describeSede(sede) {
   const displayName = sedeDisplayName(sede);
   const [, name, venue = ""] = /^(.*) \(([^()]+)\)$/.exec(displayName) ?? ["", displayName];
-  const photo = { PV: "/img/panama-viejo.jpg", BR: "/img/sede-brisas.jpg" }[sede.codigo];
+  const photo = { PV: "/img/panama-viejo-640.webp", BR: "/img/sede-brisas.jpg" }[sede.codigo];
   return { ...sede, name, venue, photo: photo || sede.imagen_principal, caption: [name, venue].filter(Boolean).join(" · ") };
 }
 
