@@ -315,6 +315,27 @@ export default async function handler(req, res) {
         image TEXT NOT NULL, instagram TEXT NOT NULL, featured BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`;
+      if (req.method === "GET" && req.query.view === "thumbnail") {
+        const { id, version } = req.query;
+        if (typeof id !== "string" || typeof version !== "string") return res.status(400).end();
+        const [item] = await sql`SELECT image FROM academy_news WHERE id = ${id} AND md5(image) = ${version} AND image <> ''`;
+        if (!item) return res.status(404).end();
+        const { default: sharp } = await import("sharp");
+        const bytes = Buffer.from(item.image.slice(item.image.indexOf(",") + 1), "base64");
+        const thumbnail = await sharp(bytes).rotate().resize({ width: 740, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer();
+        res.setHeader("Content-Type", "image/webp");
+        res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=86400");
+        return res.status(200).send(thumbnail);
+      }
+      if (req.method === "GET" && req.query.view === "cards") {
+        const rows = await sql`SELECT id, title, instagram, featured, created_at,
+          CASE WHEN image <> '' THEN md5(image) END AS version
+          FROM academy_news ORDER BY featured DESC, created_at DESC`;
+        res.setHeader("Cache-Control", "public, max-age=0, s-maxage=30");
+        return res.status(200).json(rows.map(({ version, ...item }) => ({
+          ...item, image: version ? "/api/data?" + new URLSearchParams({ key: "academy_news", view: "thumbnail", id: item.id, version }) : ""
+        })));
+      }
       if (req.method === "GET") {
         return res.status(200).json(await sql`SELECT * FROM academy_news ORDER BY featured DESC, created_at DESC`);
       }

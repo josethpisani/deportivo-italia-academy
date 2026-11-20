@@ -12,7 +12,8 @@
     "dotenv": "^17.4.2",
     "exceljs": "^4.4.0",
     "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.9"
+    "jspdf-autotable": "^5.0.9",
+    "sharp": "^0.34.5"
   },
   "engines": {
     "node": "24.x"

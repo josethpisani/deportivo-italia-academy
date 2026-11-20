@@ -309,7 +309,7 @@ export function renderPublicHome() {
               <article class="sede-card-public">
                 <div class="sede-img-wrapper">
                   ${sede.codigo === 'BR' || sede.id === 'sed_brisas' ? `<img src="/img/sede-brisas.jpg" alt="Cancha de la sede Brisas" class="sede-img" style="object-position: center 67%" loading="lazy">` :
-                    sede.codigo === 'PV' || sede.id === 'sed_panama_viejo' ? `<img src="/img/panama-viejo.jpg" alt="Sede Panamá Viejo" class="sede-img">` : sede.imagen_principal 
+                    sede.codigo === 'PV' || sede.id === 'sed_panama_viejo' ? `<img src="/img/panama-viejo-640.webp" srcset="/img/panama-viejo-640.webp 640w, /img/panama-viejo-1280.webp 1280w" sizes="(max-width: 768px) 100vw, 562px" loading="lazy" decoding="async" alt="Sede Panamá Viejo" class="sede-img">` : sede.imagen_principal 
                     ? `<img src="${escapeHtml(sede.imagen_principal)}" alt="${escapeHtml(sede.nombre)}" class="sede-img">`
                     : `<div class="sede-img-placeholder">${ic.mapPin}</div>`
                   }
